@@ -58,7 +58,7 @@ Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` ac
 - **Widget Definitions Contract (`schemaVersion: 1`):**
   - Stored under `fixtures/widget_definitions/widget_definitions_v1.json` with 6 widget types: `single_value`, `history_chart`, `indicator_lamp`, `multi_value`, `aggregate`, `gauge_bar`.
   - Immutable models: `InfluxConnection`, `WidgetDefinition`, `ThresholdRule`, `SensorQueryItem`, `SensorDataPoint`.
-- **iOS widget extension target:** Generated and verified reproducibly in GitHub Actions (`macos-latest`) via XcodeGen / project scripting (`Roadmap/Tasks/Task_09.md`).
+- **iOS widget extension target:** Implemented in `ios/SensorWidgetsExtension/` using Swift 5.9+, SwiftUI, Swift Charts (`Charts`), and AppIntents (`SelectWidgetIntent`, `SensorTimelineProvider`, `SensorWidgetViews`). Configured with `ios/Package.swift` and verified in GitHub Actions (`macos-latest`) via `swift test --package-path ios` (`Roadmap/Tasks/Task_09.md`).
 - **Roadmap & task tracking:** Sequentially managed in `Roadmap/README.md` and `Roadmap/Tasks/Task_01.md` – `Task_10.md`.
 
 ---

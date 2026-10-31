@@ -28,9 +28,10 @@ cd android && ./gradlew test --tests "<fully.qualified.Class>"  # one Android te
 cd android && ./gradlew :app:ktlintCheck                        # ktlint check
 ```
 
-iOS (CI only; scheme and destination are defined once the widget target exists):
+iOS (CI only via `macos-latest` runner):
 
 ```bash
+swift test --package-path ios                                    # Swift unit tests against fixtures
 xcodebuild test -workspace ios/Runner.xcworkspace -scheme <scheme> -destination 'platform=iOS Simulator,name=<device>'
 ```
 

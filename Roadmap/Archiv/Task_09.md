@@ -37,60 +37,62 @@
 
 ## 3. Detaillierte Implementierungsschritte
 1. **Vorbereitung:**
-   - [ ] Datei in `RUN_Task_09.md` umbenennen.
-   - [ ] Learnings aus `Task_02`, `Task_03`, `Task_04` und `Task_07` prüfen.
+   - [x] Datei in `RUN_Task_09.md` umbenennen.
+   - [x] Learnings aus `Task_02`, `Task_03`, `Task_04` und `Task_07` prüfen.
 2. **Swift Core-Logik & XCTests (TDD-Struktur für CI):**
-   - [ ] Strukturierung der Core-Logik (`Models`, `InfluxQlBuilder`, `InfluxResponseParser`, `ThresholdEvaluator`), sodass sie sowohl vom WidgetKit-Extension-Target als auch vom Test-Target (`xcodebuild test` / `swift test` auf macOS-CI) direkt getestet werden kann.
-   - [ ] Schreibe `ios/SensorWidgetsTests/InfluxWidgetCoreTests.swift` zuerst (Red-Spezifikation):
+   - [x] Strukturierung der Core-Logik (`Models`, `InfluxQlBuilder`, `InfluxResponseParser`, `ThresholdEvaluator`), sodass sie sowohl vom WidgetKit-Extension-Target als auch vom Test-Target (`xcodebuild test` / `swift test` auf macOS-CI) direkt getestet werden kann.
+   - [x] Schreibe `ios/SensorWidgetsTests/InfluxWidgetCoreTests.swift` zuerst (Red-Spezifikation):
      - Lädt `fixtures/widget_definitions/widget_definitions_v1.json` und prüft alle 6 Widget-Typen.
      - Prüft `InfluxQlBuilder` auf identische InfluxQL-Strings wie in Dart (`Task_03`) und Kotlin (`Task_07`).
      - Lädt und parst alle Dateien aus `fixtures/influx/*.json`.
      - Prüft Schwellenwert-Auswertung und Token-Redaction in Fehlermeldungen.
-   - [ ] Implementiere `WidgetModels.swift`, `InfluxQlBuilder.swift`, `InfluxResponseParser.swift` und `InfluxHttpClient.swift` (Green).
+   - [x] Implementiere `WidgetModels.swift`, `InfluxQlBuilder.swift`, `InfluxResponseParser.swift` und `InfluxHttpClient.swift` (Green).
 3. **App Group Storage, Keychain & AppIntents (iOS 17+):**
-   - [ ] Implementiere `SharedGroupStorage.swift`:
+   - [x] Implementiere `SharedGroupStorage.swift`:
      - Liest Verbindungs-Metadaten und Widget-Definitionen aus `UserDefaults(suiteName: "group.io.github.mgasc.influx_sensor_widgets")`.
      - Liest das API-Token aus der iOS Keychain (kompatibel mit den `IOSOptions` von `flutter_secure_storage` aus `Task_04`).
      - Speichert/liest den letzten bekannten Messwert im lokalen App-Group-Cache für Offline-Resilienz.
-   - [ ] Implementiere `SelectWidgetIntent.swift` (`WidgetConfigurationIntent` + `WidgetDefinitionEntity` + `EntityQuery`), sodass Nutzer beim Bearbeiten des iOS-Widgets aus der dynamischen Liste der in der Flutter-App angelegten Widgets wählen können.
+   - [x] Implementiere `SelectWidgetIntent.swift` (`WidgetConfigurationIntent` + `WidgetDefinitionEntity` + `EntityQuery`), sodass Nutzer beim Bearbeiten des iOS-Widgets aus der dynamischen Liste der in der Flutter-App angelegten Widgets wählen können.
 4. **TimelineProvider & SwiftUI Views für alle 6 Widget-Typen:**
-   - [ ] Implementiere `SensorTimelineProvider.swift` (`AppIntentTimelineProvider`): führt den Netzwerk-Request im Hintergrund durch und plant das nächste Timeline-Reload budgetschonend (z. B. `.after(Date().addingTimeInterval(15 * 60))`).
-   - [ ] Implementiere `SensorWidgetViews.swift` (nutzt SwiftUI & `Charts` ab iOS 17):
+   - [x] Implementiere `SensorTimelineProvider.swift` (`AppIntentTimelineProvider`): führt den Netzwerk-Request im Hintergrund durch und plant das nächste Timeline-Reload budgetschonend (z. B. `.after(Date().addingTimeInterval(15 * 60))`).
+   - [x] Implementiere `SensorWidgetViews.swift` (nutzt SwiftUI & `Charts` ab iOS 17):
      - `SingleValueWidgetView`, `HistoryChartWidgetView` (mit `Chart { LineMark / AreaMark }`), `IndicatorLampWidgetView`, `MultiValueWidgetView`, `AggregateWidgetView`, `GaugeBarWidgetView` (mit `Gauge` / Progress-Bar) sowie `containerBackground(for: .widget)`.
 5. **CI-Workflow (`.github/workflows/ci.yml`) & Dokumentation:**
-   - [ ] Konfiguriere den `ios`-Job in `.github/workflows/ci.yml` so, dass auf `macos-latest`:
+   - [x] Konfiguriere den `ios`-Job in `.github/workflows/ci.yml` so, dass auf `macos-latest`:
      1. `swiftlint` ausgeführt wird,
      2. die Swift-Core-Unit-Tests gegen `fixtures/` ausgeführt werden (`swift test` / `xcodebuild test`),
      3. das Widget-Extension-Target reproduzierbar (per `xcodeproj`-Skript oder `xcodegen`) eingebunden und mit `flutter build ios --simulator --no-codesign` gebaut wird.
-   - [ ] Dokumentiere das Setup und den Status transparent in `docs/architecture.md` und `docs/testing.md`.
+   - [x] Dokumentiere das Setup und den Status transparent in `docs/architecture.md` und `docs/testing.md`.
 
 ---
 
 ## 4. Akzeptanzkriterien & Testing-Vorgaben
 - **Funktionale Kriterien:**
-  - [ ] Alle 6 Widget-Typen, `AppIntentConfiguration`, `EntityQuery`, `TimelineProvider` und Keychain/AppGroup-Reader sind in Swift vollständig implementiert.
-  - [ ] Swift-Code hält sich strikt an `.swiftlint.yml` und das v1-JSON-Schema aus `Task_02`.
+  - [x] Alle 6 Widget-Typen, `AppIntentConfiguration`, `EntityQuery`, `TimelineProvider` und Keychain/AppGroup-Reader sind in Swift vollständig implementiert.
+  - [x] Swift-Code hält sich strikt an `.swiftlint.yml` und das v1-JSON-Schema aus `Task_02`.
 - **Testing-Pflicht (`ios/` & CI):**
-  - [ ] `ios/SensorWidgetsTests/InfluxWidgetCoreTests.swift` deckt alle Fixtures aus `fixtures/influx/` und `fixtures/widget_definitions/` ab.
-  - [ ] Wahrheitsgemäße Dokumentation: Da lokal kein Mac vorhanden ist, wird klar dokumentiert, welche Prüfungen lokal liefen und dass die iOS-Ausführung über den GitHub Actions Workflow (`ci.yml`) erfolgt.
+  - [x] `ios/SensorWidgetsTests/InfluxWidgetCoreTests.swift` deckt alle Fixtures aus `fixtures/influx/` und `fixtures/widget_definitions/` ab.
+  - [x] Wahrheitsgemäße Dokumentation: Da lokal kein Mac vorhanden ist, wird klar dokumentiert, welche Prüfungen lokal liefen und dass die iOS-Ausführung über den GitHub Actions Workflow (`ci.yml`) erfolgt.
 
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle lokal ausführbaren Suiten (`flutter test`, `flutter analyze`, `./gradlew test`, `ktlint`) sind grün und die iOS-CI-Konfiguration ist vollständig.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Task (`Task_10`) und `Roadmap/README.md` sowie `docs/` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_09.md` ➔ `Task_09.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle lokal ausführbaren Suiten (`flutter test`, `flutter analyze`, `./gradlew test`, `ktlint`) sind grün und die iOS-CI-Konfiguration ist vollständig.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Task (`Task_10`) und `Roadmap/README.md` sowie `docs/` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_09.md` ➔ `Task_09.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
 ## 6. Erkenntnisse & Learnings für nachfolgende Tasks
-<!-- DIESE SEKTION MUSS VOM BEARBEITENDEN AGENTEN VOR DER ARCHIVIERUNG AUSGEFÜLLT WERDEN! -->
-*Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
-
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Swift Package Manager (`ios/Package.swift`) wurde als saubere und plattformunabhängige Test-Struktur aufgesetzt (`SensorWidgetsCore` + `SensorWidgetsTests`). Dadurch kann `swift test --package-path ios` ohne Xcode-Workspace-Tricks direkt im CI-Workflow auf `macos-latest` ausgeführt werden.
+  - Alle 6 Widget-Typen (`single_value`, `history_chart`, `indicator_lamp`, `gauge_bar`, `aggregate`, `multi_value`) wurden nativ in SwiftUI mit Swift Charts (`Charts`), dynamischer Schwellenwertauswertung und Hex-Farbkonvertierung implementiert.
+  - `SelectWidgetIntent` nutzt modernes AppIntents-Framework (iOS 17+) mit `WidgetConfigurationIntent` und `EntityQuery`, um dynamisch alle konfigurierten Widgets aus der Shared App Group `group.io.github.mgasc.influx_sensor_widgets` bereitzustellen.
+  - `SharedGroupStorage` liest Tokens aus dem iOS Keychain (`kSecClassGenericPassword`, Account `influx_token_<connectionId>`), passend zu `flutter_secure_storage`.
+  - Bei Netzwerkfehlern greift `SensorTimelineProvider` automatisch auf die in der App Group gecachten Daten (`widget_cache_<widgetId>`) zurück.
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - UIKit-Spezifika: `Color(uiColor: .systemBackground)` ist auf iOS beschränkt. Durch `#if canImport(UIKit)` ist der Code portabel für macOS/Simulator-Testumgebungen.
+  - Token-Maskierung: Alle Exceptions im `InfluxHttpClient` sanitizen API-Tokens (`***`), um zu verhindern, dass Tokens in Logs oder Widget-Fehlertexten auftauchen.
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Für Task 10 (E2E, Offline-Resilienz, Production Polish): E2E-Flow über `integration_test/` testen, Release-Builds verifizieren und Dokumentation vervollständigen.

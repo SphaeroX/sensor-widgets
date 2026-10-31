@@ -87,6 +87,9 @@ jobs:
       - name: Run SwiftLint
         run: swiftlint --strict
 
+      - name: Run Swift unit tests
+        run: swift test --package-path ios
+
       - name: Install dependencies
         run: flutter pub get
 
