@@ -31,17 +31,17 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 
 ## 2. Aktueller Status
 
-* **Status:** In Entwicklung (Bereit für `Task_04`)
-* **Aktiver Task:** Keiner (Bereit für `Task_04`)
-* **Fortschritt:** 3 / 10 Tasks abgeschlossen
+* **Status:** In Entwicklung (Bereit für `Task_05`)
+* **Aktiver Task:** Keiner (Bereit für `Task_05`)
+* **Fortschritt:** 4 / 10 Tasks abgeschlossen
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
 | `Task_01` | Projekt-Scaffolding, Toolchain-Pinning & CI/CD-Grundgerüst | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_01.md` |
 | `Task_02` | Shared Kontrakt: Widget-Definitions-Schema (v1) & Test-Fixtures | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_02.md` |
 | `Task_03` | Dart InfluxQL Query-Builder, Parser & HTTP-Client | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_03.md` |
-| `Task_04` | Persistenz- & Bridge-Layer (Secure Token & Shared Storage) | `Offen` | Bereit zur Bearbeitung |
-| `Task_05` | Flutter Dashboard UI – Teil 1: Verbindungsverwaltung | `Wartend` | Abhängig von `Task_03`, `Task_04` |
+| `Task_04` | Persistenz- & Bridge-Layer (Secure Token & Shared Storage) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_04.md` |
+| `Task_05` | Flutter Dashboard UI – Teil 1: Verbindungsverwaltung | `Offen` | Bereit zur Bearbeitung |
 | `Task_06` | Flutter Dashboard UI – Teil 2: Widget-Konfigurator & Live-Vorschau | `Wartend` | Abhängig von `Task_05` |
 | `Task_07` | Android Native Core: Kotlin InfluxQL-Client, Parser & Worker | `Wartend` | Abhängig von `Task_02`, `Task_04` |
 | `Task_08` | Android Jetpack Glance Widgets (Alle 6 Widget-Typen) | `Wartend` | Abhängig von `Task_07` |

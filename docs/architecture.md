@@ -45,6 +45,9 @@ Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` ac
 - **State management & DI:** `flutter_riverpod` (`mocktail` for unit and widget tests).
 - **Schema configuration:** Combined approach in the widget editor — schema discovery via InfluxQL (`SHOW MEASUREMENTS`, `SHOW FIELD KEYS`, `SHOW TAG KEYS`, `SHOW TAG VALUES`) with a seamless fallback to free-text input.
 - **API token storage:** Tokens are stored in `EncryptedSharedPreferences` (Android) and the App Group Keychain (iOS `group.io.github.mgasc.influx_sensor_widgets`) via `flutter_secure_storage`; connection metadata and widget definitions (`schemaVersion: 1`) are stored as JSON in `home_widget` shared storage.
+  - **Android Secure Storage:** `encryptedSharedPreferences: true` (accessed in native Kotlin via AndroidX Security `EncryptedSharedPreferences`).
+  - **iOS Secure Storage:** App Group `group.io.github.mgasc.influx_sensor_widgets`, `kSecAttrAccessibleAfterFirstUnlock`.
+  - **Token Key Format:** `influx_token_<connectionId>`.
 - **Shared Storage Keys (`lib/core/constants/storage_keys.dart`):**
   - App Group: `group.io.github.mgasc.influx_sensor_widgets`
   - Android Prefs: `sensor_widgets_prefs`

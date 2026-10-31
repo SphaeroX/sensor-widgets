@@ -56,19 +56,19 @@
 
 ## 4. Akzeptanzkriterien & Testing-Vorgaben
 - **Funktionale Kriterien:**
-  - [ ] API-Tokens landen niemals im unverschlüsselten JSON-Dokument der Verbindungs- oder Widget-Definitionen.
-  - [ ] Jede Änderung an Verbindungen oder Widget-Definitionen aktualisiert den Shared Storage und stößt ein Widget-Update an.
+  - [x] API-Tokens landen niemals im unverschlüsselten JSON-Dokument der Verbindungs- oder Widget-Definitionen.
+  - [x] Jede Änderung an Verbindungen oder Widget-Definitionen aktualisiert den Shared Storage und stößt ein Widget-Update an.
 - **Testing-Pflicht (`test/`):**
-  - [ ] Vollständige Unit-Tests für `SecureTokenStore`, `SharedWidgetStore`, `ConnectionRepository` und `WidgetDefinitionRepository` mit `mocktail`.
-  - [ ] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` laufen fehlerfrei.
+  - [x] Vollständige Unit-Tests für `SecureTokenStore`, `SharedWidgetStore`, `ConnectionRepository` und `WidgetDefinitionRepository` mit `mocktail`.
+  - [x] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` laufen fehlerfrei.
 
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Tests unter `test/` sind grün.
-- [ ] Die exakten `FlutterSecureStorage`-Parameter (File-/Key-Namen für Android & iOS) sind in Sektion 6 und `docs/architecture.md` dokumentiert.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_04.md` ➔ `Task_04.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Tests unter `test/` sind grün.
+- [x] Die exakten `FlutterSecureStorage`-Parameter (File-/Key-Namen für Android & iOS) sind in Sektion 6 und `docs/architecture.md` dokumentiert.
+- [x] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_04.md` ➔ `Task_04.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
@@ -77,8 +77,14 @@
 *Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
 
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `SecureTokenStore` kapselt `FlutterSecureStorage` mit `AndroidOptions(encryptedSharedPreferences: true)` und `IOSOptions(groupId: StorageKeys.appGroupId, accessibility: KeychainAccessibility.first_unlock)`.
+  - `SharedWidgetStore` kapselt die `home_widget`-Aufrufe und trennt unverschlüsselte JSON-Metadaten (`widget_definitions_v1`, `connections_metadata_v1`) strikt von Secrets.
+  - `ConnectionRepository` verwaltet Verbindungsmetadaten (im Shared Store) und delegiert Token-Persistenz an `SecureTokenStore`.
+  - `WidgetDefinitionRepository` speichert Widgets im `schemaVersion: 1` Envelope und ruft nach jedem Save/Delete/Reorder automatisch `notifyWidgetsUpdated()` auf.
+  - In `lib/presentation/providers/storage_providers.dart` sind Riverpod-Provider (`connectionsListProvider`, `widgetDefinitionsListProvider`, etc.) implementiert.
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Im Unit-Test-Umfeld dürfen keine nativen Flutter-Plugins direkt aufgerufen werden; `SharedWidgetStore` nutzt daher das `WidgetStorageDelegate`-Muster für saubere Mockbarkeit.
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `Task_05` und `Task_06` (Dashboard & Configurator UI) können direkt auf die erstellten Riverpod-Provider zugreifen.
+  - `Task_07` (Android Native Core) greift auf `EncryptedSharedPreferences` und die SharedPreferences `sensor_widgets_prefs` zu.
+  - `Task_09` (iOS Native Core) greift auf `UserDefaults(suiteName: "group.io.github.mgasc.influx_sensor_widgets")` und die Shared Keychain zu.
