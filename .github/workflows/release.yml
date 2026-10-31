@@ -1,0 +1,65 @@
+name: Build & Release APK
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-apk:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'microsoft'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run verification tests
+        run: flutter test
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Rename APK with Tag or Run Number
+        run: |
+          VERSION=${GITHUB_REF_NAME:-run-${GITHUB_RUN_NUMBER}}
+          cp build/app/outputs/flutter-apk/app-release.apk "sensor-widgets-${VERSION}.apk"
+          sha256sum "sensor-widgets-${VERSION}.apk" > "sensor-widgets-${VERSION}.apk.sha256"
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: |
+            sensor-widgets-*.apk
+            sensor-widgets-*.apk.sha256
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            sensor-widgets-*.apk
+            sensor-widgets-*.apk.sha256
+          draft: false
+          prerelease: false
+          generate_release_notes: true
