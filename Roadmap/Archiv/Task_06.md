@@ -67,20 +67,29 @@
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Tests unter `test/` sind grün.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_06.md` ➔ `Task_06.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Tests unter `test/` sind grün.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_06.md` ➔ `Task_06.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
 ## 6. Erkenntnisse & Learnings für nachfolgende Tasks
-<!-- DIESE SEKTION MUSS VOM BEARBEITENDEN AGENTEN VOR DER ARCHIVIERUNG AUSGEFÜLLT WERDEN! -->
-*Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
-
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `WidgetsController` verwaltet die `List<WidgetDefinition>` im Shared Storage via `WidgetDefinitionRepository` und stößt bei Mutationen automatisch `notifyWidgetsUpdated()` via `SharedWidgetStore` an.
+  - `SchemaDiscoveryController` fragt asynchron Measurements, Field Keys und Tag Keys ab; bei Verbindungsproblemen oder fehlendem Token fängt der Controller Fehler transparent ab und liefert leere Listen, wodurch die Freitext-Eingabe in `WidgetEditorScreen` jederzeit stabil funktioniert.
+  - `WidgetEditorScreen` passt die dynamischen Eingabefelder strikt an den ausgewählten `WidgetType` an:
+    - `historyChart`: Dropdowns für `timeRange` ('1h'..'30d') und `aggregationInterval` ('1m'..'1d').
+    - `indicatorLamp`: Operator (`>`, `<`) und Schwellenwert über `ThresholdRule`.
+    - `gaugeBar`: `min` und `max`.
+    - `multiValue`: Kommagetrennte Sensor-Felder, die zu `SensorQueryItem` gemappt werden.
+    - `aggregate`: Dropdowns für Zeitraum.
+  - `WidgetLivePreviewCard` implementiert visuell realitätsnahe Darstellungen aller 6 Widget-Typen inklusive Fehlerstatus und Fortschrittsbalken/Sparkline-Indikatoren.
+
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `DropdownButtonFormField`: Die Verwendung von `value` erzeugt im aktuellen Flutter SDK Deprecation-Warnungen (`deprecated_member_use`). Durch die Verwendung von `initialValue` bleibt der Analyzer sauber.
+  - In `WidgetType` wurde das UI-Label (`Single Value`, `History Chart`, etc.) als Getter `label` hinterlegt, um UI-Code modular und typensicher zu halten.
+
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - In `Task_07` (Android Native Core) und `Task_08` (Glance Widgets) liest der native Android-Code dieselben JSON-Strukturen (`widget_definitions_v1`, `connections_metadata_v1`) aus den SharedPreferences (`sensor_widgets_prefs`).
+  - Native WorkManager-Jobs müssen InfluxQL-Queries deterministisch analog zum `InfluxQlQueryBuilder` erstellen.
