@@ -44,8 +44,14 @@ kotlin {
 
 dependencies {
     ktlint("com.pinterest.ktlint:ktlint-cli:1.3.1")
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.json:json:20240303")
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
+    testImplementation("io.mockk:mockk:1.13.10")
 }
 
 tasks.register<JavaExec>("ktlintCheck") {

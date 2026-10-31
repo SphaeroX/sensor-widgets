@@ -1,0 +1,93 @@
+package io.github.mgasc.influx_sensor_widgets.storage
+
+import android.content.Context
+import io.github.mgasc.influx_sensor_widgets.model.InfluxConnection
+import io.github.mgasc.influx_sensor_widgets.model.WidgetDefinition
+import io.github.mgasc.influx_sensor_widgets.model.WidgetDefinitionParser
+import org.json.JSONArray
+
+class WidgetStorageReader(
+    private val prefsGetter: (String) -> String?,
+    private val prefsSetter: (String, String) -> Unit,
+    private val securePrefsGetter: (String) -> String?,
+) {
+    constructor(context: Context) : this(
+        prefsGetter = { key ->
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.getString(key, null)
+        },
+        prefsSetter = { key, value ->
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            prefs.edit().putString(key, value).apply()
+        },
+        securePrefsGetter = { key ->
+            // Try FlutterSecureStorage prefs first, then standard prefs
+            val securePrefs = context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
+            var token = securePrefs.getString(key, null)
+            if (token == null) {
+                // Check prefixed key or standard prefs fallback
+                val standardPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                token = standardPrefs.getString(key, null)
+            }
+            token
+        },
+    )
+
+    fun getWidgetDefinitions(): List<WidgetDefinition> {
+        val jsonStr = prefsGetter(KEY_WIDGET_DEFINITIONS) ?: return emptyList()
+        return try {
+            WidgetDefinitionParser.parseDefinitionsList(jsonStr)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun getConnections(): List<InfluxConnection> {
+        val jsonStr = prefsGetter(KEY_CONNECTIONS_METADATA) ?: return emptyList()
+        return try {
+            val array = JSONArray(jsonStr)
+            val list = mutableListOf<InfluxConnection>()
+            for (i in 0 until array.length()) {
+                val obj = array.getJSONObject(i)
+                list.add(
+                    InfluxConnection(
+                        id = obj.getString("id"),
+                        name = obj.getString("name"),
+                        url = obj.getString("url"),
+                        database = obj.getString("database"),
+                    ),
+                )
+            }
+            list
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun getToken(connectionId: String): String? {
+        val key = "$KEY_TOKEN_PREFIX$connectionId"
+        return securePrefsGetter(key)
+    }
+
+    fun saveWidgetCache(
+        widgetId: String,
+        cacheJson: String,
+    ) {
+        val key = "$KEY_CACHE_PREFIX$widgetId"
+        prefsSetter(key, cacheJson)
+    }
+
+    fun getWidgetCache(widgetId: String): String? {
+        val key = "$KEY_CACHE_PREFIX$widgetId"
+        return prefsGetter(key)
+    }
+
+    companion object {
+        const val PREFS_NAME = "sensor_widgets_prefs"
+        const val SECURE_PREFS_NAME = "FlutterSecureStorage"
+        const val KEY_WIDGET_DEFINITIONS = "widget_definitions_v1"
+        const val KEY_CONNECTIONS_METADATA = "connections_metadata_v1"
+        const val KEY_TOKEN_PREFIX = "influx_token_"
+        const val KEY_CACHE_PREFIX = "widget_cache_"
+    }
+}

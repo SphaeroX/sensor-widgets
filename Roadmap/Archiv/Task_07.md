@@ -60,20 +60,25 @@
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle JUnit-Tests (`cd android && ./gradlew test`) und Dart-Tests (`flutter test`) sind grün.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_07.md` ➔ `Task_07.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle JUnit-Tests (`cd android && ./gradlew test`) und Dart-Tests (`flutter test`) sind grün.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_07.md` ➔ `Task_07.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
 ## 6. Erkenntnisse & Learnings für nachfolgende Tasks
-<!-- DIESE SEKTION MUSS VOM BEARBEITENDEN AGENTEN VOR DER ARCHIVIERUNG AUSGEFÜLLT WERDEN! -->
-*Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
-
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `WidgetDefinitionParser.parseDefinitionsList` unterstützt sowohl Root-Arrays `[...]` (wie sie in Android SharedPreferences via `WidgetDefinitionRepository` gespeichert werden) als auch Root-Objekte `{"widgets": [...]}` (wie in Test-Fixtures).
+  - `InfluxQlBuilder` in Kotlin implementiert exakt dieselben String-Escaping- und Sortier-Regeln wie `InfluxQlQueryBuilder` in Dart: Tags werden alphabetisch sortiert (`key = 'val'`), doppelte Anführungszeichen in Identifiern und einfache Anführungszeichen in Literalen werden escaped.
+  - `InfluxHttpClient` maskiert Token in allen Exceptions (`***`), fängt HTTP 401/403/404 differenziert ab und erzeugt typsichere `InfluxException`-Subklassen.
+  - `WidgetStorageReader` kapselt den Zugriff auf `sensor_widgets_prefs` und `FlutterSecureStorage` mit Konstruktoren für Android `Context` sowie funktionalen Lambdas für isolierte Unit-Tests.
+  - `WidgetRefreshWorker` aktualisiert alle oder ein Ziel-Widget und legt strukturierte JSON-Caches unter `widget_cache_<id>` ab. WorkManager-Perioden können über `enqueuePeriodicWork` (15 Minuten) und `enqueueOneTimeWork` gestartet werden.
+
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `org.json` wirft eine `JSONException`, wenn ein JSON-Array mit `JSONObject(...)` geparst wird. Eine Vorabprüfung mit `trimmed.startsWith("[")` löst dies elegant.
+  - `ktlintCheck` verlangt striktes Formatting (u. a. `multiline-expression-wrapping`, `trailing-comma-on-call-site`), das vollautomatisch über das Gradle-Task `:app:ktlintFormat` gelöst werden kann.
+
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - In `Task_08` greifen die Glance AppWidgets direkt auf `WidgetStorageReader` und `WidgetRefreshWorker.enqueueOneTimeWork(context, widgetId)` zu.
+  - Die Cache-Einträge in SharedPreferences nutzen das Präfix `widget_cache_<widgetId>`.
