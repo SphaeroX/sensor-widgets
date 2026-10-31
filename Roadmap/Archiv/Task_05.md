@@ -48,20 +48,20 @@
 
 ## 4. Akzeptanzkriterien & Testing-Vorgaben
 - **Funktionale Kriterien:**
-  - [ ] Nutzer können beliebig viele InfluxDB-Verbindungen anlegen, bearbeiten, testen und löschen.
-  - [ ] Beim Bearbeiten einer bestehenden Verbindung kann das gespeicherte Token beibehalten oder neu gesetzt werden.
-  - [ ] Fehlermeldungen beim Verbindungstest sind klar verständlich (401/403 Auth, 404 DB nicht gefunden, Timeout/Netzwerk).
+  - [x] Nutzer können beliebig viele InfluxDB-Verbindungen anlegen, bearbeiten, testen und löschen.
+  - [x] Beim Bearbeiten einer bestehenden Verbindung kann das gespeicherte Token beibehalten oder neu gesetzt werden.
+  - [x] Fehlermeldungen beim Verbindungstest sind klar verständlich (401/403 Auth, 404 DB nicht gefunden, Timeout/Netzwerk).
 - **Testing-Pflicht (`test/`):**
-  - [ ] Controller-Unit-Tests und Flutter-Widget-Tests unter `test/presentation/` decken alle Zustände (Loading, Empty, Data, Error, Form Validation) ab.
-  - [ ] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` sind grün.
+  - [x] Controller-Unit-Tests und Flutter-Widget-Tests unter `test/presentation/` decken alle Zustände (Loading, Empty, Data, Error, Form Validation) ab.
+  - [x] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` sind grün.
 
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Tests unter `test/` sind grün.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_05.md` ➔ `Task_05.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Tests unter `test/` sind grün.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_05.md` ➔ `Task_05.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
@@ -70,8 +70,10 @@
 *Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
 
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `ConnectionsController` kapselt CRUD-Logik und Live-Verbindungstest für InfluxDB.
+  - `ConnectionsListScreen` und `ConnectionFormScreen` bieten Material 3 UI mit Formularvalidierung, sichtbarer/maskierter Token-Eingabe und Bestätigungsdialogen beim Löschen.
+  - In `DashboardHomeScreen` (`lib/app.dart`) ist die Verbindungsverwaltung als Hauptscreen und Action integriert.
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `MaterialPageRoute<void>` muss typisiert sein, um den strict-inference / strict-raw-types Regeln von Dart zu genügen.
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `Task_06` (Widget-Konfigurator) kann nun direkt Verbindungen aus `connectionsControllerProvider` / `connectionsListProvider` abfragen und zur Auswahl im Formular anbieten.
