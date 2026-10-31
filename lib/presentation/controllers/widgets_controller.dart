@@ -60,7 +60,6 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
   Future<void> saveWidget(WidgetDefinition widget) async {
     await _repository.saveWidget(widget);
     state = AsyncValue.data(await _repository.getWidgets());
-    await _sharedWidgetStore.notifyWidgetsUpdated();
   }
 
   /// Duplicates a widget with a new unique ID and "(Kopie)" suffix.
@@ -79,7 +78,6 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
   Future<void> deleteWidget(String id) async {
     await _repository.deleteWidget(id);
     state = AsyncValue.data(await _repository.getWidgets());
-    await _sharedWidgetStore.notifyWidgetsUpdated();
   }
 
   /// Manually triggers native widget timeline / glance refresh.

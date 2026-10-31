@@ -21,7 +21,8 @@ class InfluxApiClient {
        _queryBuilder = queryBuilder ?? const InfluxQlQueryBuilder(),
        _responseParser = responseParser ?? const InfluxResponseParser();
 
-  String _sanitize(String text, String token) {
+  /// Replaces any occurrence of the secret token with `***`.
+  static String maskToken(String text, String token) {
     if (token.isEmpty) return text;
     return text.replaceAll(token, '***');
   }
@@ -54,16 +55,20 @@ class InfluxApiClient {
 
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw InfluxAuthException(
-          _sanitize(
+          maskToken(
             'Authentication failed (HTTP ${response.statusCode})',
             token,
           ),
         );
       }
 
+      if (response.statusCode == 404) {
+        throw const InfluxNotFoundException();
+      }
+
       if (response.statusCode >= 400) {
         throw InfluxQueryException(
-          _sanitize(
+          maskToken(
             'InfluxDB request failed (HTTP ${response.statusCode}): ${response.body}',
             token,
           ),
@@ -74,16 +79,16 @@ class InfluxApiClient {
         final decoded = json.decode(response.body) as Map<String, dynamic>;
         return decoded;
       } catch (e) {
-        throw InfluxParseException(_sanitize(e.toString(), token));
+        throw InfluxParseException(maskToken(e.toString(), token));
       }
     } on InfluxException {
       rethrow;
     } on SocketException catch (e) {
-      throw InfluxNetworkException(_sanitize(e.message, token));
+      throw InfluxNetworkException(maskToken(e.message, token));
     } on http.ClientException catch (e) {
-      throw InfluxNetworkException(_sanitize(e.message, token));
+      throw InfluxNetworkException(maskToken(e.message, token));
     } catch (e) {
-      throw InfluxNetworkException(_sanitize(e.toString(), token));
+      throw InfluxNetworkException(maskToken(e.toString(), token));
     }
   }
 

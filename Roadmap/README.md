@@ -25,15 +25,15 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 - [x] Sprachübergreifend identische InfluxQL-Generierung und Response-Parsing (Dart, Kotlin, Swift), abgesichert durch gemeinsame Fixtures in `fixtures/influx/`.
 - [x] Vollständige native Android-Widgets (Jetpack Glance + `WorkManager` + Config-Activity) für alle 6 Typen.
 - [x] Vollständige native iOS-Widgets (SwiftUI + WidgetKit + `AppIntentConfiguration` + `EntityQuery`) für alle 6 Typen, reproduzierbar gebaut und getestet über GitHub Actions (`macos-latest`).
-- [ ] Strikte TDD-Abdeckung (Dart `flutter_test`/`integration_test`, Android `JUnit`, iOS `XCTest`) sowie fehlerfreie Linter (`flutter analyze`, `dart format`, `ktlint`, `swiftlint`).
+- [x] Strikte TDD-Abdeckung (Dart `flutter_test`/`integration_test`, Android `JUnit`, iOS `XCTest`) sowie fehlerfreie Linter (`flutter analyze`, `dart format`, `ktlint`, `swiftlint`).
 
 ---
 
 ## 2. Aktueller Status
 
-* **Status:** In Entwicklung (`Task_09` abgeschlossen, Vorbereitung `Task_10`)
-* **Aktiver Task:** Vorbereitung `Task_10`
-* **Fortschritt:** 9 / 10 Tasks abgeschlossen
+* **Status:** Vollständig abgeschlossen (`Task_01` bis `Task_10` erledigt)
+* **Aktiver Task:** Keiner (Projekt ist produktionsreif)
+* **Fortschritt:** 10 / 10 Tasks abgeschlossen (100 %)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -46,7 +46,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_07` | Android Native Core: Kotlin InfluxQL-Client, Parser & Worker | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_07.md` |
 | `Task_08` | Android Jetpack Glance Widgets (Alle 6 Widget-Typen) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_08.md` |
 | `Task_09` | iOS Native Core & WidgetKit Extension (XcodeGen & SwiftUI) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_09.md` |
-| `Task_10` | E2E-Integrationstests, Offline-Resilienz & Production-Polish | `Wartend` | Abhängig von `Task_06`, `Task_08`, `Task_09` |
+| `Task_10` | E2E-Integrationstests, Offline-Resilienz & Production-Polish | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_10.md` |
 
 *(Hinweis: Sobald ein Task ins `Archiv/` verschoben wird, wird der Status hier auf `Erledigt` gesetzt.)*
 

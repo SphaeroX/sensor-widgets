@@ -27,13 +27,13 @@ class ConnectionsController extends AsyncNotifier<List<InfluxConnection>> {
     String? token,
   }) async {
     await _repo.saveConnection(connection, token: token);
-    ref.invalidateSelf();
+    state = AsyncValue.data(await _repo.getConnections());
   }
 
   /// Deletes a connection and its associated token.
   Future<void> deleteConnection(String id) async {
     await _repo.deleteConnection(id);
-    ref.invalidateSelf();
+    state = AsyncValue.data(await _repo.getConnections());
   }
 
   /// Tests connectivity against InfluxDB using the provided connection and token.

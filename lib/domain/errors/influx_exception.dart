@@ -30,6 +30,13 @@ class InfluxNetworkException extends InfluxException {
     : super('Network error: $details');
 }
 
+/// Thrown when an InfluxDB resource or database is not found (HTTP 404).
+class InfluxNotFoundException extends InfluxException {
+  const InfluxNotFoundException([
+    super.message = 'InfluxDB resource or database not found (HTTP 404)',
+  ]) : super(statusCode: 404);
+}
+
 /// Thrown when InfluxDB response cannot be parsed.
 class InfluxParseException extends InfluxException {
   const InfluxParseException(String details)
