@@ -11,53 +11,49 @@ abstract class WidgetStorageDelegate {
 /// Default implementation backed by the `home_widget` package.
 class HomeWidgetStorageDelegate implements WidgetStorageDelegate {
   HomeWidgetStorageDelegate() {
-    HomeWidget.setAppGroupId(StorageKeys.appGroupId);
+    _init();
+  }
+
+  Future<void> _init() async {
+    try {
+      await HomeWidget.setAppGroupId(StorageKeys.appGroupId);
+    } catch (_) {
+      // Ignored if platform does not require or support app group
+    }
   }
 
   @override
-  Future<bool?> saveString(String key, String value) {
-    return HomeWidget.saveWidgetData<String>(key, value);
+  Future<bool?> saveString(String key, String value) async {
+    try {
+      return await HomeWidget.saveWidgetData<String>(key, value);
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
-  Future<String?> getString(String key) {
-    return HomeWidget.getWidgetData<String>(key);
+  Future<String?> getString(String key) async {
+    try {
+      return await HomeWidget.getWidgetData<String>(key);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
   Future<bool?> notifyWidgetsUpdated() async {
-    // Notify all Android widgets & iOS timelines
-    await HomeWidget.updateWidget(
-      name: 'SingleValueWidget',
-      androidName: 'SingleValueWidgetReceiver',
-      iOSName: 'SingleValueWidget',
-    );
-    await HomeWidget.updateWidget(
-      name: 'HistoryChartWidget',
-      androidName: 'HistoryChartWidgetReceiver',
-      iOSName: 'HistoryChartWidget',
-    );
-    await HomeWidget.updateWidget(
-      name: 'IndicatorLampWidget',
-      androidName: 'IndicatorLampWidgetReceiver',
-      iOSName: 'IndicatorLampWidget',
-    );
-    await HomeWidget.updateWidget(
-      name: 'MultiValueWidget',
-      androidName: 'MultiValueWidgetReceiver',
-      iOSName: 'MultiValueWidget',
-    );
-    await HomeWidget.updateWidget(
-      name: 'AggregateWidget',
-      androidName: 'AggregateWidgetReceiver',
-      iOSName: 'AggregateWidget',
-    );
-    await HomeWidget.updateWidget(
-      name: 'GaugeBarWidget',
-      androidName: 'GaugeBarWidgetReceiver',
-      iOSName: 'GaugeBarWidget',
-    );
-    return true;
+    try {
+      // Notify Android Glance widget receiver
+      await HomeWidget.updateWidget(
+        name: 'SensorGlanceWidgetReceiver',
+        androidName: 'SensorGlanceWidgetReceiver',
+        qualifiedAndroidName: 'io.github.mgasc.influx_sensor_widgets.glance.SensorGlanceWidgetReceiver',
+        iOSName: 'SensorWidget',
+      );
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

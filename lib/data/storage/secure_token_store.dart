@@ -26,30 +26,38 @@ class SecureTokenStore {
 
   /// Saves the secret token for the given [connectionId].
   Future<void> saveToken(String connectionId, String token) async {
-    await _storage.write(
-      key: StorageKeys.tokenKey(connectionId),
-      value: token,
-      aOptions: _androidOptions,
-      iOptions: _iosOptions,
-    );
+    try {
+      await _storage.write(
+        key: StorageKeys.tokenKey(connectionId),
+        value: token,
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (_) {}
   }
 
   /// Retrieves the secret token for the given [connectionId], or null if not set.
   Future<String?> getToken(String connectionId) async {
-    return _storage.read(
-      key: StorageKeys.tokenKey(connectionId),
-      aOptions: _androidOptions,
-      iOptions: _iosOptions,
-    );
+    try {
+      return await _storage.read(
+        key: StorageKeys.tokenKey(connectionId),
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Deletes the secret token for the given [connectionId].
   Future<void> deleteToken(String connectionId) async {
-    await _storage.delete(
-      key: StorageKeys.tokenKey(connectionId),
-      aOptions: _androidOptions,
-      iOptions: _iosOptions,
-    );
+    try {
+      await _storage.delete(
+        key: StorageKeys.tokenKey(connectionId),
+        aOptions: _androidOptions,
+        iOptions: _iosOptions,
+      );
+    } catch (_) {}
   }
 
   /// Checks if a token exists for the given [connectionId].
