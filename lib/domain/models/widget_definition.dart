@@ -1,0 +1,176 @@
+import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
+import 'package:sensor_widgets/domain/models/threshold_rule.dart';
+import 'package:sensor_widgets/domain/models/widget_type.dart';
+
+/// Specification for a configured home screen widget.
+class WidgetDefinition {
+  final String id;
+  final WidgetType type;
+  final String title;
+  final String connectionId;
+  final String measurement;
+  final String? field;
+  final Map<String, String>? tagFilters;
+  final String? unit;
+  final int? decimalPlaces;
+  final int refreshIntervalMinutes;
+
+  // History & Aggregate specific
+  final String? timeRange;
+  final String? aggregationInterval;
+  final String? aggregateFunction;
+
+  // Indicator Lamp specific
+  final ThresholdRule? threshold;
+
+  // Gauge specific
+  final double? min;
+  final double? max;
+  final List<ThresholdRule>? thresholds;
+
+  // Multi-Value specific
+  final List<SensorQueryItem>? items;
+
+  const WidgetDefinition({
+    required this.id,
+    required this.type,
+    required this.title,
+    required this.connectionId,
+    required this.measurement,
+    this.field,
+    this.tagFilters,
+    this.unit,
+    this.decimalPlaces,
+    this.refreshIntervalMinutes = 15,
+    this.timeRange,
+    this.aggregationInterval,
+    this.aggregateFunction,
+    this.threshold,
+    this.min,
+    this.max,
+    this.thresholds,
+    this.items,
+  });
+
+  bool get isValid {
+    if (id.trim().isEmpty || title.trim().isEmpty) return false;
+    if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
+
+    if (type == WidgetType.multiValue) {
+      if (items == null || items!.isEmpty) return false;
+    } else {
+      if (field == null || field!.trim().isEmpty) return false;
+    }
+    return true;
+  }
+
+  factory WidgetDefinition.fromJson(Map<String, dynamic> json) {
+    return WidgetDefinition(
+      id: json['id'] as String,
+      type: WidgetType.fromString(json['type'] as String),
+      title: json['title'] as String,
+      connectionId: json['connectionId'] as String,
+      measurement: json['measurement'] as String,
+      field: json['field'] as String?,
+      tagFilters: json['tagFilters'] != null
+          ? Map<String, String>.from(json['tagFilters'] as Map)
+          : null,
+      unit: json['unit'] as String?,
+      decimalPlaces: json['decimalPlaces'] as int?,
+      refreshIntervalMinutes: json['refreshIntervalMinutes'] as int? ?? 15,
+      timeRange: json['timeRange'] as String?,
+      aggregationInterval: json['aggregationInterval'] as String?,
+      aggregateFunction: json['aggregateFunction'] as String?,
+      threshold: json['threshold'] != null
+          ? ThresholdRule.fromJson(json['threshold'] as Map<String, dynamic>)
+          : null,
+      min: (json['min'] as num?)?.toDouble(),
+      max: (json['max'] as num?)?.toDouble(),
+      thresholds: json['thresholds'] != null
+          ? (json['thresholds'] as List<dynamic>)
+                .map((e) => ThresholdRule.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : null,
+      items: json['items'] != null
+          ? (json['items'] as List<dynamic>)
+                .map((e) => SensorQueryItem.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = <String, dynamic>{
+      'id': id,
+      'type': type.toJson(),
+      'title': title,
+      'connectionId': connectionId,
+      'measurement': measurement,
+      'refreshIntervalMinutes': refreshIntervalMinutes,
+    };
+    if (field != null) map['field'] = field;
+    if (tagFilters != null) map['tagFilters'] = tagFilters;
+    if (unit != null) map['unit'] = unit;
+    if (decimalPlaces != null) map['decimalPlaces'] = decimalPlaces;
+    if (timeRange != null) map['timeRange'] = timeRange;
+    if (aggregationInterval != null) {
+      map['aggregationInterval'] = aggregationInterval;
+    }
+    if (aggregateFunction != null) {
+      map['aggregateFunction'] = aggregateFunction;
+    }
+    if (threshold != null) map['threshold'] = threshold!.toJson();
+    if (min != null) map['min'] = min;
+    if (max != null) map['max'] = max;
+    if (thresholds != null) {
+      map['thresholds'] = thresholds!.map((e) => e.toJson()).toList();
+    }
+    if (items != null) {
+      map['items'] = items!.map((e) => e.toJson()).toList();
+    }
+    return map;
+  }
+
+  WidgetDefinition copyWith({
+    String? id,
+    WidgetType? type,
+    String? title,
+    String? connectionId,
+    String? measurement,
+    String? field,
+    Map<String, String>? tagFilters,
+    String? unit,
+    int? decimalPlaces,
+    int? refreshIntervalMinutes,
+    String? timeRange,
+    String? aggregationInterval,
+    String? aggregateFunction,
+    ThresholdRule? threshold,
+    double? min,
+    double? max,
+    List<ThresholdRule>? thresholds,
+    List<SensorQueryItem>? items,
+  }) {
+    return WidgetDefinition(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      title: title ?? this.title,
+      connectionId: connectionId ?? this.connectionId,
+      measurement: measurement ?? this.measurement,
+      field: field ?? this.field,
+      tagFilters: tagFilters ?? this.tagFilters,
+      unit: unit ?? this.unit,
+      decimalPlaces: decimalPlaces ?? this.decimalPlaces,
+      refreshIntervalMinutes:
+          refreshIntervalMinutes ?? this.refreshIntervalMinutes,
+      timeRange: timeRange ?? this.timeRange,
+      aggregationInterval: aggregationInterval ?? this.aggregationInterval,
+      aggregateFunction: aggregateFunction ?? this.aggregateFunction,
+      threshold: threshold ?? this.threshold,
+      min: min ?? this.min,
+      max: max ?? this.max,
+      thresholds: thresholds ?? this.thresholds,
+      items: items ?? this.items,
+    );
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "statement_id": 0,
+      "series": [
+        {
+          "name": "climate",
+          "tags": {
+            "room": "living_room"
+          },
+          "columns": [
+            "time",
+            "temperature",
+            "humidity",
+            "co2"
+          ],
+          "values": [
+            [
+              1730370000000,
+              22.3,
+              48.5,
+              620.0
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

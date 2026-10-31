@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "statement_id": 0,
+      "series": [
+        {
+          "name": "temperature",
+          "columns": [
+            "time",
+            "min",
+            "max",
+            "mean"
+          ],
+          "values": [
+            [
+              1730370000000,
+              18.2,
+              23.9,
+              21.1
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

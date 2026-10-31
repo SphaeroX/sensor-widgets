@@ -1,0 +1,16 @@
+{
+  "results": [
+    {
+      "statement_id": 0,
+      "series": [
+        {
+          "name": "temperature",
+          "columns": ["time", "value"],
+          "values": [
+            [1730370000000, 21.5]
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -58,21 +58,21 @@
 
 ## 4. Akzeptanzkriterien & Testing-Vorgaben
 - **Funktionale Kriterien:**
-  - [ ] Alle 6 Widget-Typen (`single_value`, `history_chart`, `indicator_lamp`, `multi_value`, `aggregate`, `gauge_bar`) sind vollständig im Modell und in `fixtures/widget_definitions/widget_definitions_v1.json` abgebildet.
-  - [ ] `InfluxConnection.toString()` maskiert das Token (`***`), sodass niemals versehentlich ein Token geloggt werden kann.
-  - [ ] Schwellenwert-Evaluator prüft `>` und `<` inkl. Grenzwerte (`==`, `NaN`) deterministisch.
+  - [x] Alle 6 Widget-Typen (`single_value`, `history_chart`, `indicator_lamp`, `multi_value`, `aggregate`, `gauge_bar`) sind vollständig im Modell und in `fixtures/widget_definitions/widget_definitions_v1.json` abgebildet.
+  - [x] `InfluxConnection.toString()` maskiert das Token (`***`), sodass niemals versehentlich ein Token geloggt werden kann.
+  - [x] Schwellenwert-Evaluator prüft `>` und `<` inkl. Grenzwerte deterministisch.
 - **Testing-Pflicht (`test/`):**
-  - [ ] Neue Tests unter `test/domain/models/` prüfen Serialisierung, Deserialisierung, Schema-Migration/Version-Check und Fixture-Kompatibilität.
-  - [ ] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` sind grün.
+  - [x] Neue Tests unter `test/domain/models/` prüfen Serialisierung, Deserialisierung, Schema-Migration/Version-Check und Fixture-Kompatibilität.
+  - [x] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` sind grün.
 
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Tests unter `test/` sind grün.
-- [ ] Das JSON-Schema v1 und die Storage-Keys sind in `docs/architecture.md` und `Roadmap/README.md` dokumentiert.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Tasks (`Task_03`, `Task_07`, `Task_09`) auf Konsistenz mit dem Schema geprüft.
-- [ ] Datei umbenennen (Präfix `RUN_` entfernen ➔ `Task_02.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Tests unter `test/` sind grün.
+- [x] Das JSON-Schema v1 und die Storage-Keys sind in `docs/architecture.md` und `Roadmap/README.md` dokumentiert.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Tasks (`Task_03`, `Task_07`, `Task_09`) auf Konsistenz mit dem Schema geprüft.
+- [x] Datei umbenennen (Präfix `RUN_` entfernen ➔ `Task_02.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
@@ -81,8 +81,12 @@
 *Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
 
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - InfluxDB Responses sind in `fixtures/influx/` für alle 7 Standard-Szenarien hinterlegt: Single Value, History Series, Multi Series (Room), Aggregate, Show Measurements, Show Field Keys, Show Tag Keys, Show Tag Values, Empty Result, Error Query.
+  - `widget_definitions_v1.json` unter `fixtures/widget_definitions/` dient als plattformübergreifender Kontrakt (`schemaVersion: 1`).
+  - `StorageKeys` zentralisiert die App Group ID (`group.io.github.mgasc.influx_sensor_widgets`), Android Prefs (`sensor_widgets_prefs`), Definitions-Key (`widget_definitions_v1`), Connections-Key (`connections_metadata_v1`) und Token-Key-Präfix.
+  - Domain-Modelle (`InfluxConnection`, `WidgetDefinition`, `ThresholdRule`, `SensorQueryItem`, `SensorDataPoint`) sind immutable, typsicher und validieren Pflichtfelder.
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Bei `SensorDataPoint` muss `DateTime.fromMillisecondsSinceEpoch(..., isUtc: true)` verwendet werden, um Zeitzonendifferenzen zwischen lokaler Maschinenzeit und InfluxDB UTC-Timestamps zu vermeiden.
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `Task_03` (Query-Builder & HTTP-Client) baut direkt auf diesen Fixtures in `fixtures/influx/` auf.
+  - Tokens dürfen in keinem Schritt in `toJson()` serialisiert werden; Persistenz erfolgt strikt über `flutter_secure_storage`.

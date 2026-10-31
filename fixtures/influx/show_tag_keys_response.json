@@ -1,0 +1,26 @@
+{
+  "results": [
+    {
+      "statement_id": 0,
+      "series": [
+        {
+          "name": "climate",
+          "columns": [
+            "tagKey"
+          ],
+          "values": [
+            [
+              "building"
+            ],
+            [
+              "device"
+            ],
+            [
+              "room"
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

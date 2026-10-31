@@ -45,6 +45,16 @@ Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` ac
 - **State management & DI:** `flutter_riverpod` (`mocktail` for unit and widget tests).
 - **Schema configuration:** Combined approach in the widget editor — schema discovery via InfluxQL (`SHOW MEASUREMENTS`, `SHOW FIELD KEYS`, `SHOW TAG KEYS`, `SHOW TAG VALUES`) with a seamless fallback to free-text input.
 - **API token storage:** Tokens are stored in `EncryptedSharedPreferences` (Android) and the App Group Keychain (iOS `group.io.github.mgasc.influx_sensor_widgets`) via `flutter_secure_storage`; connection metadata and widget definitions (`schemaVersion: 1`) are stored as JSON in `home_widget` shared storage.
+- **Shared Storage Keys (`lib/core/constants/storage_keys.dart`):**
+  - App Group: `group.io.github.mgasc.influx_sensor_widgets`
+  - Android Prefs: `sensor_widgets_prefs`
+  - Widget Definitions Key: `widget_definitions_v1`
+  - Connections Key: `connections_metadata_v1`
+  - Token Prefix: `influx_token_<connectionId>`
+  - Cache Prefix: `widget_cache_<widgetId>`
+- **Widget Definitions Contract (`schemaVersion: 1`):**
+  - Stored under `fixtures/widget_definitions/widget_definitions_v1.json` with 6 widget types: `single_value`, `history_chart`, `indicator_lamp`, `multi_value`, `aggregate`, `gauge_bar`.
+  - Immutable models: `InfluxConnection`, `WidgetDefinition`, `ThresholdRule`, `SensorQueryItem`, `SensorDataPoint`.
 - **iOS widget extension target:** Generated and verified reproducibly in GitHub Actions (`macos-latest`) via XcodeGen / project scripting (`Roadmap/Tasks/Task_09.md`).
 - **Roadmap & task tracking:** Sequentially managed in `Roadmap/README.md` and `Roadmap/Tasks/Task_01.md` – `Task_10.md`.
 

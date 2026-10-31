@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "widget-1-single-value",
+      "type": "single_value",
+      "title": "Living Room Temp",
+      "connectionId": "conn-home-1",
+      "measurement": "temperature",
+      "field": "value",
+      "tagFilters": {
+        "room": "living_room"
+      },
+      "unit": "°C",
+      "decimalPlaces": 1,
+      "refreshIntervalMinutes": 15
+    },
+    {
+      "id": "widget-2-history-chart",
+      "type": "history_chart",
+      "title": "Temperature 24h",
+      "connectionId": "conn-home-1",
+      "measurement": "temperature",
+      "field": "value",
+      "tagFilters": {
+        "room": "living_room"
+      },
+      "unit": "°C",
+      "timeRange": "24h",
+      "aggregationInterval": "1h",
+      "refreshIntervalMinutes": 30
+    },
+    {
+      "id": "widget-3-indicator-lamp",
+      "type": "indicator_lamp",
+      "title": "CO2 Alert Lamp",
+      "connectionId": "conn-home-1",
+      "measurement": "climate",
+      "field": "co2",
+      "tagFilters": {
+        "room": "office"
+      },
+      "unit": "ppm",
+      "threshold": {
+        "operator": "greaterThan",
+        "value": 1000.0,
+        "activeColor": "#FF0000",
+        "inactiveColor": "#00FF00"
+      },
+      "refreshIntervalMinutes": 15
+    },
+    {
+      "id": "widget-4-multi-value",
+      "type": "multi_value",
+      "title": "Office Climate",
+      "connectionId": "conn-home-1",
+      "measurement": "climate",
+      "tagFilters": {
+        "room": "office"
+      },
+      "items": [
+        {
+          "field": "temperature",
+          "label": "Temp",
+          "unit": "°C",
+          "decimalPlaces": 1
+        },
+        {
+          "field": "humidity",
+          "label": "Hum",
+          "unit": "%",
+          "decimalPlaces": 0
+        },
+        {
+          "field": "co2",
+          "label": "CO2",
+          "unit": "ppm",
+          "decimalPlaces": 0
+        }
+      ],
+      "refreshIntervalMinutes": 15
+    },
+    {
+      "id": "widget-5-aggregate",
+      "type": "aggregate",
+      "title": "Daily Peak Power",
+      "connectionId": "conn-home-1",
+      "measurement": "power",
+      "field": "watts",
+      "tagFilters": {
+        "device": "main_grid"
+      },
+      "unit": "W",
+      "timeRange": "24h",
+      "aggregateFunction": "max",
+      "decimalPlaces": 0,
+      "refreshIntervalMinutes": 30
+    },
+    {
+      "id": "widget-6-gauge-bar",
+      "type": "gauge_bar",
+      "title": "Humidity Gauge",
+      "connectionId": "conn-home-1",
+      "measurement": "climate",
+      "field": "humidity",
+      "tagFilters": {
+        "room": "living_room"
+      },
+      "unit": "%",
+      "min": 0.0,
+      "max": 100.0,
+      "thresholds": [
+        {
+          "operator": "lessThan",
+          "value": 30.0,
+          "color": "#FFA500"
+        },
+        {
+          "operator": "lessThan",
+          "value": 60.0,
+          "color": "#00FF00"
+        },
+        {
+          "operator": "greaterThan",
+          "value": 60.0,
+          "color": "#FF0000"
+        }
+      ],
+      "decimalPlaces": 0,
+      "refreshIntervalMinutes": 15
+    }
+  ]
+}
