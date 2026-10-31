@@ -23,7 +23,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 ### 1.2 Zieldefinition & Erfolgskriterien (Production Ready)
 - [x] Flutter-App verwaltet Verbindungen und alle 6 Widget-Typen fehlerfrei und persistiert Tokens sicher (`EncryptedSharedPreferences` / iOS App Group Keychain) sowie Widget-Definitionen im Shared Storage (`home_widget`).
 - [x] Sprachübergreifend identische InfluxQL-Generierung und Response-Parsing (Dart, Kotlin, Swift), abgesichert durch gemeinsame Fixtures in `fixtures/influx/`.
-- [ ] Vollständige native Android-Widgets (Jetpack Glance + `WorkManager` + Config-Activity) für alle 6 Typen.
+- [x] Vollständige native Android-Widgets (Jetpack Glance + `WorkManager` + Config-Activity) für alle 6 Typen.
 - [ ] Vollständige native iOS-Widgets (SwiftUI + WidgetKit + `AppIntentConfiguration` + `EntityQuery`) für alle 6 Typen, reproduzierbar gebaut und getestet über GitHub Actions (`macos-latest`).
 - [ ] Strikte TDD-Abdeckung (Dart `flutter_test`/`integration_test`, Android `JUnit`, iOS `XCTest`) sowie fehlerfreie Linter (`flutter analyze`, `dart format`, `ktlint`, `swiftlint`).
 
@@ -31,9 +31,9 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 
 ## 2. Aktueller Status
 
-* **Status:** In Entwicklung (`Task_07` abgeschlossen, Vorbereitung `Task_08`)
-* **Aktiver Task:** Vorbereitung `Task_08`
-* **Fortschritt:** 7 / 10 Tasks abgeschlossen
+* **Status:** In Entwicklung (`Task_08` abgeschlossen, Vorbereitung `Task_09`)
+* **Aktiver Task:** Vorbereitung `Task_09`
+* **Fortschritt:** 8 / 10 Tasks abgeschlossen
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -44,7 +44,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_05` | Flutter Dashboard UI – Teil 1: Verbindungsverwaltung | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_05.md` |
 | `Task_06` | Flutter Dashboard UI – Teil 2: Widget-Konfigurator & Live-Vorschau | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_06.md` |
 | `Task_07` | Android Native Core: Kotlin InfluxQL-Client, Parser & Worker | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_07.md` |
-| `Task_08` | Android Jetpack Glance Widgets (Alle 6 Widget-Typen) | `Wartend` | Abhängig von `Task_07` |
+| `Task_08` | Android Jetpack Glance Widgets (Alle 6 Widget-Typen) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_08.md` |
 | `Task_09` | iOS Native Core & WidgetKit Extension (XcodeGen & SwiftUI) | `Wartend` | Abhängig von `Task_02`, `Task_04` |
 | `Task_10` | E2E-Integrationstests, Offline-Resilienz & Production-Polish | `Wartend` | Abhängig von `Task_06`, `Task_08`, `Task_09` |
 

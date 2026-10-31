@@ -69,20 +69,26 @@
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Android- und Dart-Tests sind grün.
-- [ ] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_08.md` ➔ `Task_08.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Android- und Dart-Tests sind grün.
+- [x] Erkenntnisse in Sektion 6 (unten) vollständig eingetragen.
+- [x] Folge-Tasks in `Roadmap/Tasks/` und `Roadmap/README.md` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_08.md` ➔ `Task_08.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
 ## 6. Erkenntnisse & Learnings für nachfolgende Tasks
-<!-- DIESE SEKTION MUSS VOM BEARBEITENDEN AGENTEN VOR DER ARCHIVIERUNG AUSGEFÜLLT WERDEN! -->
-*Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
-
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `SensorGlanceAppWidget` implementiert alle 6 Widget-Typen über Jetpack Glance Composables.
+  - Sparklines für `history_chart` werden über `NativeChartBitmapRenderer` serverseitig/nativ auf ein `Bitmap` gezeichnet und über `ImageProvider(bitmap)` in Glance eingebunden.
+  - Das Binding zwischen der Android `appWidgetId` und der `WidgetDefinition`-ID wird beim Platzieren des Widgets via `SensorWidgetConfigActivity` in SharedPreferences unter dem Key `app_widget_${appWidgetId}_bound_id` gespeichert.
+  - `WidgetUiStateMapper` und `ChartMathAndFormatter` sind modular und unabhängig vom Android-UI-Thread über JUnit testbar.
+  - Beim Klick auf das Widget öffnet sich `MainActivity` (`actionStartActivity<MainActivity>()`). Beim Klick auf den Refresh-Button `↻` wird über `actionRunCallback<RefreshActionCallback>()` ein One-Time-Refresh via `WidgetRefreshWorker` angestoßen und das Glance Widget aktualisiert.
+
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Glance `TextStyle` verlangt `androidx.glance.unit.ColorProvider` anstelle von Compose `Color`.
+  - In `RowScope` können Child-Komponenten nur dann `defaultWeight()` nutzen, wenn Composable-Funktionen als Extension auf `RowScope` deklariert sind (z. B. `RowScope.AggBox(...)`).
+  - `.editorconfig`: Compose-Funktionen werden per Konvention in PascalCase benannt (`@Composable fun WidgetHeader(...)`). Um Konflikte mit ktlint zu vermeiden, wurde `ktlint_standard_function-naming = disabled` in `.editorconfig` ergänzt.
+
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - In `Task_09` (iOS Native Core & WidgetKit) wird dieselbe JSON-Definitions- und Cache-Struktur für WidgetKit / Swift Charts verwendet.
+  - Der Release-Build via GitHub Actions baut die Android APK via `./gradlew assembleRelease` oder `flutter build apk --release`.
