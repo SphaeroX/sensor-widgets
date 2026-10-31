@@ -31,16 +31,16 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 
 ## 2. Aktueller Status
 
-* **Status:** In Entwicklung (Bereit für `Task_03`)
-* **Aktiver Task:** Keiner (Bereit für `Task_03`)
-* **Fortschritt:** 2 / 10 Tasks abgeschlossen
+* **Status:** In Entwicklung (Bereit für `Task_04`)
+* **Aktiver Task:** Keiner (Bereit für `Task_04`)
+* **Fortschritt:** 3 / 10 Tasks abgeschlossen
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
 | `Task_01` | Projekt-Scaffolding, Toolchain-Pinning & CI/CD-Grundgerüst | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_01.md` |
 | `Task_02` | Shared Kontrakt: Widget-Definitions-Schema (v1) & Test-Fixtures | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_02.md` |
-| `Task_03` | Dart InfluxQL Query-Builder, Parser & HTTP-Client | `Offen` | Bereit zur Bearbeitung |
-| `Task_04` | Persistenz- & Bridge-Layer (Secure Token & Shared Storage) | `Wartend` | Abhängig von `Task_02`, `Task_03` |
+| `Task_03` | Dart InfluxQL Query-Builder, Parser & HTTP-Client | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_03.md` |
+| `Task_04` | Persistenz- & Bridge-Layer (Secure Token & Shared Storage) | `Offen` | Bereit zur Bearbeitung |
 | `Task_05` | Flutter Dashboard UI – Teil 1: Verbindungsverwaltung | `Wartend` | Abhängig von `Task_03`, `Task_04` |
 | `Task_06` | Flutter Dashboard UI – Teil 2: Widget-Konfigurator & Live-Vorschau | `Wartend` | Abhängig von `Task_05` |
 | `Task_07` | Android Native Core: Kotlin InfluxQL-Client, Parser & Worker | `Wartend` | Abhängig von `Task_02`, `Task_04` |
@@ -85,6 +85,12 @@ Dieses Kapitel wird von den KI-Agenten fortlaufend aktualisiert, sobald architek
   - `Roadmap/`: Projektorganisation und Task-Steuerung
 - **Schnittstellen & Datenformate:**
   - Jede Änderung am Widget-Definitions-JSON-Format oder den Shared-Storage-Keys muss **immer im selben Schritt** in Dart, Kotlin, Swift und den Fixtures nachgezogen werden.
+  - **Verbindliche InfluxQL-Templates (sprachübergreifend für Dart, Kotlin, Swift):**
+    - Single / Lamp / Gauge: `SELECT "<field>" FROM "<measurement>" [WHERE <tagFilters>] ORDER BY time DESC LIMIT 1`
+    - History Chart: `SELECT MEAN("<field>") AS "mean" FROM "<measurement>" WHERE time > now() - <range> [AND <tagFilters>] GROUP BY time(<bucket>) fill(none)`
+    - Aggregate: `SELECT MIN("<field>") AS "min", MAX("<field>") AS "max", MEAN("<field>") AS "mean" FROM "<measurement>" WHERE time > now() - <range> [AND <tagFilters>]`
+    - Multi-Value: `SELECT "<field1>", "<field2>", ... FROM "<measurement>" [WHERE <tagFilters>] ORDER BY time DESC LIMIT 1`
+    - Schema Discovery: `SHOW MEASUREMENTS`, `SHOW FIELD KEYS FROM "<m>"`, `SHOW TAG KEYS FROM "<m>"`, `SHOW TAG VALUES FROM "<m>" WITH KEY = "<k>"`
 
 ### 3.3 Konventionen & Best Practices
 - **TDD (Test-Driven Development) ist Pflicht:** Zuerst fehlschlagenden Test schreiben (Red), dann minimalen Produktionscode (Green), dann Refactoring. Maximal 3 Reparaturversuche pro fehlschlagendem Test, danach Stopp & Bericht. Bestehende Tests niemals abschwächen oder löschen.

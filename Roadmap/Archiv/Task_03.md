@@ -57,20 +57,20 @@
 
 ## 4. Akzeptanzkriterien & Testing-Vorgaben
 - **Funktionale Kriterien:**
-  - [ ] Alle Fixtures aus `fixtures/influx/` werden fehlerfrei geparst.
-  - [ ] Bei Fehlern wird niemals der `Authorization`-Header oder das API-Token in Exception-Messages geleakt.
-  - [ ] Schema-Discovery-Methoden (`fetchMeasurements`, `fetchFieldKeys`, `fetchTagKeys`, `fetchTagValues`) und `testConnection()` funktionieren zuverlässig.
+  - [x] Alle Fixtures aus `fixtures/influx/` werden fehlerfrei geparst.
+  - [x] Bei Fehlern wird niemals der `Authorization`-Header oder das API-Token in Exception-Messages geleakt.
+  - [x] Schema-Discovery-Methoden (`fetchMeasurements`, `fetchFieldKeys`, `fetchTagKeys`, `fetchTagValues`) und `testConnection()` funktionieren zuverlässig.
 - **Testing-Pflicht (`test/`):**
-  - [ ] 100 % der Query-Typen und Fehlerpfade sind durch Unit-Tests unter `test/data/influx/` abgedeckt (keine Live-Netzwerkaufrufe in Tests!).
-  - [ ] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` laufen fehlerfrei.
+  - [x] 100 % der Query-Typen und Fehlerpfade sind durch Unit-Tests unter `test/data/influx/` abgedeckt (keine Live-Netzwerkaufrufe in Tests!).
+  - [x] `flutter test`, `dart format --set-exit-if-changed .` und `flutter analyze` laufen fehlerfrei.
 
 ---
 
 ## 5. Abschluss-Checkliste vor der Archivierung
-- [ ] Alle Tests unter `test/` sind grün.
-- [ ] Erkenntnisse (insb. exakte InfluxQL-Query-Strings für Kotlin/Swift) in Sektion 6 und `Roadmap/README.md` dokumentiert.
-- [ ] Folge-Tasks in `Roadmap/Tasks/` geprüft und aktualisiert.
-- [ ] Datei umbenennen (`RUN_Task_03.md` ➔ `Task_03.md`) und nach `Roadmap/Archiv/` verschieben.
+- [x] Alle Tests unter `test/` sind grün.
+- [x] Erkenntnisse (insb. exakte InfluxQL-Query-Strings für Kotlin/Swift) in Sektion 6 und `Roadmap/README.md` dokumentiert.
+- [x] Folge-Tasks in `Roadmap/Tasks/` geprüft und aktualisiert.
+- [x] Datei umbenennen (`RUN_Task_03.md` ➔ `Task_03.md`) und nach `Roadmap/Archiv/` verschieben.
 
 ---
 
@@ -79,8 +79,11 @@
 *Hier dokumentiert der Agent wichtige Erkenntnisse, Stolpersteine, Architekturanpassungen und Schnittstellen-Details, die für nachfolgende Agenten bei späteren Tasks unverzichtbar sind:*
 
 - **Wichtige Architekturentscheidungen & Details:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `InfluxQlQueryBuilder` baut standardisierte, deterministische InfluxQL v1-Queries mit alphabetisch sortierten Tag-Filtern und String/Identifier-Escaping (`\"` für Identifier, `\'` für Tag-Werte).
+  - `InfluxResponseParser` deckt alle 6 Widget-Typen sowie Schema-Discovery ab und toleriert fehlende oder leere Zeitreihen ohne Laufzeitabstürze.
+  - `InfluxApiClient` maskiert API-Tokens konsequent mit `***` in allen Fehlermeldungen und Exceptions (`InfluxAuthException`, `InfluxNetworkException`, `InfluxQueryException`, `InfluxParseException`).
 - **Stolpersteine & gelöste Probleme:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - Tag-Filter müssen alphabetisch sortiert werden, damit Queries sprachübergreifend deterministisch und testbar sind.
 - **Wichtige Hinweise für die Folge-Tasks:**
-  - *[Wird vom Agenten nach der Implementierung ausgefüllt]*
+  - `Task_04` (Persistenz & Bridge-Layer) kann nun `InfluxApiClient` für Verbindungstests und Token-Persistenz einbinden.
+  - Die InfluxQL-Muster in `Roadmap/README.md` müssen 1:1 in Kotlin (`Task_07`) und Swift (`Task_09`) übernommen werden.
