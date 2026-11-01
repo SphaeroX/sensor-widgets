@@ -10,6 +10,7 @@ data class WidgetUiState(
     val isConfigured: Boolean = true,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val warningMessage: String? = null,
     val singleValue: String? = null,
     val timestampStr: String? = null,
     val isIndicatorActive: Boolean? = null,

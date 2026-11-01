@@ -22,4 +22,5 @@ data class WidgetDefinition(
     val formula: String? = null,
     val formulaVariables: List<FormulaVariable>? = null,
     val formulaSteps: List<FormulaStep>? = null,
+    val gapPolicy: String? = null,
 )

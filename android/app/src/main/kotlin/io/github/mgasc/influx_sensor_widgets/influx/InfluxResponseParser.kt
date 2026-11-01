@@ -109,6 +109,34 @@ object InfluxResponseParser {
         return points
     }
 
+    /** Parses a bucketed multi-field response into `field -> {epochMs: value}`; null buckets are omitted. */
+    fun parseBucketedFields(
+        json: JSONObject,
+        fields: List<String>,
+    ): Map<String, Map<Long, Double>> {
+        val result = fields.associateWith { mutableMapOf<Long, Double>() }
+        val seriesArr = extractSeries(json) ?: return result
+        if (seriesArr.length() == 0) return result
+        val series = seriesArr.getJSONObject(0)
+        val columns = series.getJSONArray("columns")
+        val values = series.optJSONArray("values") ?: return result
+
+        val names = (0 until columns.length()).map { columns.getString(it) }
+        val timeIdx = names.indexOf("time")
+        if (timeIdx == -1) return result
+
+        for (field in fields) {
+            val idx = names.indexOf(field)
+            if (idx == -1) continue
+            for (i in 0 until values.length()) {
+                val row = values.getJSONArray(i)
+                if (row.isNull(idx) || row.isNull(timeIdx)) continue
+                result.getValue(field)[row.getLong(timeIdx)] = row.getDouble(idx)
+            }
+        }
+        return result
+    }
+
     fun parseMultiValues(
         json: JSONObject,
         fields: List<String>,

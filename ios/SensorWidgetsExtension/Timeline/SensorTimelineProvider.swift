@@ -108,6 +108,11 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
         }
     }
 
+    private func hasFormula(_ widget: WidgetDefinition) -> Bool {
+        guard let formula = widget.formula, let variables = widget.formulaVariables else { return false }
+        return !formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !variables.isEmpty
+    }
+
     private func fetchSensorData(
         widget: WidgetDefinition,
         connection: InfluxConnection,
@@ -168,6 +173,17 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
             }
 
         case .historyChart:
+            if hasFormula(widget) {
+                let result = try await FormulaSeriesCalculator.calculateSeries(
+                    widget: widget, connection: connection, token: token, httpClient: httpClient
+                )
+                return CachedSensorData(
+                    singleValue: result.points.last?.value,
+                    series: result.points,
+                    lastUpdated: result.points.last?.timestamp ?? Date(),
+                    warningMessage: FormulaSeriesCalculator.summarizeErrors(result.errors)
+                )
+            }
             let field = widget.field ?? "value"
             let timeRange = widget.timeRange ?? "24h"
             let bucket = widget.aggregationInterval ?? "15m"
@@ -187,6 +203,16 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
             )
 
         case .aggregate:
+            if hasFormula(widget) {
+                let result = try await FormulaSeriesCalculator.calculateSeries(
+                    widget: widget, connection: connection, token: token, httpClient: httpClient
+                )
+                return CachedSensorData(
+                    aggregate: FormulaSeriesCalculator.aggregate(result, widget: widget),
+                    lastUpdated: Date(),
+                    warningMessage: FormulaSeriesCalculator.summarizeErrors(result.errors)
+                )
+            }
             let field = widget.field ?? "value"
             let timeRange = widget.timeRange ?? "24h"
             let q = InfluxQlBuilder.buildAggregateQuery(

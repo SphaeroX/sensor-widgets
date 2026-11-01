@@ -112,6 +112,18 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                 ErrorView(state.title, state.errorMessage)
             } else {
                 ConfiguredWidgetContent(state)
+                if (state.warningMessage != null) {
+                    Column(
+                        modifier = GlanceModifier.fillMaxSize(),
+                        verticalAlignment = Alignment.Bottom,
+                    ) {
+                        Text(
+                            text = state.warningMessage,
+                            style = TextStyle(color = ColorError, fontSize = 10.sp),
+                            maxLines = 2,
+                        )
+                    }
+                }
             }
         }
     }

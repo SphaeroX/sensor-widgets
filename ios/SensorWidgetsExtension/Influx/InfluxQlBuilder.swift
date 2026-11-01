@@ -34,6 +34,26 @@ public enum InfluxQlBuilder {
         }
     }
 
+    /// Several fields of one measurement as time buckets; empty buckets are `null` (`fill(null)`).
+    public static func buildBucketedMultiFieldQuery(
+        measurement: String,
+        fields: [String],
+        timeRange: String,
+        bucketInterval: String,
+        tagFilters: [String: String]? = nil
+    ) -> String {
+        let m = escapeIdentifier(measurement)
+        let selects = fields.map { field -> String in
+            let e = escapeIdentifier(field)
+            return "MEAN(\"\(e)\") AS \"\(e)\""
+        }.joined(separator: ", ")
+        let tagClause = buildTagFilterClause(tagFilters)
+        let whereClause = tagClause.isEmpty
+            ? "time > now() - \(timeRange)"
+            : "time > now() - \(timeRange) AND \(tagClause)"
+        return "SELECT \(selects) FROM \"\(m)\" WHERE \(whereClause) GROUP BY time(\(bucketInterval)) fill(null)"
+    }
+
     public static func buildHistoryQuery(
         measurement: String,
         field: String,

@@ -362,6 +362,14 @@ public struct SensorWidgetEntryView: View {
     public var body: some View {
         if let widget = entry.widget {
             contentView(for: widget)
+                .overlay(alignment: .bottomLeading) {
+                    if let warning = entry.data?.warningMessage {
+                        Text(warning)
+                            .font(.system(size: 8))
+                            .foregroundStyle(.red)
+                            .lineLimit(2)
+                    }
+                }
                 .widgetURL(URL(string: "influxwidget://widget/\(widget.id)"))
         } else {
             VStack(spacing: 4) {

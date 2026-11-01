@@ -157,6 +157,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
     public let formula: String?
     public let formulaVariables: [FormulaVariable]?
     public let formulaSteps: [FormulaStep]?
+    public let gapPolicy: String?
 
     public init(
         id: String,
@@ -179,7 +180,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         items: [SensorQueryItem]? = nil,
         formula: String? = nil,
         formulaVariables: [FormulaVariable]? = nil,
-        formulaSteps: [FormulaStep]? = nil
+        formulaSteps: [FormulaStep]? = nil,
+        gapPolicy: String? = nil
     ) {
         self.id = id
         self.type = type
@@ -202,6 +204,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         self.formula = formula
         self.formulaVariables = formulaVariables
         self.formulaSteps = formulaSteps
+        self.gapPolicy = gapPolicy
     }
 }
 

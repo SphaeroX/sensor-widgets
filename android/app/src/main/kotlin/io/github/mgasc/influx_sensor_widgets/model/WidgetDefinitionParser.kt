@@ -160,6 +160,7 @@ object WidgetDefinitionParser {
             formula = json.optString("formula").takeIf { it.isNotEmpty() },
             formulaVariables = formulaVariables,
             formulaSteps = formulaSteps,
+            gapPolicy = json.optString("gapPolicy").takeIf { it.isNotEmpty() },
         )
     }
 

@@ -126,6 +126,34 @@ public enum InfluxResponseParser {
         return points
     }
 
+    // MARK: - Bucketed fields
+
+    public static func parseBucketedFields(data: Data, fields: [String]) throws -> [String: [Int64: Double]] {
+        let dict = try deserializeJson(data)
+        return try parseBucketedFields(dict: dict, fields: fields)
+    }
+
+    /// Parses a bucketed multi-field response into `field -> [epochMs: value]`; null buckets are omitted.
+    public static func parseBucketedFields(dict: [String: Any], fields: [String]) throws -> [String: [Int64: Double]] {
+        var result: [String: [Int64: Double]] = [:]
+        for field in fields { result[field] = [:] }
+        guard let seriesArr = try extractSeries(dict), let series = seriesArr.first,
+              let columns = series["columns"] as? [String],
+              let values = series["values"] as? [[Any]],
+              let timeIdx = columns.firstIndex(of: "time") else { return result }
+
+        for field in fields {
+            guard let idx = columns.firstIndex(of: field) else { continue }
+            for row in values {
+                guard idx < row.count, timeIdx < row.count,
+                      let value = toDouble(row[idx]),
+                      let time = row[timeIdx] as? NSNumber else { continue }
+                result[field]?[time.int64Value] = value
+            }
+        }
+        return result
+    }
+
     // MARK: - Multi Values
 
     public static func parseMultiValues(data: Data, fields: [String]) throws -> [String: SensorDataPoint] {

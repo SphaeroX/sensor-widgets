@@ -60,7 +60,18 @@ object WidgetUiStateMapper {
         val timestamp = cacheObj.optLong("timestamp", 0L)
         val timestampStr = if (timestamp > 0L) ChartMathAndFormatter.formatTimestamp(timestamp) else null
 
-        return when (widget.type) {
+        val state =
+            mapTypeState(widget, cacheObj, timestampStr)
+        val warning = cacheObj.optString("warning").takeIf { it.isNotEmpty() }
+        return if (warning != null) state.copy(warningMessage = warning) else state
+    }
+
+    private fun mapTypeState(
+        widget: WidgetDefinition,
+        cacheObj: JSONObject,
+        timestampStr: String?,
+    ): WidgetUiState =
+        when (widget.type) {
             WidgetType.SINGLE_VALUE -> {
                 val value =
                     if (cacheObj.has("value") && !cacheObj.isNull("value")) {
@@ -193,5 +204,4 @@ object WidgetUiStateMapper {
                 )
             }
         }
-    }
 }

@@ -30,6 +30,30 @@ object InfluxQlBuilder {
         }
     }
 
+    /** Several fields of one measurement as time buckets; empty buckets are `null` (`fill(null)`). */
+    fun buildBucketedMultiFieldQuery(
+        measurement: String,
+        fields: List<String>,
+        timeRange: String,
+        bucketInterval: String,
+        tagFilters: Map<String, String>? = null,
+    ): String {
+        val m = escapeIdentifier(measurement)
+        val selects =
+            fields.joinToString(", ") {
+                val e = escapeIdentifier(it)
+                "MEAN(\"$e\") AS \"$e\""
+            }
+        val tagClause = buildTagFilterClause(tagFilters)
+        val whereClause =
+            if (tagClause.isEmpty()) {
+                "time > now() - $timeRange"
+            } else {
+                "time > now() - $timeRange AND $tagClause"
+            }
+        return "SELECT $selects FROM \"$m\" WHERE $whereClause GROUP BY time($bucketInterval) fill(null)"
+    }
+
     fun buildHistoryQuery(
         measurement: String,
         field: String,

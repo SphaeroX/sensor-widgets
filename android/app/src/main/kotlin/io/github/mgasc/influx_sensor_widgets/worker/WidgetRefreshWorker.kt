@@ -9,6 +9,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaEvaluator
+import io.github.mgasc.influx_sensor_widgets.formula.FormulaSeriesCalculator
 import io.github.mgasc.influx_sensor_widgets.formula.MissingVariableException
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxHttpClient
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxQlBuilder
@@ -187,6 +188,17 @@ class WidgetRefreshWorker(
                 }
 
                 WidgetType.HISTORY_CHART -> {
+                    if (hasFormula(widget)) {
+                        val series = FormulaSeriesCalculator.calculateSeries(widget, conn, token, httpClient)
+                        val pointsArr = JSONArray()
+                        for (p in series.points) {
+                            pointsArr.put(JSONObject().apply { put("t", p.timestamp).put("v", p.value) })
+                        }
+                        cacheObj.put("points", pointsArr)
+                        FormulaSeriesCalculator.summarizeErrors(series.errors)?.let { cacheObj.put("warning", it) }
+                        cacheObj.put("timestamp", System.currentTimeMillis())
+                        return cacheObj.toString()
+                    }
                     val field = widget.field ?: ""
                     val query =
                         InfluxQlBuilder.buildHistoryQuery(
@@ -212,6 +224,15 @@ class WidgetRefreshWorker(
                 }
 
                 WidgetType.AGGREGATE -> {
+                    if (hasFormula(widget)) {
+                        val series = FormulaSeriesCalculator.calculateSeries(widget, conn, token, httpClient)
+                        val aggObj = JSONObject()
+                        FormulaSeriesCalculator.aggregate(series, widget).forEach { (k, v) -> aggObj.put(k, v) }
+                        cacheObj.put("aggregates", aggObj)
+                        FormulaSeriesCalculator.summarizeErrors(series.errors)?.let { cacheObj.put("warning", it) }
+                        cacheObj.put("timestamp", System.currentTimeMillis())
+                        return cacheObj.toString()
+                    }
                     val field = widget.field ?: ""
                     val query =
                         InfluxQlBuilder.buildAggregateQuery(
@@ -256,6 +277,9 @@ class WidgetRefreshWorker(
 
             return cacheObj.toString()
         }
+
+        private fun hasFormula(widget: WidgetDefinition): Boolean =
+            !widget.formula.isNullOrBlank() && !widget.formulaVariables.isNullOrEmpty()
 
         fun enqueuePeriodicWork(context: Context) {
             val periodicRequest =

@@ -8,6 +8,7 @@ public struct CachedSensorData: Codable, Equatable {
     public let aggregate: [String: Double]?
     public let lastUpdated: Date
     public let errorMessage: String?
+    public let warningMessage: String?
 
     public init(
         singleValue: Double? = nil,
@@ -15,7 +16,8 @@ public struct CachedSensorData: Codable, Equatable {
         multiValues: [String: Double]? = nil,
         aggregate: [String: Double]? = nil,
         lastUpdated: Date = Date(),
-        errorMessage: String? = nil
+        errorMessage: String? = nil,
+        warningMessage: String? = nil
     ) {
         self.singleValue = singleValue
         self.series = series
@@ -23,6 +25,7 @@ public struct CachedSensorData: Codable, Equatable {
         self.aggregate = aggregate
         self.lastUpdated = lastUpdated
         self.errorMessage = errorMessage
+        self.warningMessage = warningMessage
     }
 }
 
