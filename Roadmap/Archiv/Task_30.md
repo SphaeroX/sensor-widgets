@@ -45,10 +45,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Farbwerte der Kotlin-Interpolation stimmen mit den Dart-Fixtures überein.
-- [ ] Gradient ist auf einem Android-Gerät sichtbar (manuelle Prüfung vom Nutzer, im Task festgehalten) oder als nicht prüfbar markiert.
-- [ ] iOS: Code und Tests vorhanden, CI-Ergebnis festgehalten oder ausstehend.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Farbwerte der Kotlin-Interpolation stimmen mit den Dart-Fixtures überein.
+- [x] Gradient ist auf einem Android-Gerät sichtbar (manuelle Prüfung vom Nutzer, im Task festgehalten) oder als nicht prüfbar markiert.
+- [x] iOS: Code und Tests vorhanden, CI-Ergebnis festgehalten oder ausstehend.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -62,19 +62,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Android: `ChartStyle`/`ColorStop`, Parser, `ChartColor` (gegen `color_interpolation_cases.json` getestet), `ChartRenderPlan` (rein geometrisch, JVM-testbar), `renderChart` im Bitmap-Renderer, `WidgetUiState.chartValues/chartStyle`. iOS: `ChartStyle.swift` (Modelle + `ChartColor`), `StyledHistoryChart` mit Gradient/Flaeche/Gitter/Achsen/Min-Max, `WidgetDefinition.chartStyle`, `ChartStyleTests`.
+- **Learnings & Stolpersteine:** Bitmap-Zeichnen selbst ist auf der JVM nicht testbar (android.jar-Stubs); deshalb wurde die Geometrie in `ChartRenderPlan` ausgelagert und nur das duenne Zeichnen bleibt ungetestet. Bitmap-Budget: max. 600x240 px (ca. 576 KB); der Aufruf nutzt 300x100 (ca. 120 KB). `ktlintFormat` formatiert Einzeiler um (z. B. `validSorted`).
+- **Wichtige Entscheidungen und ihre Gründe:** Der Gradient laeuft ueber den Datenbereich der Reihe (identisch zu Dart). Swift Charts: Y-Domain = Datenbereich, damit der Bounding-Box-Gradient der Linie zu den Werten passt.
+- **Auswirkungen auf Folge-Tasks:** Task_32 (Optik) kann Hintergrund/Schrift ergaenzen; `appearance` wird neben `chartStyle` geparst. Task_33 (E2E) sollte den manuellen Test "Gradient auf Android-Geraet sichtbar" und die iOS-Optik als offene, nicht automatisiert pruefbare Punkte fuehren.
+- **Hinweise zu Tests und Befehlen:** Android `ChartStyleTest`; iOS `ChartStyleTests` (CI). **Nicht pruefbar ohne Geraet:** Sichtbarkeit des Gradienten im echten Android-Widget und das Aussehen in WidgetKit (kein Geraet/Mac verfuegbar); vom Nutzer manuell zu pruefen.

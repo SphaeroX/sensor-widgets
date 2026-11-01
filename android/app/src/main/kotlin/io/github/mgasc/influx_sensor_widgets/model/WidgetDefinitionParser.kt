@@ -100,6 +100,30 @@ object WidgetDefinitionParser {
             formulaVariables = formulaVariables,
             formulaSteps = formulaSteps,
             gapPolicy = json.optString("gapPolicy").takeIf { it.isNotEmpty() },
+            chartStyle = parseChartStyle(json),
+        )
+    }
+
+    private fun parseChartStyle(owner: JSONObject): ChartStyle? {
+        if (!owner.has("chartStyle") || owner.isNull("chartStyle")) return null
+        val obj = owner.getJSONObject("chartStyle")
+        val stopsArr = obj.optJSONArray("colorStops")
+        val stops =
+            if (stopsArr == null) {
+                emptyList()
+            } else {
+                (0 until stopsArr.length()).map {
+                    val s = stopsArr.getJSONObject(it)
+                    ColorStop(value = s.getDouble("value"), color = s.getString("color"))
+                }
+            }
+        return ChartStyle(
+            colorStops = stops,
+            fillArea = obj.optBoolean("fillArea", false),
+            showGrid = obj.optBoolean("showGrid", false),
+            showAxes = obj.optBoolean("showAxes", false),
+            markMinMax = obj.optBoolean("markMinMax", false),
+            lineWidth = obj.optDouble("lineWidth", ChartStyle.DEFAULT_LINE_WIDTH.toDouble()).toFloat(),
         )
     }
 

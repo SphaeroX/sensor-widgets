@@ -157,6 +157,8 @@ object WidgetUiStateMapper {
                     isConfigured = true,
                     singleValue = ChartMathAndFormatter.formatValue(latest, widget.decimalPlaces),
                     chartNormalizedPoints = normalized,
+                    chartValues = pointValues,
+                    chartStyle = widget.chartStyle,
                     chartMinStr = ChartMathAndFormatter.formatValue(minVal, widget.decimalPlaces),
                     chartMaxStr = ChartMathAndFormatter.formatValue(maxVal, widget.decimalPlaces),
                     timestampStr = timestampStr,

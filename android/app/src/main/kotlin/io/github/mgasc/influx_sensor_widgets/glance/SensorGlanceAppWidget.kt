@@ -288,7 +288,11 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             }
             Spacer(modifier = GlanceModifier.height(4.dp))
             val points = state.chartNormalizedPoints ?: emptyList()
-            val bitmap = NativeChartBitmapRenderer.renderSparkline(points)
+            val style = state.chartStyle
+            val values = state.chartValues
+            val bitmap =
+                (if (style != null && values != null) NativeChartBitmapRenderer.renderChart(values, style) else null)
+                    ?: NativeChartBitmapRenderer.renderSparkline(points)
             Image(
                 provider = ImageProvider(bitmap),
                 contentDescription = "Chart",

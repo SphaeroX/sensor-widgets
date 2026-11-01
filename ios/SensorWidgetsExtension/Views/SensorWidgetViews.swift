@@ -141,6 +141,8 @@ public struct HistoryChartWidgetView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                 Spacer()
+            } else if let style = widget.chartStyle {
+                StyledHistoryChart(series: series, style: style)
             } else {
                 Chart(series, id: \.timestamp) { item in
                     LineMark(
@@ -169,6 +171,99 @@ public struct HistoryChartWidgetView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+    }
+}
+
+extension Color {
+    /// Color from an opaque ARGB value (see `ChartColor`).
+    public init(argb: UInt32, opacity: Double = 1) {
+        self.init(
+            .sRGB,
+            red: Double((argb >> 16) & 0xFF) / 255,
+            green: Double((argb >> 8) & 0xFF) / 255,
+            blue: Double(argb & 0xFF) / 255,
+            opacity: opacity
+        )
+    }
+}
+
+/// History chart with the optional `chartStyle`: value gradient along Y, filled area, grid,
+/// axis labels and min/max markers. The gradient spans the data range, which is also the
+/// Y domain, so the colors line up with the values.
+public struct StyledHistoryChart: View {
+    public let series: [SensorDataPoint]
+    public let style: ChartStyle
+
+    private var dataMin: Double { series.map { $0.value }.min() ?? 0 }
+    private var dataMax: Double { series.map { $0.value }.max() ?? 0 }
+
+    private var domain: ClosedRange<Double> {
+        dataMin == dataMax ? (dataMin - 1)...(dataMax + 1) : dataMin...dataMax
+    }
+
+    private func gradient(opacity: Double) -> LinearGradient? {
+        guard let built = ChartColor.buildGradient(
+            style.colorStops,
+            minValue: domain.lowerBound,
+            maxValue: domain.upperBound
+        ) else { return nil }
+        let stops = zip(built.colors, built.positions).map { color, position in
+            Gradient.Stop(color: Color(argb: color, opacity: opacity), location: position)
+        }
+        return LinearGradient(stops: stops, startPoint: .bottom, endPoint: .top)
+    }
+
+    public var body: some View {
+        let lineGradient = gradient(opacity: 1)
+        let fillGradient = gradient(opacity: 0.35)
+
+        Chart(series, id: \.timestamp) { item in
+            if style.fillArea {
+                AreaMark(
+                    x: .value("Time", item.timestamp),
+                    y: .value("Value", item.value)
+                )
+                .interpolationMethod(.monotone)
+                .foregroundStyle(fillGradient ?? LinearGradient(
+                    colors: [Color.accentColor.opacity(0.3), Color.accentColor.opacity(0.0)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ))
+            }
+
+            LineMark(
+                x: .value("Time", item.timestamp),
+                y: .value("Value", item.value)
+            )
+            .interpolationMethod(.monotone)
+            .lineStyle(StrokeStyle(lineWidth: CGFloat(style.lineWidth), lineCap: .round, lineJoin: .round))
+            .foregroundStyle(lineGradient ?? LinearGradient(
+                colors: [Color.accentColor, Color.accentColor],
+                startPoint: .bottom,
+                endPoint: .top
+            ))
+
+            if style.markMinMax && (item.value == dataMin || item.value == dataMax) {
+                PointMark(
+                    x: .value("Time", item.timestamp),
+                    y: .value("Value", item.value)
+                )
+                .foregroundStyle(Color.accentColor)
+            }
+        }
+        .chartXAxis(.hidden)
+        .chartYScale(domain: domain)
+        .chartYAxis {
+            AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+                if style.showGrid {
+                    AxisGridLine()
+                }
+                if style.showAxes {
+                    AxisValueLabel()
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

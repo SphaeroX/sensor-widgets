@@ -1,5 +1,6 @@
 package io.github.mgasc.influx_sensor_widgets.glance
 
+import io.github.mgasc.influx_sensor_widgets.model.ChartStyle
 import io.github.mgasc.influx_sensor_widgets.model.WidgetType
 
 data class WidgetUiState(
@@ -18,6 +19,8 @@ data class WidgetUiState(
     val gaugeMinStr: String? = null,
     val gaugeMaxStr: String? = null,
     val chartNormalizedPoints: List<Float>? = null,
+    val chartValues: List<Double>? = null,
+    val chartStyle: ChartStyle? = null,
     val chartMinStr: String? = null,
     val chartMaxStr: String? = null,
     val aggregates: Map<String, String>? = null,
