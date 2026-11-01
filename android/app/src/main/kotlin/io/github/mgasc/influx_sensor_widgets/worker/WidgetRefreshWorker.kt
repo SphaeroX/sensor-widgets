@@ -149,7 +149,7 @@ class WidgetRefreshWorker(
                             }
                         }
 
-                        val calculatedValue = FormulaEvaluator.evaluate(widget.formula, varValues)
+                        val calculatedValue = FormulaEvaluator.evaluate(widget.formula, varValues, widget.formulaSteps ?: emptyList())
                         val decimals = (widget.decimalPlaces ?: 2).coerceIn(0, 2)
                         val multiplier =
                             when (decimals) {

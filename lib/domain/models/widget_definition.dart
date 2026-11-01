@@ -1,3 +1,5 @@
+import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
@@ -35,6 +37,7 @@ class WidgetDefinition {
   // Formula specific
   final String? formula;
   final List<FormulaVariable>? formulaVariables;
+  final List<FormulaStep>? formulaSteps;
 
   const WidgetDefinition({
     required this.id,
@@ -57,6 +60,7 @@ class WidgetDefinition {
     this.items,
     this.formula,
     this.formulaVariables,
+    this.formulaSteps,
   });
 
   bool get isValid {
@@ -65,6 +69,14 @@ class WidgetDefinition {
 
     if (formula != null && formula!.trim().isNotEmpty) {
       if (formulaVariables == null || formulaVariables!.isEmpty) return false;
+      if (FormulaEvaluator.validateSteps(
+            formulaSteps ?? const [],
+            formula!,
+            variableNames: formulaVariables!.map((v) => v.name).toList(),
+          ) !=
+          null) {
+        return false;
+      }
     } else if (type == WidgetType.multiValue) {
       if (items == null || items!.isEmpty) return false;
     } else {
@@ -111,6 +123,11 @@ class WidgetDefinition {
                 .map((e) => FormulaVariable.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
+      formulaSteps: json['formulaSteps'] != null
+          ? (json['formulaSteps'] as List<dynamic>)
+                .map((e) => FormulaStep.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : null,
     );
   }
 
@@ -149,6 +166,9 @@ class WidgetDefinition {
           .map((e) => e.toJson())
           .toList();
     }
+    if (formulaSteps != null) {
+      map['formulaSteps'] = formulaSteps!.map((e) => e.toJson()).toList();
+    }
     return map;
   }
 
@@ -173,6 +193,7 @@ class WidgetDefinition {
     List<SensorQueryItem>? items,
     String? formula,
     List<FormulaVariable>? formulaVariables,
+    List<FormulaStep>? formulaSteps,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -196,6 +217,7 @@ class WidgetDefinition {
       items: items ?? this.items,
       formula: formula ?? this.formula,
       formulaVariables: formulaVariables ?? this.formulaVariables,
+      formulaSteps: formulaSteps ?? this.formulaSteps,
     );
   }
 }

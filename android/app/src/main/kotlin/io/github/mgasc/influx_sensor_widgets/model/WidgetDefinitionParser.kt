@@ -118,6 +118,21 @@ object WidgetDefinitionParser {
                 null
             }
 
+        val formulaSteps =
+            if (json.has("formulaSteps") && !json.isNull("formulaSteps")) {
+                val arr = json.getJSONArray("formulaSteps")
+                (0 until arr.length()).map {
+                    val o = arr.getJSONObject(it)
+                    FormulaStep(
+                        name = o.getString("name"),
+                        expression = o.getString("expression"),
+                        label = o.optString("label").takeIf { l -> l.isNotEmpty() },
+                    )
+                }
+            } else {
+                null
+            }
+
         return WidgetDefinition(
             id = json.getString("id"),
             type = WidgetType.fromWireName(json.getString("type")),
@@ -144,6 +159,7 @@ object WidgetDefinitionParser {
             items = items,
             formula = json.optString("formula").takeIf { it.isNotEmpty() },
             formulaVariables = formulaVariables,
+            formulaSteps = formulaSteps,
         )
     }
 

@@ -97,6 +97,18 @@ public struct FormulaVariable: Codable, Equatable {
     }
 }
 
+public struct FormulaStep: Codable, Equatable {
+    public let name: String
+    public let expression: String
+    public let label: String?
+
+    public init(name: String, expression: String, label: String? = nil) {
+        self.name = name
+        self.expression = expression
+        self.label = label
+    }
+}
+
 public struct SensorDataPoint: Codable, Equatable {
     public let timestamp: Date
     public let value: Double
@@ -144,6 +156,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
     public let items: [SensorQueryItem]?
     public let formula: String?
     public let formulaVariables: [FormulaVariable]?
+    public let formulaSteps: [FormulaStep]?
 
     public init(
         id: String,
@@ -165,7 +178,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         thresholds: [ThresholdRule]? = nil,
         items: [SensorQueryItem]? = nil,
         formula: String? = nil,
-        formulaVariables: [FormulaVariable]? = nil
+        formulaVariables: [FormulaVariable]? = nil,
+        formulaSteps: [FormulaStep]? = nil
     ) {
         self.id = id
         self.type = type
@@ -187,6 +201,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         self.items = items
         self.formula = formula
         self.formulaVariables = formulaVariables
+        self.formulaSteps = formulaSteps
     }
 }
 

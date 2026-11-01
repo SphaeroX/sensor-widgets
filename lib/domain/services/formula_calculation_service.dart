@@ -91,7 +91,11 @@ class FormulaCalculationService {
       }
     }
 
-    final rawResult = FormulaEvaluator.evaluate(formula, variableValues);
+    final rawResult = FormulaEvaluator.evaluate(
+      formula,
+      variableValues,
+      steps: widget.formulaSteps ?? const [],
+    );
     final decimals = (widget.decimalPlaces ?? 2).clamp(0, 2);
     return NumberFormatter.roundToMaxDecimals(rawResult, maxDecimals: decimals);
   }

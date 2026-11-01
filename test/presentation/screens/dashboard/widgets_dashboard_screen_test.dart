@@ -86,5 +86,76 @@ void main() {
 
       verify(() => mockSharedStore.notifyWidgetsUpdated()).called(1);
     });
+    group('layout', () {
+      List<WidgetDefinition> many(int n) => List.generate(
+        n,
+        (i) => WidgetDefinition(
+          id: 'w-$i',
+          type: WidgetType.multiValue,
+          title: 'Widget $i',
+          connectionId: 'conn-1',
+          measurement: 'environment',
+        ),
+      );
+
+      Future<void> pumpDashboard(
+        WidgetTester tester, {
+        required List<WidgetDefinition> widgets,
+        EdgeInsets padding = EdgeInsets.zero,
+      }) async {
+        when(() => mockWidgetRepo.getWidgets())
+            .thenAnswer((_) async => widgets);
+        tester.view.physicalSize = const Size(360, 480);
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.padding = FakeViewPadding(
+          top: padding.top,
+          bottom: padding.bottom,
+        );
+        tester.view.viewPadding = tester.view.padding;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+      }
+
+      for (final count in [1, 10]) {
+        testWidgets('first card starts below the AppBar ($count widgets)', (
+          tester,
+        ) async {
+          await pumpDashboard(
+            tester,
+            widgets: many(count),
+            padding: const EdgeInsets.only(top: 48, bottom: 24),
+          );
+
+          final appBarBottom = tester.getBottomLeft(find.byType(AppBar)).dy;
+          final firstCardTop = tester.getTopLeft(find.byType(Card).first).dy;
+          expect(firstCardTop, greaterThanOrEqualTo(appBarBottom));
+        });
+      }
+
+      testWidgets('list scrolls to the last entry on a small viewport', (
+        tester,
+      ) async {
+        await pumpDashboard(tester, widgets: many(10));
+
+        await tester.scrollUntilVisible(
+          find.text('Widget 9'),
+          200,
+          scrollable: find.byType(Scrollable).first,
+        );
+        expect(find.text('Widget 9'), findsOneWidget);
+      });
+
+      testWidgets('empty state is centered in the body', (tester) async {
+        await pumpDashboard(tester, widgets: const []);
+
+        final appBarBottom = tester.getBottomLeft(find.byType(AppBar)).dy;
+        final center = tester.getCenter(
+          find.text('Noch keine Widgets konfiguriert'),
+        );
+        expect(center.dx, closeTo(180, 1));
+        expect(center.dy, greaterThan(appBarBottom));
+      });
+    });
   });
 }

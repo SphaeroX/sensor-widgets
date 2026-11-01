@@ -50,12 +50,12 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Alle Funktionen, Vergleiche, `if`, Konstanten und Schritte werden korrekt ausgewertet (Fixture-Test grün).
-- [ ] Fehlerfälle liefern explizite, unterscheidbare Fehler statt 0.0.
-- [ ] Alte Widget-JSONs ohne `formulaSteps` und alte Formeln verhalten sich unverändert.
-- [ ] Fixtures enthalten alle Fälle für die Kotlin-/Swift-Umsetzung.
-- [ ] `docs/architecture.md` beschreibt den Kontrakt v2.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Alle Funktionen, Vergleiche, `if`, Konstanten und Schritte werden korrekt ausgewertet (Fixture-Test grün).
+- [x] Fehlerfälle liefern explizite, unterscheidbare Fehler statt 0.0.
+- [x] Alte Widget-JSONs ohne `formulaSteps` und alte Formeln verhalten sich unverändert.
+- [x] Fixtures enthalten alle Fälle für die Kotlin-/Swift-Umsetzung.
+- [x] `docs/architecture.md` beschreibt den Kontrakt v2.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -70,19 +70,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Evaluator als Recursive-Descent-Parser mit AST neu geschrieben (statt Shunting-Yard), Public API unverändert, `steps:` ergänzt. Neu: `lib/domain/models/formula_step.dart`, `WidgetDefinition.formulaSteps`, Fehlercodes in `formula_exception.dart`, `FormulaEvaluator.validateSteps`, Positionsangabe in `validateSyntax`. `FormulaCalculationService` reicht `formulaSteps` an den Evaluator durch. Fixtures: neue Abschnitte `v2_valid_cases` und `v2_error_cases` (v1-Abschnitte unverändert, damit bestehende Kotlin/Swift-Tests weiterlaufen).
+- **Learnings & Stolpersteine:** `if` ist lazy (Guard `if(B == 0, -1, A / B)`). `round` rundet weg von null (Kotlin `Math.round` und Swift `.rounded()` verhalten sich bei negativen .5 unterschiedlich, explizit nachbauen). `log10` als `ln(x)/ln10` (Fixture-Toleranz 1e-9). Variablen/Steps haben Vorrang vor `pi`/`e`. Unäres `+` ist bewusst nicht erlaubt (`A ++ B` bleibt Syntaxfehler).
+- **Wichtige Entscheidungen und ihre Gründe:** Vergleiche liefern 1.0/0.0, damit alles `double` bleibt. Nicht-endliche Ergebnisse sind `domain_error`, nie stilles NaN/0.0.
+- **Auswirkungen auf Folge-Tasks:** Task_23 muss beide Fixture-Abschnitte plus Step-Semantik (Reihenfolge, Duplikat/Vorwärtsreferenz = `step_reference_error`) in Kotlin und Swift nachbauen. Task_27 kann `validateSteps` und die Positionsangabe im Editor nutzen.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/domain` (neu: `formula_evaluator_v2_test.dart`, `formula_step_test.dart`, `widget_definition_steps_test.dart`, `formula_calculation_service_steps_test.dart`). Beim parallelen Lauf trat einmal ein sporadischer "loading"-Fehler auf, der beim Einzellauf nicht reproduzierbar war.

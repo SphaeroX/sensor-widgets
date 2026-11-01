@@ -150,7 +150,7 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
                     }
                 }
 
-                let calculated = try FormulaEvaluator.evaluate(formula, variables: varValues)
+                let calculated = try FormulaEvaluator.evaluate(formula, variables: varValues, steps: widget.formulaSteps ?? [])
                 let decimals = Double(min(max(widget.decimalPlaces ?? 2, 0), 2))
                 let multiplier = pow(10.0, decimals)
                 let rounded = (calculated * multiplier).rounded() / multiplier

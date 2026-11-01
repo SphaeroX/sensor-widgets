@@ -3,61 +3,93 @@
     {
       "name": "simple_addition",
       "formula": "A + B",
-      "variables": { "A": 10.0, "B": 25.5 },
+      "variables": {
+        "A": 10.0,
+        "B": 25.5
+      },
       "expected": 35.5
     },
     {
       "name": "simple_subtraction",
       "formula": "A - B",
-      "variables": { "A": 50.0, "B": 20.25 },
+      "variables": {
+        "A": 50.0,
+        "B": 20.25
+      },
       "expected": 29.75
     },
     {
       "name": "multiplication_and_division",
       "formula": "A * B / C",
-      "variables": { "A": 10.0, "B": 6.0, "C": 4.0 },
+      "variables": {
+        "A": 10.0,
+        "B": 6.0,
+        "C": 4.0
+      },
       "expected": 15.0
     },
     {
       "name": "operator_precedence",
       "formula": "A + B * C",
-      "variables": { "A": 2.0, "B": 3.0, "C": 4.0 },
+      "variables": {
+        "A": 2.0,
+        "B": 3.0,
+        "C": 4.0
+      },
       "expected": 14.0
     },
     {
       "name": "parentheses",
       "formula": "(A + B) * C",
-      "variables": { "A": 2.0, "B": 3.0, "C": 4.0 },
+      "variables": {
+        "A": 2.0,
+        "B": 3.0,
+        "C": 4.0
+      },
       "expected": 20.0
     },
     {
       "name": "three_values_average",
       "formula": "(A + B + C) / 3",
-      "variables": { "A": 20.0, "B": 22.0, "C": 24.0 },
+      "variables": {
+        "A": 20.0,
+        "B": 22.0,
+        "C": 24.0
+      },
       "expected": 22.0
     },
     {
       "name": "unary_minus",
       "formula": "-A + 10",
-      "variables": { "A": 4.5 },
+      "variables": {
+        "A": 4.5
+      },
       "expected": 5.5
     },
     {
       "name": "unary_minus_inside_parentheses",
       "formula": "A * (-B)",
-      "variables": { "A": 5.0, "B": 3.0 },
+      "variables": {
+        "A": 5.0,
+        "B": 3.0
+      },
       "expected": -15.0
     },
     {
       "name": "decimal_constants",
       "formula": "A * 1.8 + 32.0",
-      "variables": { "A": 25.0 },
+      "variables": {
+        "A": 25.0
+      },
       "expected": 77.0
     },
     {
       "name": "multi_character_identifiers",
       "formula": "temp_in - temp_out",
-      "variables": { "temp_in": 24.5, "temp_out": 14.0 },
+      "variables": {
+        "temp_in": 24.5,
+        "temp_out": 14.0
+      },
       "expected": 10.5
     }
   ],
@@ -65,26 +97,579 @@
     {
       "name": "division_by_zero",
       "formula": "A / B",
-      "variables": { "A": 10.0, "B": 0.0 },
+      "variables": {
+        "A": 10.0,
+        "B": 0.0
+      },
       "expected_error": "division_by_zero"
     },
     {
       "name": "syntax_error_unclosed_parenthesis",
       "formula": "(A + B",
-      "variables": { "A": 1.0, "B": 2.0 },
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
       "expected_error": "syntax_error"
     },
     {
       "name": "syntax_error_consecutive_operators",
       "formula": "A ++ B",
-      "variables": { "A": 1.0, "B": 2.0 },
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
       "expected_error": "syntax_error"
     },
     {
       "name": "missing_variable",
       "formula": "A + B",
-      "variables": { "A": 1.0 },
+      "variables": {
+        "A": 1.0
+      },
       "expected_error": "missing_variable"
+    }
+  ],
+  "v2_valid_cases": [
+    {
+      "name": "min_two",
+      "formula": "min(A, B)",
+      "variables": {
+        "A": 3.0,
+        "B": 2.0
+      },
+      "expected": 2.0
+    },
+    {
+      "name": "min_four_iaq",
+      "formula": "min(a, b, c, d)",
+      "variables": {
+        "a": 80.0,
+        "b": 60.0,
+        "c": 95.0,
+        "d": 70.0
+      },
+      "expected": 60.0
+    },
+    {
+      "name": "min_single_argument",
+      "formula": "min(A)",
+      "variables": {
+        "A": 4.0
+      },
+      "expected": 4.0
+    },
+    {
+      "name": "max_three",
+      "formula": "max(A, B, C)",
+      "variables": {
+        "A": 1.0,
+        "B": 9.0,
+        "C": 5.0
+      },
+      "expected": 9.0
+    },
+    {
+      "name": "clamp_inside",
+      "formula": "clamp(A, 0, 100)",
+      "variables": {
+        "A": 42.0
+      },
+      "expected": 42.0
+    },
+    {
+      "name": "clamp_above",
+      "formula": "clamp(A, 0, 100)",
+      "variables": {
+        "A": 140.0
+      },
+      "expected": 100.0
+    },
+    {
+      "name": "clamp_below",
+      "formula": "clamp(A, 0, 100)",
+      "variables": {
+        "A": -5.0
+      },
+      "expected": 0.0
+    },
+    {
+      "name": "abs_negative",
+      "formula": "abs(A - B)",
+      "variables": {
+        "A": 2.0,
+        "B": 5.0
+      },
+      "expected": 3.0
+    },
+    {
+      "name": "pow_square",
+      "formula": "pow(A, 2)",
+      "variables": {
+        "A": 3.0
+      },
+      "expected": 9.0
+    },
+    {
+      "name": "sqrt_basic",
+      "formula": "sqrt(A)",
+      "variables": {
+        "A": 16.0
+      },
+      "expected": 4.0
+    },
+    {
+      "name": "ln_e",
+      "formula": "ln(e)",
+      "variables": {},
+      "expected": 1.0
+    },
+    {
+      "name": "log10_thousand",
+      "formula": "log10(A)",
+      "variables": {
+        "A": 1000.0
+      },
+      "expected": 3.0
+    },
+    {
+      "name": "exp_zero",
+      "formula": "exp(A)",
+      "variables": {
+        "A": 0.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "round_up",
+      "formula": "round(A)",
+      "variables": {
+        "A": 2.6
+      },
+      "expected": 3.0
+    },
+    {
+      "name": "round_half_away_from_zero",
+      "formula": "round(A)",
+      "variables": {
+        "A": -2.5
+      },
+      "expected": -3.0
+    },
+    {
+      "name": "floor_negative",
+      "formula": "floor(A)",
+      "variables": {
+        "A": -1.2
+      },
+      "expected": -2.0
+    },
+    {
+      "name": "ceil_positive",
+      "formula": "ceil(A)",
+      "variables": {
+        "A": 1.2
+      },
+      "expected": 2.0
+    },
+    {
+      "name": "constant_pi",
+      "formula": "pi * A",
+      "variables": {
+        "A": 2.0
+      },
+      "expected": 6.283185307179586
+    },
+    {
+      "name": "nested_functions",
+      "formula": "max(0, min(100, A * 2))",
+      "variables": {
+        "A": 30.0
+      },
+      "expected": 60.0
+    },
+    {
+      "name": "compare_less_true",
+      "formula": "A < B",
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "compare_less_false",
+      "formula": "A < B",
+      "variables": {
+        "A": 3.0,
+        "B": 2.0
+      },
+      "expected": 0.0
+    },
+    {
+      "name": "compare_greater_equal",
+      "formula": "A >= B",
+      "variables": {
+        "A": 2.0,
+        "B": 2.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "compare_less_equal",
+      "formula": "A <= B",
+      "variables": {
+        "A": 3.0,
+        "B": 2.0
+      },
+      "expected": 0.0
+    },
+    {
+      "name": "compare_equal",
+      "formula": "A == B",
+      "variables": {
+        "A": 2.0,
+        "B": 2.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "compare_not_equal",
+      "formula": "A != B",
+      "variables": {
+        "A": 2.0,
+        "B": 2.0
+      },
+      "expected": 0.0
+    },
+    {
+      "name": "compare_lower_than_arithmetic",
+      "formula": "A + 1 > B * 2",
+      "variables": {
+        "A": 5.0,
+        "B": 2.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "if_true_branch",
+      "formula": "if(A > 10, 1, 0)",
+      "variables": {
+        "A": 11.0
+      },
+      "expected": 1.0
+    },
+    {
+      "name": "if_false_branch",
+      "formula": "if(A > 10, 1, 0)",
+      "variables": {
+        "A": 3.0
+      },
+      "expected": 0.0
+    },
+    {
+      "name": "if_is_lazy_division_guard",
+      "formula": "if(B == 0, -1, A / B)",
+      "variables": {
+        "A": 6.0,
+        "B": 0.0
+      },
+      "expected": -1.0
+    },
+    {
+      "name": "if_nonzero_condition_is_true",
+      "formula": "if(A, 7, 8)",
+      "variables": {
+        "A": 0.5
+      },
+      "expected": 7.0
+    },
+    {
+      "name": "steps_chain",
+      "formula": "min(voc, co2)",
+      "variables": {
+        "v": 100.0,
+        "c": 900.0
+      },
+      "expected": 40.0,
+      "steps": [
+        {
+          "name": "voc",
+          "expression": "100 - v * 0.6"
+        },
+        {
+          "name": "co2",
+          "expression": "clamp(100 - (c - 400) / 10, 0, 100)"
+        }
+      ]
+    },
+    {
+      "name": "step_references_earlier_step",
+      "formula": "b2",
+      "variables": {
+        "a": 2.0
+      },
+      "expected": 8.0,
+      "steps": [
+        {
+          "name": "b1",
+          "expression": "a * 2"
+        },
+        {
+          "name": "b2",
+          "expression": "b1 * b1 / 2"
+        }
+      ]
+    },
+    {
+      "name": "step_with_if",
+      "formula": "score",
+      "variables": {
+        "t": 31.0
+      },
+      "expected": 50.0,
+      "steps": [
+        {
+          "name": "score",
+          "expression": "if(t > 30, 50, 100)"
+        }
+      ]
+    },
+    {
+      "name": "variable_named_like_constant_wins",
+      "formula": "e + 1",
+      "variables": {
+        "e": 4.0
+      },
+      "expected": 5.0
+    }
+  ],
+  "v2_error_cases": [
+    {
+      "name": "unknown_function",
+      "formula": "foo(A)",
+      "variables": {
+        "A": 1.0
+      },
+      "expected_error": "unknown_function"
+    },
+    {
+      "name": "wrong_arity_sqrt",
+      "formula": "sqrt(A, B)",
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
+      "expected_error": "wrong_arity"
+    },
+    {
+      "name": "wrong_arity_if",
+      "formula": "if(A, B)",
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
+      "expected_error": "wrong_arity"
+    },
+    {
+      "name": "wrong_arity_min_empty",
+      "formula": "min()",
+      "variables": {},
+      "expected_error": "wrong_arity"
+    },
+    {
+      "name": "wrong_arity_clamp",
+      "formula": "clamp(A, 1)",
+      "variables": {
+        "A": 1.0
+      },
+      "expected_error": "wrong_arity"
+    },
+    {
+      "name": "sqrt_negative",
+      "formula": "sqrt(A)",
+      "variables": {
+        "A": -1.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "ln_zero",
+      "formula": "ln(A)",
+      "variables": {
+        "A": 0.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "ln_negative",
+      "formula": "ln(A)",
+      "variables": {
+        "A": -2.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "log10_zero",
+      "formula": "log10(A)",
+      "variables": {
+        "A": 0.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "pow_negative_base_fractional",
+      "formula": "pow(A, 0.5)",
+      "variables": {
+        "A": -4.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "exp_overflow",
+      "formula": "exp(A)",
+      "variables": {
+        "A": 1000.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "clamp_inverted_bounds",
+      "formula": "clamp(A, 10, 0)",
+      "variables": {
+        "A": 5.0
+      },
+      "expected_error": "domain_error"
+    },
+    {
+      "name": "division_by_zero_in_function",
+      "formula": "max(A / B, 1)",
+      "variables": {
+        "A": 1.0,
+        "B": 0.0
+      },
+      "expected_error": "division_by_zero"
+    },
+    {
+      "name": "division_by_zero_in_step",
+      "formula": "r",
+      "variables": {
+        "A": 1.0,
+        "B": 0.0
+      },
+      "expected_error": "division_by_zero",
+      "steps": [
+        {
+          "name": "r",
+          "expression": "A / B"
+        }
+      ]
+    },
+    {
+      "name": "missing_variable_in_function",
+      "formula": "min(A, B)",
+      "variables": {
+        "A": 1.0
+      },
+      "expected_error": "missing_variable"
+    },
+    {
+      "name": "forward_reference",
+      "formula": "s1",
+      "variables": {
+        "a": 1.0
+      },
+      "expected_error": "step_reference_error",
+      "steps": [
+        {
+          "name": "s1",
+          "expression": "s2 + 1"
+        },
+        {
+          "name": "s2",
+          "expression": "a"
+        }
+      ]
+    },
+    {
+      "name": "self_reference",
+      "formula": "s1",
+      "variables": {
+        "a": 1.0
+      },
+      "expected_error": "step_reference_error",
+      "steps": [
+        {
+          "name": "s1",
+          "expression": "s1 + 1"
+        }
+      ]
+    },
+    {
+      "name": "duplicate_step_name",
+      "formula": "s1",
+      "variables": {
+        "a": 1.0
+      },
+      "expected_error": "step_reference_error",
+      "steps": [
+        {
+          "name": "s1",
+          "expression": "a"
+        },
+        {
+          "name": "s1",
+          "expression": "a + 1"
+        }
+      ]
+    },
+    {
+      "name": "step_name_is_function",
+      "formula": "min(a, 1)",
+      "variables": {
+        "a": 1.0
+      },
+      "expected_error": "step_reference_error",
+      "steps": [
+        {
+          "name": "min",
+          "expression": "a"
+        }
+      ]
+    },
+    {
+      "name": "comparison_missing_operand",
+      "formula": "A <",
+      "variables": {
+        "A": 1.0
+      },
+      "expected_error": "syntax_error"
+    },
+    {
+      "name": "unclosed_function_call",
+      "formula": "min(A, B",
+      "variables": {
+        "A": 1.0,
+        "B": 2.0
+      },
+      "expected_error": "syntax_error"
+    },
+    {
+      "name": "trailing_comma",
+      "formula": "min(A, )",
+      "variables": {
+        "A": 1.0
+      },
+      "expected_error": "syntax_error"
+    },
+    {
+      "name": "single_equals_sign",
+      "formula": "A = B",
+      "variables": {
+        "A": 1.0,
+        "B": 1.0
+      },
+      "expected_error": "syntax_error"
     }
   ]
 }

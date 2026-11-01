@@ -1,365 +1,585 @@
-import 'package:sensor_widgets/domain/formula/formula_exception.dart';
+import 'dart:math' as math;
 
-enum _TokenType {
+import 'package:sensor_widgets/domain/formula/formula_exception.dart';
+import 'package:sensor_widgets/domain/models/formula_step.dart';
+
+enum _T {
   number,
   identifier,
   plus,
   minus,
-  multiply,
-  divide,
-  openParen,
-  closeParen,
+  star,
+  slash,
+  lparen,
+  rparen,
+  comma,
+  lt,
+  gt,
+  le,
+  ge,
+  eq,
+  ne,
+  end,
 }
 
 class _Token {
-  final _TokenType type;
+  final _T type;
   final String text;
-  final double? numberValue;
+  final int pos;
+  final double? value;
 
-  _Token(this.type, this.text, [this.numberValue]);
-
-  @override
-  String toString() => '_Token($type, $text)';
+  const _Token(this.type, this.text, this.pos, [this.value]);
 }
 
-/// Evaluator for custom arithmetic formulas with variables.
-/// Supports +, -, *, /, unary minus, parentheses, and floating-point constants.
+sealed class _Node {
+  const _Node();
+}
+
+class _Num extends _Node {
+  final double value;
+  const _Num(this.value);
+}
+
+class _Ident extends _Node {
+  final String name;
+  const _Ident(this.name);
+}
+
+class _Neg extends _Node {
+  final _Node operand;
+  const _Neg(this.operand);
+}
+
+class _Bin extends _Node {
+  final _T op;
+  final _Node left;
+  final _Node right;
+  const _Bin(this.op, this.left, this.right);
+}
+
+class _Call extends _Node {
+  final String name;
+  final List<_Node> args;
+  const _Call(this.name, this.args);
+}
+
+/// Arity as `(min, max)`; `max == null` means unbounded.
+const Map<String, (int, int?)> _functions = {
+  'min': (1, null),
+  'max': (1, null),
+  'clamp': (3, 3),
+  'abs': (1, 1),
+  'pow': (2, 2),
+  'sqrt': (1, 1),
+  'ln': (1, 1),
+  'log10': (1, 1),
+  'exp': (1, 1),
+  'round': (1, 1),
+  'floor': (1, 1),
+  'ceil': (1, 1),
+  'if': (3, 3),
+};
+
+const Map<String, double> _constants = {'pi': math.pi, 'e': math.e};
+
+final RegExp _identPattern = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$');
+
+/// Evaluator for formulas (contract v2).
+///
+/// Supports `+ - * /`, unary minus, parentheses, comparisons
+/// (`< > <= >= == !=`, result `1.0` / `0.0`), the functions `min`, `max`
+/// (1..n arguments), `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`,
+/// `round` (half away from zero), `floor`, `ceil`, `if(cond, a, b)` (lazy,
+/// non-zero is true), the constants `pi` and `e` (variables and steps of the
+/// same name take precedence) and named intermediate [FormulaStep]s.
 class FormulaEvaluator {
   FormulaEvaluator._();
 
-  /// Validates formula syntax. Returns null if valid, or an error description string.
+  /// Validates formula syntax. Returns null if valid, or an error description
+  /// string that includes the 1-based error position where known.
   static String? validateSyntax(String formula) {
     if (formula.trim().isEmpty) {
       return 'Formel darf nicht leer sein';
     }
     try {
-      final tokens = _tokenize(formula);
-      if (tokens.isEmpty) return 'Formel darf nicht leer sein';
-      final rpn = _toRpn(tokens);
-      if (rpn.isEmpty) return 'Ungültige Formel';
+      _parse(formula);
       return null;
-    } catch (e) {
-      return e.toString();
+    } on FormulaException catch (e) {
+      final position = switch (e) {
+        FormulaSyntaxException(:final position) => position,
+        UnknownFunctionException(:final position) => position,
+        WrongArgumentCountException(:final position) => position,
+        _ => null,
+      };
+      return position == null
+          ? e.message
+          : '${e.message} (Position ${position + 1})';
     }
   }
 
-  /// Extracts all distinct variable names referenced in the formula in order of appearance.
+  /// Validates [steps] and the final [formula] without evaluating them.
+  /// Returns null if valid, or the first error message.
+  static String? validateSteps(
+    List<FormulaStep> steps,
+    String formula, {
+    required List<String> variableNames,
+  }) {
+    final known = <String>{...variableNames};
+    final allSteps = steps.map((s) => s.name).toSet();
+    try {
+      for (final step in steps) {
+        _checkStepName(step.name, known);
+        _checkReferences(_parse(step.expression), known, allSteps, step.name);
+        known.add(step.name);
+      }
+      _checkReferences(_parse(formula), known, const {}, null);
+      return null;
+    } on FormulaException catch (e) {
+      return e.message;
+    }
+  }
+
+  /// Extracts all distinct variable names referenced in the formula in order
+  /// of appearance. Function names and the constants `pi` and `e` are skipped.
   static List<String> extractVariables(String formula) {
     try {
-      final tokens = _tokenize(formula);
       final vars = <String>[];
-      for (final t in tokens) {
-        if (t.type == _TokenType.identifier && !vars.contains(t.text)) {
-          vars.add(t.text);
-        }
-      }
-      return vars;
-    } catch (_) {
+      _collectIdents(_parse(formula), vars);
+      return vars.where((n) => !_constants.containsKey(n)).toList();
+    } on FormulaException {
       return const [];
     }
   }
 
-  /// Evaluates the formula using the provided variable values.
-  /// Throws [FormulaSyntaxException], [MissingVariableException], or [DivisionByZeroException].
-  static double evaluate(String formula, Map<String, double> variables) {
+  /// Evaluates the formula using the provided variable values and optional
+  /// intermediate [steps].
+  ///
+  /// Throws a [FormulaException] subclass; see `FormulaException.code`.
+  static double evaluate(
+    String formula,
+    Map<String, double> variables, {
+    List<FormulaStep> steps = const [],
+  }) {
     if (formula.trim().isEmpty) {
       throw const FormulaSyntaxException('Formel darf nicht leer sein');
     }
-    final tokens = _tokenize(formula);
-    final rpn = _toRpn(tokens);
-    return _evaluateRpn(rpn, variables);
+    final scope = Map<String, double>.of(variables);
+    final allSteps = steps.map((s) => s.name).toSet();
+    for (final step in steps) {
+      _checkStepName(step.name, scope.keys);
+      final ast = _parse(step.expression);
+      _checkForwardReferences(ast, scope.keys, allSteps, step.name);
+      scope[step.name] = _eval(ast, scope);
+    }
+    return _eval(_parse(formula), scope);
   }
 
-  static List<_Token> _tokenize(String expression) {
+  static void _checkStepName(String name, Iterable<String> taken) {
+    if (!_identPattern.hasMatch(name)) {
+      throw StepReferenceException('Ungültiger Schrittname: "$name"');
+    }
+    if (_functions.containsKey(name)) {
+      throw StepReferenceException('Schrittname "$name" ist ein Funktionsname');
+    }
+    if (taken.contains(name)) {
+      throw StepReferenceException('Doppelter Name: "$name"');
+    }
+  }
+
+  static void _checkForwardReferences(
+    _Node ast,
+    Iterable<String> known,
+    Set<String> allSteps,
+    String? current,
+  ) {
+    final idents = <String>[];
+    _collectIdents(ast, idents);
+    for (final id in idents) {
+      if (!known.contains(id) && allSteps.contains(id)) {
+        throw StepReferenceException(
+          id == current
+              ? 'Schritt "$id" verweist auf sich selbst'
+              : 'Schritt verweist auf später definierten Schritt "$id"',
+        );
+      }
+    }
+  }
+
+  static void _checkReferences(
+    _Node ast,
+    Set<String> known,
+    Set<String> allSteps,
+    String? current,
+  ) {
+    _checkForwardReferences(ast, known, allSteps, current);
+    final idents = <String>[];
+    _collectIdents(ast, idents);
+    for (final id in idents) {
+      if (!known.contains(id) && !_constants.containsKey(id)) {
+        throw MissingVariableException(id);
+      }
+    }
+  }
+
+  static void _collectIdents(_Node node, List<String> out) {
+    switch (node) {
+      case _Num():
+        break;
+      case _Ident(:final name):
+        if (!out.contains(name)) out.add(name);
+      case _Neg(:final operand):
+        _collectIdents(operand, out);
+      case _Bin(:final left, :final right):
+        _collectIdents(left, out);
+        _collectIdents(right, out);
+      case _Call(:final args):
+        for (final a in args) {
+          _collectIdents(a, out);
+        }
+    }
+  }
+
+  // ---------------------------------------------------------------- tokenizer
+
+  static List<_Token> _tokenize(String s) {
     final tokens = <_Token>[];
     var i = 0;
-    final length = expression.length;
-
-    while (i < length) {
-      final char = expression[i];
-
-      if (char.trim().isEmpty) {
+    while (i < s.length) {
+      final c = s[i];
+      if (c.trim().isEmpty) {
         i++;
         continue;
       }
-
-      if (char == '+') {
-        tokens.add(_Token(_TokenType.plus, '+'));
-        i++;
-      } else if (char == '-') {
-        // Unary minus detection: if it's at start or after an operator or '('
-        final isUnary =
-            tokens.isEmpty ||
-            tokens.last.type == _TokenType.plus ||
-            tokens.last.type == _TokenType.minus ||
-            tokens.last.type == _TokenType.multiply ||
-            tokens.last.type == _TokenType.divide ||
-            tokens.last.type == _TokenType.openParen;
-
-        if (isUnary) {
-          // Check if followed immediately by a number
-          var nextIndex = i + 1;
-          while (nextIndex < length && expression[nextIndex].trim().isEmpty) {
-            nextIndex++;
+      final next = i + 1 < s.length ? s[i + 1] : '';
+      switch (c) {
+        case '+':
+          tokens.add(_Token(_T.plus, c, i++));
+        case '-':
+          tokens.add(_Token(_T.minus, c, i++));
+        case '*':
+          tokens.add(_Token(_T.star, c, i++));
+        case '/':
+          tokens.add(_Token(_T.slash, c, i++));
+        case '(':
+          tokens.add(_Token(_T.lparen, c, i++));
+        case ')':
+          tokens.add(_Token(_T.rparen, c, i++));
+        case ',':
+          tokens.add(_Token(_T.comma, c, i++));
+        case '<':
+          if (next == '=') {
+            tokens.add(_Token(_T.le, '<=', i));
+            i += 2;
+          } else {
+            tokens.add(_Token(_T.lt, c, i++));
           }
-          if (nextIndex < length && _isDigit(expression[nextIndex])) {
-            var numStr = '-';
-            i = nextIndex;
+        case '>':
+          if (next == '=') {
+            tokens.add(_Token(_T.ge, '>=', i));
+            i += 2;
+          } else {
+            tokens.add(_Token(_T.gt, c, i++));
+          }
+        case '=':
+          if (next != '=') {
+            throw FormulaSyntaxException(
+              'Unerwartetes Zeichen: "=" (Vergleich: "==")',
+              position: i,
+            );
+          }
+          tokens.add(_Token(_T.eq, '==', i));
+          i += 2;
+        case '!':
+          if (next != '=') {
+            throw FormulaSyntaxException(
+              'Unerwartetes Zeichen: "!"',
+              position: i,
+            );
+          }
+          tokens.add(_Token(_T.ne, '!=', i));
+          i += 2;
+        default:
+          if (_isDigit(c) || c == '.') {
+            final start = i;
             var hasDot = false;
-            while (i < length) {
-              final c = expression[i];
-              if (_isDigit(c)) {
-                numStr += c;
-                i++;
-              } else if (c == '.' && !hasDot) {
-                hasDot = true;
-                numStr += c;
-                i++;
-              } else {
-                break;
-              }
+            while (i < s.length &&
+                (_isDigit(s[i]) || (s[i] == '.' && !hasDot))) {
+              if (s[i] == '.') hasDot = true;
+              i++;
             }
-            final val = double.tryParse(numStr);
-            if (val == null) {
-              throw FormulaSyntaxException('Ungültige Zahl: $numStr');
+            final text = s.substring(start, i);
+            final value = double.tryParse(text);
+            if (value == null) {
+              throw FormulaSyntaxException(
+                'Ungültige Zahl: $text',
+                position: start,
+              );
             }
-            tokens.add(_Token(_TokenType.number, numStr, val));
-            continue;
+            tokens.add(_Token(_T.number, text, start, value));
+          } else if (_isIdentStart(c)) {
+            final start = i;
+            while (i < s.length && (_isIdentStart(s[i]) || _isDigit(s[i]))) {
+              i++;
+            }
+            tokens.add(_Token(_T.identifier, s.substring(start, i), start));
           } else {
-            // Unary minus as (0 - x)
-            tokens.add(_Token(_TokenType.number, '0', 0.0));
-            tokens.add(_Token(_TokenType.minus, '-'));
-            i++;
-            continue;
+            throw FormulaSyntaxException(
+              'Unerwartetes Zeichen: "$c"',
+              position: i,
+            );
           }
-        } else {
-          tokens.add(_Token(_TokenType.minus, '-'));
-          i++;
-        }
-      } else if (char == '*') {
-        tokens.add(_Token(_TokenType.multiply, '*'));
-        i++;
-      } else if (char == '/') {
-        tokens.add(_Token(_TokenType.divide, '/'));
-        i++;
-      } else if (char == '(') {
-        tokens.add(_Token(_TokenType.openParen, '('));
-        i++;
-      } else if (char == ')') {
-        tokens.add(_Token(_TokenType.closeParen, ')'));
-        i++;
-      } else if (_isDigit(char) || char == '.') {
-        var numStr = '';
-        var hasDot = false;
-        while (i < length) {
-          final c = expression[i];
-          if (_isDigit(c)) {
-            numStr += c;
-            i++;
-          } else if (c == '.' && !hasDot) {
-            hasDot = true;
-            numStr += c;
-            i++;
-          } else {
-            break;
-          }
-        }
-        final val = double.tryParse(numStr);
-        if (val == null) {
-          throw FormulaSyntaxException('Ungültige Zahl: $numStr');
-        }
-        tokens.add(_Token(_TokenType.number, numStr, val));
-      } else if (_isIdentStart(char)) {
-        var ident = '';
-        while (i < length && _isIdentPart(expression[i])) {
-          ident += expression[i];
-          i++;
-        }
-        tokens.add(_Token(_TokenType.identifier, ident));
-      } else {
-        throw FormulaSyntaxException('Unerwartetes Zeichen: "$char"');
       }
     }
-
+    tokens.add(_Token(_T.end, '', s.length));
     return tokens;
   }
 
-  static bool _isDigit(String s) {
-    if (s.isEmpty) return false;
-    final code = s.codeUnitAt(0);
+  static bool _isDigit(String c) {
+    final code = c.codeUnitAt(0);
     return code >= 48 && code <= 57;
   }
 
-  static bool _isIdentStart(String s) {
-    if (s.isEmpty) return false;
-    final code = s.codeUnitAt(0);
-    return (code >= 65 && code <= 90) || // A-Z
-        (code >= 97 && code <= 122) || // a-z
-        code == 95; // _
+  static bool _isIdentStart(String c) {
+    final code = c.codeUnitAt(0);
+    return (code >= 65 && code <= 90) ||
+        (code >= 97 && code <= 122) ||
+        code == 95;
   }
 
-  static bool _isIdentPart(String s) {
-    return _isIdentStart(s) || _isDigit(s);
-  }
+  static _Node _parse(String formula) => _Parser(_tokenize(formula)).parseAll();
 
-  static int _precedence(_TokenType type) {
-    switch (type) {
-      case _TokenType.plus:
-      case _TokenType.minus:
-        return 1;
-      case _TokenType.multiply:
-      case _TokenType.divide:
-        return 2;
-      default:
-        return 0;
+  // --------------------------------------------------------------- evaluator
+
+  static double _eval(_Node node, Map<String, double> scope) {
+    switch (node) {
+      case _Num(:final value):
+        return value;
+      case _Ident(:final name):
+        final v = scope[name] ?? _constants[name];
+        if (v == null) throw MissingVariableException(name);
+        return v;
+      case _Neg(:final operand):
+        return -_eval(operand, scope);
+      case _Bin(:final op, :final left, :final right):
+        final a = _eval(left, scope);
+        final b = _eval(right, scope);
+        return _finite(switch (op) {
+          _T.plus => a + b,
+          _T.minus => a - b,
+          _T.star => a * b,
+          _T.slash => b == 0.0 ? throw const DivisionByZeroException() : a / b,
+          _T.lt => a < b ? 1.0 : 0.0,
+          _T.gt => a > b ? 1.0 : 0.0,
+          _T.le => a <= b ? 1.0 : 0.0,
+          _T.ge => a >= b ? 1.0 : 0.0,
+          _T.eq => a == b ? 1.0 : 0.0,
+          _T.ne => a != b ? 1.0 : 0.0,
+          _ => throw FormulaSyntaxException('Unbekannter Operator: $op'),
+        });
+      case _Call(:final name, :final args):
+        return _call(name, args, scope);
     }
   }
 
-  static List<_Token> _toRpn(List<_Token> tokens) {
-    final output = <_Token>[];
-    final operatorStack = <_Token>[];
-
-    _Token? lastToken;
-    for (final token in tokens) {
-      switch (token.type) {
-        case _TokenType.number:
-        case _TokenType.identifier:
-          if (lastToken != null &&
-              (lastToken.type == _TokenType.number ||
-                  lastToken.type == _TokenType.identifier ||
-                  lastToken.type == _TokenType.closeParen)) {
-            throw const FormulaSyntaxException(
-              'Fehlender Operator zwischen Operanden',
-            );
-          }
-          output.add(token);
-          break;
-
-        case _TokenType.plus:
-        case _TokenType.minus:
-        case _TokenType.multiply:
-        case _TokenType.divide:
-          if (lastToken == null ||
-              lastToken.type == _TokenType.plus ||
-              lastToken.type == _TokenType.minus ||
-              lastToken.type == _TokenType.multiply ||
-              lastToken.type == _TokenType.divide ||
-              lastToken.type == _TokenType.openParen) {
-            throw const FormulaSyntaxException('Unerwarteter Operator');
-          }
-          while (operatorStack.isNotEmpty &&
-              operatorStack.last.type != _TokenType.openParen &&
-              _precedence(operatorStack.last.type) >= _precedence(token.type)) {
-            output.add(operatorStack.removeLast());
-          }
-          operatorStack.add(token);
-          break;
-
-        case _TokenType.openParen:
-          operatorStack.add(token);
-          break;
-
-        case _TokenType.closeParen:
-          if (lastToken != null &&
-              (lastToken.type == _TokenType.plus ||
-                  lastToken.type == _TokenType.minus ||
-                  lastToken.type == _TokenType.multiply ||
-                  lastToken.type == _TokenType.divide ||
-                  lastToken.type == _TokenType.openParen)) {
-            throw const FormulaSyntaxException(
-              'Unerwartete schließende Klammer',
-            );
-          }
-          var foundOpen = false;
-          while (operatorStack.isNotEmpty) {
-            final top = operatorStack.removeLast();
-            if (top.type == _TokenType.openParen) {
-              foundOpen = true;
-              break;
-            }
-            output.add(top);
-          }
-          if (!foundOpen) {
-            throw const FormulaSyntaxException('Fehlende öffnende Klammer');
-          }
-          break;
-      }
-      lastToken = token;
+  static double _call(
+    String name,
+    List<_Node> args,
+    Map<String, double> scope,
+  ) {
+    if (name == 'if') {
+      final cond = _eval(args[0], scope);
+      return _eval(cond != 0.0 ? args[1] : args[2], scope);
     }
-
-    if (lastToken != null &&
-        (lastToken.type == _TokenType.plus ||
-            lastToken.type == _TokenType.minus ||
-            lastToken.type == _TokenType.multiply ||
-            lastToken.type == _TokenType.divide)) {
-      throw const FormulaSyntaxException(
-        'Ausdruck darf nicht mit Operator enden',
-      );
-    }
-
-    while (operatorStack.isNotEmpty) {
-      final top = operatorStack.removeLast();
-      if (top.type == _TokenType.openParen) {
-        throw const FormulaSyntaxException('Nicht geschlossene Klammer');
-      }
-      output.add(top);
-    }
-
-    return output;
-  }
-
-  static double _evaluateRpn(List<_Token> rpn, Map<String, double> variables) {
-    final stack = <double>[];
-
-    for (final token in rpn) {
-      if (token.type == _TokenType.number) {
-        stack.add(token.numberValue!);
-      } else if (token.type == _TokenType.identifier) {
-        if (!variables.containsKey(token.text)) {
-          throw MissingVariableException(token.text);
-        }
-        final val = variables[token.text];
-        if (val == null) {
-          throw MissingVariableException(token.text);
-        }
-        stack.add(val);
-      } else {
-        if (stack.length < 2) {
-          throw const FormulaSyntaxException(
-            'Ungenügend Operanden für Operation',
+    final v = args.map((a) => _eval(a, scope)).toList();
+    switch (name) {
+      case 'min':
+        return v.reduce(math.min);
+      case 'max':
+        return v.reduce(math.max);
+      case 'clamp':
+        if (v[1] > v[2]) {
+          throw const FormulaDomainException(
+            'clamp: untere Grenze größer als obere Grenze',
           );
         }
-        final b = stack.removeLast();
-        final a = stack.removeLast();
-
-        double res;
-        switch (token.type) {
-          case _TokenType.plus:
-            res = a + b;
-            break;
-          case _TokenType.minus:
-            res = a - b;
-            break;
-          case _TokenType.multiply:
-            res = a * b;
-            break;
-          case _TokenType.divide:
-            if (b == 0.0) {
-              throw const DivisionByZeroException();
-            }
-            res = a / b;
-            break;
-          default:
-            throw FormulaSyntaxException('Unbekannter Operator: ${token.text}');
+        return v[0].clamp(v[1], v[2]).toDouble();
+      case 'abs':
+        return v[0].abs();
+      case 'pow':
+        return _finite(math.pow(v[0], v[1]).toDouble(), 'pow');
+      case 'sqrt':
+        if (v[0] < 0) {
+          throw const FormulaDomainException(
+            'sqrt: Argument darf nicht negativ sein',
+          );
         }
-        stack.add(res);
+        return math.sqrt(v[0]);
+      case 'ln':
+        if (v[0] <= 0) {
+          throw const FormulaDomainException(
+            'ln: Argument muss größer als 0 sein',
+          );
+        }
+        return math.log(v[0]);
+      case 'log10':
+        if (v[0] <= 0) {
+          throw const FormulaDomainException(
+            'log10: Argument muss größer als 0 sein',
+          );
+        }
+        return math.log(v[0]) / math.ln10;
+      case 'exp':
+        return _finite(math.exp(v[0]), 'exp');
+      case 'round':
+        return v[0].roundToDouble();
+      case 'floor':
+        return v[0].floorToDouble();
+      case 'ceil':
+        return v[0].ceilToDouble();
+    }
+    throw UnknownFunctionException(name);
+  }
+
+  static double _finite(double value, [String what = 'Ergebnis']) {
+    if (value.isNaN || value.isInfinite) {
+      throw FormulaDomainException('$what: Ergebnis ist nicht endlich');
+    }
+    return value;
+  }
+}
+
+/// Recursive-descent parser. Grammar:
+///
+/// ```
+/// comparison := additive (("<"|">"|"<="|">="|"=="|"!=") additive)*
+/// additive   := term (("+"|"-") term)*
+/// term       := unary (("*"|"/") unary)*
+/// unary      := "-" unary | primary
+/// primary    := number | ident "(" [comparison ("," comparison)*] ")"
+///             | ident | "(" comparison ")"
+/// ```
+class _Parser {
+  final List<_Token> _tokens;
+  var _i = 0;
+
+  _Parser(this._tokens);
+
+  _Token get _cur => _tokens[_i];
+
+  _Node parseAll() {
+    final node = _comparison();
+    if (_cur.type != _T.end) {
+      throw FormulaSyntaxException(switch (_cur.type) {
+        _T.rparen => 'Fehlende öffnende Klammer',
+        _T.number || _T.identifier => 'Fehlender Operator zwischen Operanden',
+        _ => 'Unerwartetes Zeichen: "${_cur.text}"',
+      }, position: _cur.pos);
+    }
+    return node;
+  }
+
+  static const _cmpOps = {_T.lt, _T.gt, _T.le, _T.ge, _T.eq, _T.ne};
+
+  _Node _comparison() {
+    var left = _additive();
+    while (_cmpOps.contains(_cur.type)) {
+      final op = _tokens[_i++].type;
+      left = _Bin(op, left, _additive());
+    }
+    return left;
+  }
+
+  _Node _additive() {
+    var left = _term();
+    while (_cur.type == _T.plus || _cur.type == _T.minus) {
+      final op = _tokens[_i++].type;
+      left = _Bin(op, left, _term());
+    }
+    return left;
+  }
+
+  _Node _term() {
+    var left = _unary();
+    while (_cur.type == _T.star || _cur.type == _T.slash) {
+      final op = _tokens[_i++].type;
+      left = _Bin(op, left, _unary());
+    }
+    return left;
+  }
+
+  _Node _unary() {
+    if (_cur.type == _T.minus) {
+      _i++;
+      return _Neg(_unary());
+    }
+    return _primary();
+  }
+
+  _Node _primary() {
+    final t = _cur;
+    switch (t.type) {
+      case _T.number:
+        _i++;
+        return _Num(t.value!);
+      case _T.identifier:
+        _i++;
+        if (_cur.type == _T.lparen) return _callNode(t);
+        return _Ident(t.text);
+      case _T.lparen:
+        _i++;
+        final inner = _comparison();
+        _expectClose();
+        return inner;
+      case _T.end:
+        throw FormulaSyntaxException('Ausdruck unvollständig', position: t.pos);
+      default:
+        throw FormulaSyntaxException(
+          'Unerwartetes Zeichen: "${t.text}"',
+          position: t.pos,
+        );
+    }
+  }
+
+  void _expectClose() {
+    if (_cur.type != _T.rparen) {
+      throw FormulaSyntaxException(
+        'Nicht geschlossene Klammer',
+        position: _cur.pos,
+      );
+    }
+    _i++;
+  }
+
+  _Node _callNode(_Token nameToken) {
+    final name = nameToken.text;
+    final arity = _functions[name];
+    if (arity == null) {
+      throw UnknownFunctionException(name, position: nameToken.pos);
+    }
+    _i++; // '('
+    final args = <_Node>[];
+    if (_cur.type != _T.rparen) {
+      args.add(_comparison());
+      while (_cur.type == _T.comma) {
+        _i++;
+        args.add(_comparison());
       }
     }
-
-    if (stack.length != 1) {
-      throw const FormulaSyntaxException('Ungültiger mathematischer Ausdruck');
+    _expectClose();
+    final (minArgs, maxArgs) = arity;
+    if (args.length < minArgs || (maxArgs != null && args.length > maxArgs)) {
+      final expected = maxArgs == null
+          ? 'mindestens $minArgs'
+          : minArgs == maxArgs
+          ? '$minArgs'
+          : '$minArgs bis $maxArgs';
+      throw WrongArgumentCountException(
+        name,
+        expected,
+        args.length,
+        position: nameToken.pos,
+      );
     }
-
-    return stack.single;
+    return _Call(name, args);
   }
 }

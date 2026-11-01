@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "w-iaq",
+      "type": "single_value",
+      "title": "IAQ",
+      "connectionId": "conn-1",
+      "measurement": "sen66",
+      "unit": "%",
+      "formula": "min(voc, co2)",
+      "formulaVariables": [
+        { "name": "v", "field": "voc_index" },
+        { "name": "c", "field": "co2" }
+      ],
+      "formulaSteps": [
+        { "name": "voc", "expression": "100 - v * 0.6", "label": "VOC-Index" },
+        { "name": "co2", "expression": "clamp(100 - (c - 400) / 10, 0, 100)" }
+      ]
+    }
+  ]
+}
