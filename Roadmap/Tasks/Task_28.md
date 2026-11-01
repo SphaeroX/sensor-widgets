@@ -46,13 +46,21 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
 - [ ] Jede Evaluator-Funktion hat einen Hilfeeintrag (automatischer Test).
-- [ ] IAQ-Vorlage rechnet mit Beispielwerten korrekt (Test).
+- [ ] IAQ-Vorlage (SEN66, `min` über vier Teil-Scores) rechnet mit Beispielwerten korrekt (Test, inkl. Fall, dass der schlechteste Score das Ergebnis bestimmt).
 - [ ] Vorlage lässt sich im Editor übernehmen und anschließend anpassen.
 - [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
-- Genaue IAQ-Formel (Skalierung VOC/CO2, Gewichtung) ist sensor- und geschmacksabhängig; der Nutzer liefert oder bestätigt sie. Bis dahin Platzhaltergewichtung, klar als Beispiel markiert.
+- **Vom Nutzer vorgegeben (Gesamtformel):** `IAQ_gesamt = min(S_CO2, S_VOC, S_PM2.5, S_RH)`, also der schlechteste Teil-Score bestimmt den Gesamt-Score. Die Vorlage „IAQ (Sensirion SEN66)“ bildet das als Zwischenschritte ab: `s_co2`, `s_voc`, `s_pm25`, `s_rh`, Ergebnis `min(s_co2, s_voc, s_pm25, s_rh)`. Variablen: `co2` (ppm), `voc` (VOC-Index), `pm25` (µg/m³), `rh` (% relative Feuchte).
+- **Entschieden (Nutzer überlässt die Schwellen dem Agenten, Bedingung: in der App umsetzbar):** Die Teil-Scores (0 bis 100) sind lineare Rampen, begrenzt mit `clamp`. Sie nutzen nur Funktionen aus Task_22 (`clamp`, `abs`, `min`) und stehen als normale Zwischenschritte im Editor, die der Nutzer direkt ändern kann:
+  - `s_co2 = clamp(100 * (2000 - co2) / 1400, 0, 100)` (600 ppm = 100, 2000 ppm = 0)
+  - `s_voc = clamp(100 * (250 - voc) / 150, 0, 100)` (VOC-Index 100 = 100, 250 = 0)
+  - `s_pm25 = clamp(100 * (35 - pm25) / 30, 0, 100)` (5 µg/m³ = 100, 35 = 0)
+  - `s_rh = clamp(100 - 100 * abs(rh - 50) / 30, 0, 100)` (50 % = 100, 20 % oder 80 % = 0)
+  - Ergebnis: `min(s_co2, s_voc, s_pm25, s_rh)`
+- **Umsetzbarkeit:** Der Test wertet die Vorlage mit dem echten Dart-Evaluator (Task_22) aus, nicht mit einer Sonderlogik. Die Schwellen sind als Zahlen in den Schritten sichtbar und editierbar; der Hilfetext erklärt, wo man sie anpasst. Falls Task_22 Konstanten/Parameter (z. B. `co2_gut = 600`) umsetzt, nutzt die Vorlage diese, sonst bleiben es Literale.
+- Die Vorlage braucht `min` mit beliebig vielen Argumenten (siehe Task_22).
 
 ## Notizen zu diesem Task
 

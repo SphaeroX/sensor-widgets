@@ -7,7 +7,7 @@
 
 ## Ziel
 
-Der Formel-Evaluator versteht neben `+ - * / ( )` auch Funktionen (`min`, `max`, `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`, `round`, `floor`, `ceil`), Vergleichsoperatoren (`<`, `>`, `<=`, `>=`, `==`, `!=`), `if(bedingung, a, b)`, die Konstanten `pi` und `e` sowie benannte Zwischenformeln (Schritte), die auf frühere Schritte und Variablen verweisen. Damit lässt sich z. B. ein IAQ in mehreren Schritten rechnen.
+Der Formel-Evaluator versteht neben `+ - * / ( )` auch Funktionen (`min` und `max` mit beliebig vielen Argumenten ab 1, z. B. `min(a, b, c, d)` für den IAQ, `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`, `round`, `floor`, `ceil`), Vergleichsoperatoren (`<`, `>`, `<=`, `>=`, `==`, `!=`), `if(bedingung, a, b)`, die Konstanten `pi` und `e` sowie benannte Zwischenformeln (Schritte), die auf frühere Schritte und Variablen verweisen. Damit lässt sich z. B. ein IAQ in mehreren Schritten rechnen.
 
 ## Kontext & Abhängigkeiten
 
