@@ -39,6 +39,9 @@ class WidgetDefinition {
   final List<FormulaVariable>? formulaVariables;
   final List<FormulaStep>? formulaSteps;
 
+  /// How time buckets with missing variables are handled: `skip` (default) or `previous`.
+  final String? gapPolicy;
+
   const WidgetDefinition({
     required this.id,
     required this.type,
@@ -61,10 +64,14 @@ class WidgetDefinition {
     this.formula,
     this.formulaVariables,
     this.formulaSteps,
+    this.gapPolicy,
   });
 
   bool get isValid {
     if (id.trim().isEmpty || title.trim().isEmpty) return false;
+    if (gapPolicy != null && gapPolicy != 'skip' && gapPolicy != 'previous') {
+      return false;
+    }
     if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
 
     if (formula != null && formula!.trim().isNotEmpty) {
@@ -128,6 +135,7 @@ class WidgetDefinition {
                 .map((e) => FormulaStep.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
+      gapPolicy: json['gapPolicy'] as String?,
     );
   }
 
@@ -169,6 +177,7 @@ class WidgetDefinition {
     if (formulaSteps != null) {
       map['formulaSteps'] = formulaSteps!.map((e) => e.toJson()).toList();
     }
+    if (gapPolicy != null) map['gapPolicy'] = gapPolicy;
     return map;
   }
 
@@ -194,6 +203,7 @@ class WidgetDefinition {
     String? formula,
     List<FormulaVariable>? formulaVariables,
     List<FormulaStep>? formulaSteps,
+    String? gapPolicy,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -218,6 +228,7 @@ class WidgetDefinition {
       formula: formula ?? this.formula,
       formulaVariables: formulaVariables ?? this.formulaVariables,
       formulaSteps: formulaSteps ?? this.formulaSteps,
+      gapPolicy: gapPolicy ?? this.gapPolicy,
     );
   }
 }

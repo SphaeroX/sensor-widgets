@@ -150,6 +150,39 @@ class InfluxResponseParser {
     return map;
   }
 
+  /// Parses a bucketed multi-field response into `field -> {epochMs: value}`.
+  /// Buckets where a field is `null` are omitted for that field.
+  Map<String, Map<int, double>> parseBucketedFields(
+    Map<String, dynamic> json,
+    List<String> fields,
+  ) {
+    final result = <String, Map<int, double>>{
+      for (final f in fields) f: <int, double>{},
+    };
+    final seriesList = _extractSeries(json);
+    if (seriesList.isEmpty) return result;
+
+    final series = seriesList.first;
+    final columns = (series['columns'] as List<dynamic>).cast<String>();
+    final valuesList = series['values'] as List<dynamic>?;
+    final timeIdx = columns.indexOf('time');
+    if (valuesList == null || timeIdx == -1) return result;
+
+    for (final field in fields) {
+      final idx = columns.indexOf(field);
+      if (idx == -1) continue;
+      for (final row in valuesList) {
+        final cells = row as List<dynamic>;
+        final raw = cells[idx];
+        final time = cells[timeIdx];
+        if (raw is num && time is num) {
+          result[field]![time.toInt()] = raw.toDouble();
+        }
+      }
+    }
+    return result;
+  }
+
   /// Parses aggregate values (min, max, mean).
   Map<String, double> parseAggregate(Map<String, dynamic> json) {
     final seriesList = _extractSeries(json);

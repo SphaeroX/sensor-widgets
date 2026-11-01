@@ -21,6 +21,9 @@ class WidgetPreviewData {
   final Map<String, double>? aggregateValues;
   final Map<String, SensorDataPoint>? multiValues;
   final String? errorMessage;
+
+  /// Non-fatal per-bucket formula problems (e.g. division by zero in some buckets).
+  final List<String>? bucketErrors;
   final DateTime fetchedAt;
 
   WidgetPreviewData({
@@ -29,6 +32,7 @@ class WidgetPreviewData {
     this.aggregateValues,
     this.multiValues,
     this.errorMessage,
+    this.bucketErrors,
     DateTime? fetchedAt,
   }) : fetchedAt = fetchedAt ?? DateTime.now();
 
@@ -136,6 +140,23 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
   }
 
   /// Queries InfluxDB according to the widget definition to preview live data in editor.
+  bool _hasFormula(WidgetDefinition widget) =>
+      widget.formula != null &&
+      widget.formula!.trim().isNotEmpty &&
+      widget.formulaVariables != null &&
+      widget.formulaVariables!.isNotEmpty;
+
+  List<String>? _summarizeBucketErrors(List<FormulaBucketError> errors) {
+    if (errors.isEmpty) return null;
+    final first = errors.first.message;
+    final count = errors.length;
+    return [
+      count == 1
+          ? '1 Zeit-Bucket nicht berechenbar: $first'
+          : '$count Zeit-Buckets nicht berechenbar: $first',
+    ];
+  }
+
   Future<WidgetPreviewData> fetchPreviewData(WidgetDefinition widget) async {
     try {
       final connection = await _connectionRepository.getConnection(
@@ -195,6 +216,21 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
           return WidgetPreviewData(singleValue: point);
 
         case WidgetType.historyChart:
+          if (_hasFormula(widget)) {
+            try {
+              final series = await _formulaCalculationService.calculateSeries(
+                widget: widget,
+                connection: connection,
+                token: token,
+              );
+              return WidgetPreviewData(
+                historyPoints: series.points,
+                bucketErrors: _summarizeBucketErrors(series.errors),
+              );
+            } catch (e) {
+              return WidgetPreviewData(errorMessage: e.toString());
+            }
+          }
           final field = widget.field ?? '';
           if (field.isEmpty) {
             return WidgetPreviewData(errorMessage: 'Kein Feld angegeben.');
@@ -215,6 +251,19 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
           return WidgetPreviewData(historyPoints: points);
 
         case WidgetType.aggregate:
+          if (_hasFormula(widget)) {
+            try {
+              final aggregates = await _formulaCalculationService
+                  .calculateAggregate(
+                    widget: widget,
+                    connection: connection,
+                    token: token,
+                  );
+              return WidgetPreviewData(aggregateValues: aggregates);
+            } catch (e) {
+              return WidgetPreviewData(errorMessage: e.toString());
+            }
+          }
           final field = widget.field ?? '';
           if (field.isEmpty) {
             return WidgetPreviewData(errorMessage: 'Kein Feld angegeben.');

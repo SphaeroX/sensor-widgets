@@ -51,11 +51,11 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] IAQ-Szenario (mehrere Variablen, Zwischenschritte) liefert im Verlaufschart eine berechnete Reihe in Dart-Tests.
-- [ ] Lücken werden gemäß `gapPolicy` behandelt, Division durch 0 und fehlende Werte erzeugen sichtbare Fehler.
-- [ ] Aggregat/Gauge/Lampe berechnen Formel vor Aggregation, belegt durch Tests.
-- [ ] Widgets ohne Formel verhalten sich unverändert (Regressionstests grün).
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] IAQ-Szenario (mehrere Variablen, Zwischenschritte) liefert im Verlaufschart eine berechnete Reihe in Dart-Tests.
+- [x] Lücken werden gemäß `gapPolicy` behandelt, Division durch 0 und fehlende Werte erzeugen sichtbare Fehler.
+- [x] Aggregat/Gauge/Lampe berechnen Formel vor Aggregation, belegt durch Tests.
+- [x] Widgets ohne Formel verhalten sich unverändert (Regressionstests grün).
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -70,19 +70,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `DurationUtils`, `InfluxQlQueryBuilder.buildBucketedMultiFieldQuery`, `InfluxResponseParser.parseBucketedFields`, `WidgetDefinition.gapPolicy`, `FormulaCalculationService.calculateSeries/calculateAggregate` (+ `FormulaSeriesResult`, `FormulaBucketError`), Controller (`fetchPreviewData` fuer Verlauf und Aggregat mit Formel), Vorschau-Hinweis fuer fehlerhafte Buckets. Abweichung: `fill(null)` statt `fill(none/previous)` in der Abfrage, Luecken werden in Dart behandelt (versionsunabhaengig). Einzelwert, Lampe und Gauge bleiben beim Letztwert-Pfad (nichts zu aggregieren).
+- **Learnings & Stolpersteine:** Der Flutter-Formatter formatiert neue Tests um; nach `dart format .` laufen sie unveraendert. Das Bash-Tool bricht bei Heredocs mit Anfuehrungszeichen/Umlauten ab: Dateien mit dem Write-Tool anlegen.
+- **Wichtige Entscheidungen und ihre Gründe:** Maximal 300 Buckets durch Vergroebern des Intervalls statt Fehler. Bucket-Fehler sind nicht fatal solange mindestens ein Bucket gelingt.
+- **Auswirkungen auf Folge-Tasks:** Task_25 muss dieselbe Logik in Kotlin und Swift nachbauen (Query, `gapPolicy`, Fixture `bucketed_multi_field_response.json`, Erwartung: skip -> [40, 100], previous -> [40, 50, 100] fuer das IAQ-Beispiel aus `formula_series_service_test.dart`) und `gapPolicy` in den nativen Modellen/Parsern ergaenzen.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/domain/services/formula_series_service_test.dart test/data/influx/bucketed_series_test.dart test/core/utils/duration_utils_test.dart`.

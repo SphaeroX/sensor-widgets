@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "statement_id": 0,
+      "series": [
+        {
+          "name": "sen66",
+          "columns": ["time", "voc", "co2"],
+          "values": [
+            [1000, null, 800],
+            [2000, 100.0, 900],
+            [3000, 50.0, null],
+            [4000, 0.0, 400]
+          ]
+        }
+      ]
+    }
+  ]
+}

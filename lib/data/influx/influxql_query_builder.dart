@@ -64,6 +64,33 @@ class InfluxQlQueryBuilder {
     return 'SELECT MEAN("$f") AS "mean" FROM "$m" WHERE $whereClause GROUP BY time($bucketInterval) fill(none)';
   }
 
+  /// Query for several fields of one measurement as time buckets.
+  ///
+  /// Empty buckets are returned as `null` (`fill(null)`) so that gap handling
+  /// is done uniformly in Dart and does not depend on `fill(previous)`
+  /// support of the InfluxDB version.
+  String buildBucketedMultiFieldQuery({
+    required String measurement,
+    required List<String> fields,
+    required String timeRange,
+    required String bucketInterval,
+    Map<String, String>? tagFilters,
+  }) {
+    final m = escapeIdentifier(measurement);
+    final selects = fields
+        .map((f) {
+          final e = escapeIdentifier(f);
+          return 'MEAN("$e") AS "$e"';
+        })
+        .join(', ');
+    final tagClause = _buildTagFilterClause(tagFilters);
+    final whereClause = tagClause.isEmpty
+        ? 'time > now() - $timeRange'
+        : 'time > now() - $timeRange AND $tagClause';
+
+    return 'SELECT $selects FROM "$m" WHERE $whereClause GROUP BY time($bucketInterval) fill(null)';
+  }
+
   /// Query for aggregate min, max, mean.
   String buildAggregateQuery({
     required String measurement,

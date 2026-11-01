@@ -52,8 +52,8 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 ## 2. Aktueller Status
 
 * **Status:** Meilenstein 4 geplant (Meilensteine 1 bis 3 vollständig umgesetzt und verifiziert)
-* **Aktiver Task:** Keiner (nächster Task: `Task_24`; `Task_21` zurückgestellt)
-* **Fortschritt:** 22 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 2/13, Task_21 zurückgestellt)
+* **Aktiver Task:** Keiner (nächster Task: `Task_25`; `Task_21` zurückgestellt)
+* **Fortschritt:** 23 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 3/13, Task_21 zurückgestellt)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -80,7 +80,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_21` | Bugfix: Dashboard-Layout (Liste scrollt unter die AppBar) | `Zurückgestellt` | Nicht reproduzierbar im Widget-Test (Regressionstests vorhanden); Screenshot/Gerätedaten nötig. `Roadmap/Tasks/Task_21.md` |
 | `Task_22` | Formel-Kontrakt v2 & Dart-Evaluator (Funktionen, Bedingungen, Zwischenformeln) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_22.md` |
 | `Task_23` | Evaluator-Parität in Kotlin und Swift | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_23.md` (Kotlin lokal grün, Swift wartet auf CI) |
-| `Task_24` | Zeit-Bucket-Pipeline (Dart): Formel im Verlaufschart, Aggregat, Gauge, Lampe | `Offen` | `Roadmap/Tasks/Task_24.md` |
+| `Task_24` | Zeit-Bucket-Pipeline (Dart): Formel im Verlaufschart, Aggregat, Gauge, Lampe | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_24.md` |
 | `Task_25` | Native Pipeline Android & iOS: Formel für Zeitreihen und alle Typen | `Offen` | `Roadmap/Tasks/Task_25.md` |
 | `Task_26` | Multi-Value: Formel pro Zeile (Dart, Android, iOS) | `Offen` | `Roadmap/Tasks/Task_26.md` |
 | `Task_27` | Editor: Variablen per Picker, Formel für alle Typen, Zwischenformeln | `Offen` | `Roadmap/Tasks/Task_27.md` |
