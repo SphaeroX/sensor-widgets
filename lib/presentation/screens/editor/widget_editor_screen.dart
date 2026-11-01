@@ -20,6 +20,7 @@ import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_sectio
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/tag_filter_editor.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/widget_type_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
 
 /// Form screen for creating or editing a widget configuration with live preview and schema discovery.
@@ -666,6 +667,17 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                                 setState(() => _selectedType = t);
                               }
                             },
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Widget-Typ',
+                            style: Theme.of(context).textTheme.titleSmall,
+                          ),
+                          const SizedBox(height: 8),
+                          WidgetTypeSelector(
+                            selected: _selectedType,
+                            onSelected: (t) =>
+                                setState(() => _selectedType = t),
                           ),
                         ],
                       ),

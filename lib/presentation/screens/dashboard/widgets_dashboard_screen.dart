@@ -6,6 +6,7 @@ import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart'
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
+import 'package:sensor_widgets/presentation/widgets/widget_type_visuals.dart';
 
 /// Dashboard overview screen showing all configured sensor widgets.
 class WidgetsDashboardScreen extends ConsumerWidget {
@@ -74,10 +75,10 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.widgets_outlined,
                       size: 64,
-                      color: Colors.grey,
+                      color: Theme.of(context).colorScheme.outline,
                     ),
                     const SizedBox(height: 16),
                     Text(
@@ -85,10 +86,12 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
-                    const Text(
+                    Text(
                       'Erstelle dein erstes Widget für den Homescreen!',
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
@@ -109,7 +112,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
             itemCount: widgets.length,
             separatorBuilder: (context, index) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
@@ -137,122 +140,259 @@ class _WidgetCardItem extends ConsumerWidget {
 
   const _WidgetCardItem({required this.widgetDef});
 
+  void _openEditor(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WidgetEditorScreen(widgetToEdit: widgetDef),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
     return Card(
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.colorScheme.primaryContainer,
-          child: Icon(
-            _getIcon(widgetDef.type),
-            color: theme.colorScheme.onPrimaryContainer,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => _openEditor(context),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 4, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      WidgetTypeVisuals.icon(widgetDef.type),
+                      color: theme.colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widgetDef.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${widgetDef.measurement} • alle ${widgetDef.refreshIntervalMinutes}m',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.secondaryContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      widgetDef.type.label,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                  _buildMenu(context, ref),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: _MiniPreview(
+                  key: Key('dashboard_card_preview_${widgetDef.id}'),
+                  type: widgetDef.type,
+                ),
+              ),
+            ],
           ),
         ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                widgetDef.title,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                widgetDef.type.label,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
-                ),
-              ),
-            ),
-          ],
-        ),
-        subtitle: Text(
-          '${widgetDef.measurement} • alle ${widgetDef.refreshIntervalMinutes}m',
-        ),
-        trailing: PopupMenuButton<String>(
-          onSelected: (value) async {
-            if (value == 'edit') {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => WidgetEditorScreen(widgetToEdit: widgetDef),
-                ),
-              );
-            } else if (value == 'duplicate') {
-              await ref
-                  .read(widgetsControllerProvider.notifier)
-                  .duplicateWidget(widgetDef);
-            } else if (value == 'delete') {
-              await ref
-                  .read(widgetsControllerProvider.notifier)
-                  .deleteWidget(widgetDef.id);
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 20),
-                  SizedBox(width: 8),
-                  Text('Bearbeiten'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'duplicate',
-              child: Row(
-                children: [
-                  Icon(Icons.copy, size: 20),
-                  SizedBox(width: 8),
-                  Text('Duplizieren'),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(Icons.delete, color: Colors.red, size: 20),
-                  SizedBox(width: 8),
-                  Text('Löschen', style: TextStyle(color: Colors.red)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => WidgetEditorScreen(widgetToEdit: widgetDef),
-            ),
-          );
-        },
       ),
     );
   }
 
-  IconData _getIcon(WidgetType type) {
+  Widget _buildMenu(BuildContext context, WidgetRef ref) {
+    return PopupMenuButton<String>(
+      tooltip: 'Aktionen',
+      onSelected: (value) async {
+        if (value == 'edit') {
+          _openEditor(context);
+        } else if (value == 'duplicate') {
+          await ref
+              .read(widgetsControllerProvider.notifier)
+              .duplicateWidget(widgetDef);
+        } else if (value == 'delete') {
+          await ref
+              .read(widgetsControllerProvider.notifier)
+              .deleteWidget(widgetDef.id);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 20),
+              SizedBox(width: 8),
+              Text('Bearbeiten'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: 'duplicate',
+          child: Row(
+            children: [
+              Icon(Icons.copy, size: 20),
+              SizedBox(width: 8),
+              Text('Duplizieren'),
+            ],
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Row(
+            children: [
+              Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.error,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Löschen',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Decorative placeholder that hints at what the widget type looks like.
+class _MiniPreview extends StatelessWidget {
+  final WidgetType type;
+
+  const _MiniPreview({super.key, required this.type});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final fill = scheme.primary.withValues(alpha: 0.55);
+    final track = scheme.surfaceContainerHighest;
+
+    Widget bar(double height) => Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 2),
+        child: Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            height: height,
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Widget content;
     switch (type) {
       case WidgetType.singleValue:
-        return Icons.looks_one_outlined;
+        content = Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 96,
+            height: 14,
+            decoration: BoxDecoration(
+              color: fill,
+              borderRadius: BorderRadius.circular(6),
+            ),
+          ),
+        );
       case WidgetType.historyChart:
-        return Icons.show_chart;
+        content = Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final h in <double>[8, 14, 10, 20, 16, 24, 18]) bar(h),
+          ],
+        );
       case WidgetType.indicatorLamp:
-        return Icons.lightbulb_outline;
+        content = Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            width: 18,
+            height: 18,
+            decoration: BoxDecoration(color: fill, shape: BoxShape.circle),
+          ),
+        );
       case WidgetType.multiValue:
-        return Icons.grid_view;
+        content = Row(
+          children: [
+            for (var i = 0; i < 3; i++)
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: Container(
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: track,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
       case WidgetType.aggregate:
-        return Icons.functions;
+        content = Row(
+          children: [
+            for (final label in ['MIN', 'Ø', 'MAX'])
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(color: scheme.onSurfaceVariant),
+                ),
+              ),
+          ],
+        );
       case WidgetType.gaugeBar:
-        return Icons.speed;
+        content = ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: LinearProgressIndicator(
+            value: 0.6,
+            minHeight: 10,
+            backgroundColor: track,
+          ),
+        );
     }
+
+    return ExcludeSemantics(child: SizedBox(height: 26, child: content));
   }
 }

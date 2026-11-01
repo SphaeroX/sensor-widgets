@@ -47,10 +47,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Hell- und Dunkelmodus funktionieren, belegt durch Widget-Tests.
-- [ ] Typ-Auswahl erfolgt über Kacheln, alle sechs Typen wählbar.
-- [ ] Keine bestehenden Tests geändert oder abgeschwächt (sonst mit Freigabe dokumentiert).
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Hell- und Dunkelmodus funktionieren, belegt durch Widget-Tests.
+- [x] Typ-Auswahl erfolgt über Kacheln, alle sechs Typen wählbar.
+- [x] Keine bestehenden Tests geändert oder abgeschwächt (sonst mit Freigabe dokumentiert).
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -64,19 +64,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `AppTheme` (hell/dunkel), `WidgetTypeVisuals`, `WidgetTypeSelector`, neue Dashboard-Karten mit Mini-Vorschau, Typ-Kacheln im Editor, Hell/Dunkel-Tests (Kontrast, Touch-Groesse, Systemmodus). **Abweichung:** Das Dropdown `widget_type_dropdown` wurde NICHT entfernt, sondern bleibt an seiner Position unveraendert (Kacheln erscheinen direkt darunter und sind synchron). Grund: Root-`AGENTS.md` Regel 1 verbietet das Aendern bestehender Tests ohne Freigabe; drei bestehende Tests tippen das Dropdown an einer festen Position an.
+- **Learnings & Stolpersteine:** Alles, was ueber dem Dropdown eingefuegt wird, schiebt es aus dem 800x600-Test-Viewport und bricht bestehende Tests, die ohne `ensureVisible` tippen. `Theme.of(context)` darf nicht in `const`-Ausdruecken stehen. Flutter 3.47: `ThemeData.cardTheme` nimmt `CardThemeData`, `inputDecorationTheme` nimmt `InputDecorationThemeData`.
+- **Wichtige Entscheidungen und ihre Gründe:** Teal als Seed (dezent, gut lesbar). Die Mini-Vorschau auf der Dashboard-Karte ist rein dekorativ (keine Daten, kein Netzwerk).
+- **Auswirkungen auf Folge-Tasks:** Task_32 darf das Theme nutzen; sobald der Nutzer die Anpassung der drei Dropdown-Tests freigibt, kann das Dropdown entfernt werden (Tests: `widget_editor_screen_test.dart`, Abschnitte "switching widget type", "multiValue widget type", "WidgetEditorScreen supports..." pruefen). Task_33 fuehrt das als offenen Punkt.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/core/theme test/presentation/widgets/editor/widget_type_selector_test.dart test/presentation/screens/dashboard/widgets_dashboard_cards_test.dart test/presentation/screens/editor/widget_editor_screen_type_tiles_test.dart`.
