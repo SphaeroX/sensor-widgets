@@ -50,11 +50,11 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] IAQ-Szenario lässt sich ohne Tippen von Feldnamen zusammenklicken (Widget-Test).
-- [ ] Freitext-Fallback je Variable funktioniert.
-- [ ] Formel-Editor erscheint bei allen Typen und Multi-Value-Zeilen.
-- [ ] Bestehende Editor-Tests unverändert grün.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] IAQ-Szenario lässt sich ohne Tippen von Feldnamen zusammenklicken (Widget-Test).
+- [x] Freitext-Fallback je Variable funktioniert.
+- [x] Formel-Editor erscheint bei allen Typen und Multi-Value-Zeilen.
+- [x] Bestehende Editor-Tests unverändert grün.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -68,19 +68,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Neue Variablen-Dialog-Logik mit Pickern (Measurement, Field, Tag-Key/Value, Label), Zwischenschritt-Liste, Einfuege-Chips (horizontal scrollbar, um den bestehenden Tests keine Hoehe zu nehmen), Positionsangabe im Syntaxfehler, `getFieldInfos` im `SchemaDiscoveryController`, Formel-Zeilen-Karte fuer Multi-Value im `WidgetEditorScreen`. Abweichung: Schema wird per injizierbaren Loadern je Variable geladen (nicht ueber `EditorSchemaController`), ohne Cache; veraltete Antworten werden per Request-Zaehler verworfen.
+- **Learnings & Stolpersteine:** `SearchableSchemaPicker` ist ein `TextFormField` mit Sheet: Freitext funktioniert immer, daher blieben die alten Keys (`variable_field_input` etc.) und Tests unveraendert. Beim Tippen in Picker wird bei jedem Zeichen `onSelected` (und damit der Loader) aufgerufen; bei sehr langsamen Servern kann das viele Requests erzeugen (bei Bedarf Debounce nachruesten). `InputChip`-Loeschicon explizit gesetzt (`Icons.cancel`).
+- **Wichtige Entscheidungen und ihre Gründe:** Formel-Zeilen bekommen `field = formula_<n>` als eindeutige ID; Zeilen-Validierung beim Speichern (Snackbar) statt Blockade im Formular.
+- **Auswirkungen auf Folge-Tasks:** Task_28 kann Vorlagen als `(formula, variables, steps)`-Tripel anbieten und ueber `onFormulaChanged/onVariablesChanged/onStepsChanged` bzw. `_formulaRows` einspielen. Task_31 (Redesign) beachtet die Keys der neuen Widgets.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/presentation/widgets/editor test/presentation/screens/editor`.

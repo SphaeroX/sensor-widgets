@@ -1,9 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
+import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
 
-/// Card section in the Widget Editor for defining custom calculation formulas and variables.
+/// Loads the field keys (with type) of a measurement.
+typedef FieldInfoLoader = Future<List<InfluxFieldInfo>> Function(
+  String measurement,
+);
+
+/// Loads the tag keys of a measurement.
+typedef TagKeyLoader = Future<List<String>> Function(String measurement);
+
+/// Loads the values of a tag key in a measurement.
+typedef TagValueLoader = Future<List<String>> Function(
+  String measurement,
+  String tagKey,
+);
+
+const List<String> _formulaFunctions = [
+  'min',
+  'max',
+  'clamp',
+  'abs',
+  'pow',
+  'sqrt',
+  'ln',
+  'log10',
+  'exp',
+  'round',
+  'floor',
+  'ceil',
+  'if',
+];
+
+/// Card section in the Widget Editor for defining custom calculation formulas,
+/// variables (picked from the DB schema) and named intermediate steps.
 class FormulaEditorSection extends StatefulWidget {
   final bool isEnabled;
   final ValueChanged<bool> onEnabledChanged;
@@ -13,6 +47,19 @@ class FormulaEditorSection extends StatefulWidget {
   final ValueChanged<List<FormulaVariable>> onVariablesChanged;
   final List<InfluxFieldInfo> availableFields;
   final List<String> availableMeasurements;
+
+  /// Intermediate formulas; the step UI is shown when [onStepsChanged] is set.
+  final List<FormulaStep> steps;
+  final ValueChanged<List<FormulaStep>>? onStepsChanged;
+
+  /// Measurement a variable falls back to when it has none of its own.
+  final String? defaultMeasurement;
+  final FieldInfoLoader? fieldLoader;
+  final TagKeyLoader? tagKeyLoader;
+  final TagValueLoader? tagValueLoader;
+
+  /// Hides the enable switch (used for multi-value rows that always have a formula).
+  final bool showEnableSwitch;
 
   const FormulaEditorSection({
     super.key,
@@ -24,6 +71,13 @@ class FormulaEditorSection extends StatefulWidget {
     required this.onVariablesChanged,
     this.availableFields = const [],
     this.availableMeasurements = const [],
+    this.steps = const [],
+    this.onStepsChanged,
+    this.defaultMeasurement,
+    this.fieldLoader,
+    this.tagKeyLoader,
+    this.tagValueLoader,
+    this.showEnableSwitch = true,
   });
 
   @override
@@ -32,11 +86,14 @@ class FormulaEditorSection extends StatefulWidget {
 
 class _FormulaEditorSectionState extends State<FormulaEditorSection> {
   late TextEditingController _formulaController;
+  final List<TextEditingController> _stepNameControllers = [];
+  final List<TextEditingController> _stepExprControllers = [];
 
   @override
   void initState() {
     super.initState();
     _formulaController = TextEditingController(text: widget.formula);
+    _syncStepControllers();
   }
 
   @override
@@ -45,12 +102,35 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     if (widget.formula != _formulaController.text) {
       _formulaController.text = widget.formula;
     }
+    _syncStepControllers();
   }
 
   @override
   void dispose() {
     _formulaController.dispose();
+    for (final c in [..._stepNameControllers, ..._stepExprControllers]) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  void _syncStepControllers() {
+    while (_stepNameControllers.length < widget.steps.length) {
+      _stepNameControllers.add(TextEditingController());
+      _stepExprControllers.add(TextEditingController());
+    }
+    while (_stepNameControllers.length > widget.steps.length) {
+      _stepNameControllers.removeLast().dispose();
+      _stepExprControllers.removeLast().dispose();
+    }
+    for (var i = 0; i < widget.steps.length; i++) {
+      if (_stepNameControllers[i].text != widget.steps[i].name) {
+        _stepNameControllers[i].text = widget.steps[i].name;
+      }
+      if (_stepExprControllers[i].text != widget.steps[i].expression) {
+        _stepExprControllers[i].text = widget.steps[i].expression;
+      }
+    }
   }
 
   String? _getValidationMessage() {
@@ -63,10 +143,21 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
       return 'Syntaxfehler: $syntaxErr';
     }
     final referenced = FormulaEvaluator.extractVariables(formula);
-    final defined = widget.variables.map((v) => v.name).toSet();
+    final defined = {
+      ...widget.variables.map((v) => v.name),
+      ...widget.steps.map((s) => s.name),
+    };
     final missing = referenced.where((r) => !defined.contains(r)).toList();
     if (missing.isNotEmpty) {
       return 'Nicht definierte Variable: ${missing.join(', ')}';
+    }
+    if (widget.steps.isNotEmpty) {
+      final stepErr = FormulaEvaluator.validateSteps(
+        widget.steps,
+        formula,
+        variableNames: widget.variables.map((v) => v.name).toList(),
+      );
+      if (stepErr != null) return 'Schrittfehler: $stepErr';
     }
     return null;
   }
@@ -104,6 +195,51 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     widget.onVariablesChanged(updated);
   }
 
+  void _addStep() {
+    final taken = widget.steps.map((s) => s.name).toSet();
+    var n = 1;
+    while (taken.contains('schritt$n')) {
+      n++;
+    }
+    widget.onStepsChanged?.call([
+      ...widget.steps,
+      FormulaStep(name: 'schritt$n', expression: ''),
+    ]);
+  }
+
+  void _updateStep(int index, {String? name, String? expression}) {
+    final updated = List<FormulaStep>.from(widget.steps);
+    final old = updated[index];
+    updated[index] = FormulaStep(
+      name: name ?? old.name,
+      expression: expression ?? old.expression,
+      label: old.label,
+    );
+    widget.onStepsChanged?.call(updated);
+  }
+
+  void _removeStep(int index) {
+    final updated = List<FormulaStep>.from(widget.steps)..removeAt(index);
+    widget.onStepsChanged?.call(updated);
+  }
+
+  /// Inserts [text] at the cursor of the formula field. [cursorBack] moves
+  /// the cursor back from the end of the inserted text (e.g. into `min()`).
+  void _insertIntoFormula(String text, {int cursorBack = 0}) {
+    final value = _formulaController.value;
+    final selection = value.selection;
+    final start = selection.isValid ? selection.start : value.text.length;
+    final end = selection.isValid ? selection.end : value.text.length;
+    final newText = value.text.replaceRange(start, end, text);
+    _formulaController.value = TextEditingValue(
+      text: newText,
+      selection: TextSelection.collapsed(
+        offset: start + text.length - cursorBack,
+      ),
+    );
+    widget.onFormulaChanged(newText);
+  }
+
   @override
   Widget build(BuildContext context) {
     final validationMsg = _getValidationMessage();
@@ -117,24 +253,25 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SwitchListTile(
-              key: const Key('formula_enabled_switch'),
-              secondary: const Icon(Icons.calculate_outlined, size: 28),
-              contentPadding: EdgeInsets.zero,
-              title: const Text('Berechnungsformel verwenden'),
-              subtitle: const Text(
-                'Werte aus InfluxDB vor der Anzeige lokal verrechnen',
+            if (widget.showEnableSwitch)
+              SwitchListTile(
+                key: const Key('formula_enabled_switch'),
+                secondary: const Icon(Icons.calculate_outlined, size: 28),
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Berechnungsformel verwenden'),
+                subtitle: const Text(
+                  'Werte aus InfluxDB vor der Anzeige lokal verrechnen',
+                ),
+                value: widget.isEnabled,
+                onChanged: (val) {
+                  widget.onEnabledChanged(val);
+                  if (val && widget.variables.isEmpty) {
+                    _addVariable();
+                  }
+                },
               ),
-              value: widget.isEnabled,
-              onChanged: (val) {
-                widget.onEnabledChanged(val);
-                if (val && widget.variables.isEmpty) {
-                  _addVariable();
-                }
-              },
-            ),
             if (widget.isEnabled) ...[
-              const Divider(height: 24),
+              if (widget.showEnableSwitch) const Divider(height: 24),
               Text(
                 'Mathematische Formel',
                 style: Theme.of(context).textTheme.titleSmall,
@@ -144,13 +281,13 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 key: const Key('formula_input_field'),
                 controller: _formulaController,
                 decoration: InputDecoration(
-                  labelText: 'Formel (z. B. (A + B) / 2 oder A * 1.8 + 32)',
+                  labelText: 'Formel (z. B. (A + B) / 2 oder min(A, B))',
                   border: const OutlineInputBorder(),
                   errorText: isSyntaxError ? validationMsg : null,
                   helperText: isWarning
                       ? validationMsg
                       : (validationMsg == null
-                            ? 'Unterstützt +, -, *, /, Klammern und Zahlenkonstanten'
+                            ? 'Unterstützt + - * /, Klammern, Vergleiche, Funktionen und if(...)'
                             : null),
                   helperStyle: isWarning
                       ? TextStyle(color: Theme.of(context).colorScheme.error)
@@ -158,6 +295,12 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 ),
                 onChanged: widget.onFormulaChanged,
               ),
+              const SizedBox(height: 8),
+              _buildInsertChips(),
+              if (widget.onStepsChanged != null) ...[
+                const SizedBox(height: 16),
+                _buildStepsSection(),
+              ],
               const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -201,14 +344,129 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     );
   }
 
+  Widget _buildInsertChips() {
+    final names = [
+      ...widget.variables.map((v) => v.name),
+      ...widget.steps.map((s) => s.name),
+    ];
+    return SizedBox(
+      height: 36,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          for (final name in names)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ActionChip(
+                key: Key('insert_chip_$name'),
+                label: Text(name),
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _insertIntoFormula(name),
+              ),
+            ),
+          for (final fn in _formulaFunctions)
+            Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: ActionChip(
+                key: Key('insert_chip_$fn'),
+                label: Text('$fn()'),
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _insertIntoFormula('$fn()', cursorBack: 1),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepsSection() {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Zwischenschritte', style: theme.textTheme.titleSmall),
+            TextButton.icon(
+              key: const Key('add_formula_step_button'),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Schritt hinzufügen'),
+              onPressed: _addStep,
+            ),
+          ],
+        ),
+        if (widget.steps.isEmpty)
+          Text(
+            'Optional: benannte Teilformeln, die in der Formel oben verwendet werden. Die Formel oben ist das Ergebnis.',
+            style: theme.textTheme.bodySmall,
+          ),
+        for (var i = 0; i < widget.steps.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 110,
+                  child: TextFormField(
+                    key: Key('step_name_$i'),
+                    controller: _stepNameControllers[i],
+                    decoration: const InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (v) => _updateStep(i, name: v.trim()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    key: Key('step_expression_$i'),
+                    controller: _stepExprControllers[i],
+                    decoration: InputDecoration(
+                      labelText: 'Ausdruck',
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      errorText: _stepSyntaxError(widget.steps[i].expression),
+                    ),
+                    onChanged: (v) => _updateStep(i, expression: v),
+                  ),
+                ),
+                IconButton(
+                  key: Key('delete_step_$i'),
+                  icon: const Icon(Icons.delete_outline, size: 20),
+                  tooltip: 'Schritt löschen',
+                  onPressed: () => _removeStep(i),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  String? _stepSyntaxError(String expression) {
+    if (expression.trim().isEmpty) return null;
+    return FormulaEvaluator.validateSyntax(expression);
+  }
+
   Widget _buildVariableTile(FormulaVariable variable, int index) {
+    final theme = Theme.of(context);
+    final details = [
+      if (variable.measurement != null) variable.measurement!,
+      if (variable.tagFilters != null && variable.tagFilters!.isNotEmpty)
+        variable.tagFilters!.entries
+            .map((e) => '${e.key}=${e.value}')
+            .join(', '),
+    ];
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest
-            .withValues(alpha: 0.4),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
         children: [
@@ -232,8 +490,15 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                   variable.field.isNotEmpty
                       ? variable.field
                       : 'Kein Feld zugewiesen',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: theme.textTheme.bodySmall,
                 ),
+                if (details.isNotEmpty)
+                  Text(
+                    details.join(' • '),
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -254,70 +519,238 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     );
   }
 
-  void _editVariableDialog(FormulaVariable variable, int index) {
-    final fieldCtrl = TextEditingController(text: variable.field);
-    final measurementCtrl = TextEditingController(
-      text: variable.measurement ?? '',
-    );
-
-    showDialog<void>(
+  Future<void> _editVariableDialog(FormulaVariable variable, int index) async {
+    final result = await showDialog<FormulaVariable>(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Variable ${variable.name} anpassen'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  key: const Key('variable_field_input'),
-                  controller: fieldCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Feldname (z. B. temperature)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  key: const Key('variable_measurement_input'),
-                  controller: measurementCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Abweichendes Measurement (optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              key: const Key('apply_variable_button'),
-              onPressed: () {
-                final newField = fieldCtrl.text.trim();
-                final newM = measurementCtrl.text.trim().isNotEmpty
-                    ? measurementCtrl.text.trim()
-                    : null;
-                _updateVariable(
-                  index,
-                  FormulaVariable(
-                    name: variable.name,
-                    field: newField.isNotEmpty ? newField : variable.field,
-                    measurement: newM,
-                    tagFilters: variable.tagFilters,
-                    label: variable.label,
-                  ),
-                );
-                Navigator.of(context).pop();
+      builder: (context) => _VariableDialog(
+        variable: variable,
+        availableMeasurements: widget.availableMeasurements,
+        availableFields: widget.availableFields,
+        defaultMeasurement: widget.defaultMeasurement,
+        fieldLoader: widget.fieldLoader,
+        tagKeyLoader: widget.tagKeyLoader,
+        tagValueLoader: widget.tagValueLoader,
+      ),
+    );
+    if (result != null) _updateVariable(index, result);
+  }
+}
+
+class _VariableDialog extends StatefulWidget {
+  final FormulaVariable variable;
+  final List<String> availableMeasurements;
+  final List<InfluxFieldInfo> availableFields;
+  final String? defaultMeasurement;
+  final FieldInfoLoader? fieldLoader;
+  final TagKeyLoader? tagKeyLoader;
+  final TagValueLoader? tagValueLoader;
+
+  const _VariableDialog({
+    required this.variable,
+    required this.availableMeasurements,
+    required this.availableFields,
+    required this.defaultMeasurement,
+    required this.fieldLoader,
+    required this.tagKeyLoader,
+    required this.tagValueLoader,
+  });
+
+  @override
+  State<_VariableDialog> createState() => _VariableDialogState();
+}
+
+class _VariableDialogState extends State<_VariableDialog> {
+  late String _measurement = widget.variable.measurement ?? '';
+  late String _field = widget.variable.field;
+  late final Map<String, String> _tags;
+  late final TextEditingController _labelController = TextEditingController(
+    text: widget.variable.label ?? '',
+  );
+  String _tagKey = '';
+  String _tagValue = '';
+
+  List<InfluxFieldInfo> _fields = const [];
+  SchemaStatus _fieldStatus = SchemaStatus.idle;
+  List<String> _tagKeys = const [];
+  List<String> _tagValues = const [];
+  int _requestId = 0;
+
+  String get _effectiveMeasurement => _measurement.trim().isNotEmpty
+      ? _measurement.trim()
+      : (widget.defaultMeasurement ?? '');
+
+  @override
+  void initState() {
+    super.initState();
+    _tags = Map.of(widget.variable.tagFilters ?? {});
+    _fields = widget.availableFields;
+    _loadSchema();
+  }
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadSchema() async {
+    final measurement = _effectiveMeasurement;
+    final requestId = ++_requestId;
+    if (measurement.isEmpty ||
+        (widget.fieldLoader == null && widget.tagKeyLoader == null)) {
+      return;
+    }
+    setState(() => _fieldStatus = SchemaStatus.loading);
+    try {
+      final fields =
+          await widget.fieldLoader?.call(measurement) ??
+          const <InfluxFieldInfo>[];
+      final tagKeys =
+          await widget.tagKeyLoader?.call(measurement) ?? const <String>[];
+      if (!mounted || requestId != _requestId) return;
+      setState(() {
+        _fields = fields.isNotEmpty ? fields : widget.availableFields;
+        _tagKeys = tagKeys;
+        _fieldStatus = SchemaStatus.loaded;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _requestId) return;
+      setState(() => _fieldStatus = SchemaStatus.error);
+    }
+  }
+
+  Future<void> _loadTagValues(String key) async {
+    final measurement = _effectiveMeasurement;
+    final loader = widget.tagValueLoader;
+    if (measurement.isEmpty || key.isEmpty || loader == null) return;
+    final values = await loader(measurement, key);
+    if (!mounted || key != _tagKey) return;
+    setState(() => _tagValues = values);
+  }
+
+  void _addTag() {
+    if (_tagKey.trim().isEmpty || _tagValue.trim().isEmpty) return;
+    setState(() {
+      _tags[_tagKey.trim()] = _tagValue.trim();
+      _tagKey = '';
+      _tagValue = '';
+      _tagValues = const [];
+    });
+  }
+
+  FormulaVariable _result() {
+    final measurement = _measurement.trim();
+    final label = _labelController.text.trim();
+    return FormulaVariable(
+      name: widget.variable.name,
+      field: _field.trim().isNotEmpty ? _field.trim() : widget.variable.field,
+      measurement:
+          measurement.isNotEmpty && measurement != widget.defaultMeasurement
+          ? measurement
+          : null,
+      tagFilters: _tags.isNotEmpty ? Map.of(_tags) : null,
+      label: label.isNotEmpty ? label : null,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('Variable ${widget.variable.name} anpassen'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SearchableSchemaPicker(
+              fieldKey: const Key('variable_measurement_input'),
+              label: 'Abweichendes Measurement (optional)',
+              hintText: widget.defaultMeasurement,
+              selectedValue: _measurement,
+              options: widget.availableMeasurements
+                  .map(SchemaPickerOption.fromString)
+                  .toList(),
+              onSelected: (v) {
+                _measurement = v;
+                _loadSchema();
               },
-              child: const Text('Übernehmen'),
+            ),
+            const SizedBox(height: 12),
+            SearchableSchemaPicker(
+              fieldKey: const Key('variable_field_input'),
+              label: 'Feldname (z. B. temperature)',
+              selectedValue: _field,
+              options: _fields.map(SchemaPickerOption.fromFieldInfo).toList(),
+              status: _fieldStatus,
+              requireNumericHint: true,
+              onSelected: (v) => _field = v,
+              onReload: widget.fieldLoader == null ? null : _loadSchema,
+            ),
+            const SizedBox(height: 12),
+            Text('Tag-Filter', style: Theme.of(context).textTheme.titleSmall),
+            if (_tags.isNotEmpty)
+              Wrap(
+                spacing: 6,
+                children: [
+                  for (final entry in _tags.entries)
+                    InputChip(
+                      label: Text('${entry.key} = ${entry.value}'),
+                      deleteIcon: const Icon(Icons.cancel, size: 18),
+                      onDeleted: () => setState(() => _tags.remove(entry.key)),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 8),
+            SearchableSchemaPicker(
+              fieldKey: const Key('variable_tag_key_input'),
+              label: 'Tag',
+              selectedValue: _tagKey,
+              options: _tagKeys.map(SchemaPickerOption.fromString).toList(),
+              onSelected: (v) {
+                _tagKey = v;
+                _loadTagValues(v);
+              },
+            ),
+            const SizedBox(height: 8),
+            SearchableSchemaPicker(
+              fieldKey: const Key('variable_tag_value_input'),
+              label: 'Wert',
+              selectedValue: _tagValue,
+              options: _tagValues.map(SchemaPickerOption.fromString).toList(),
+              onSelected: (v) => _tagValue = v,
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                key: const Key('add_variable_tag_button'),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Tag-Filter hinzufügen'),
+                onPressed: _addTag,
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextFormField(
+              key: const Key('variable_label_input'),
+              controller: _labelController,
+              decoration: const InputDecoration(
+                labelText: 'Bezeichnung (optional)',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Abbrechen'),
+        ),
+        ElevatedButton(
+          key: const Key('apply_variable_button'),
+          onPressed: () => Navigator.of(context).pop(_result()),
+          child: const Text('Übernehmen'),
+        ),
+      ],
     );
   }
 }

@@ -56,6 +56,26 @@ class SchemaDiscoveryController {
     }
   }
 
+  Future<List<InfluxFieldInfo>> getFieldInfos(
+    String connectionId,
+    String measurement,
+  ) async {
+    if (measurement.trim().isEmpty) return const [];
+    try {
+      final connection = await connectionRepository.getConnection(connectionId);
+      if (connection == null) return const [];
+      final token = await connectionRepository.getToken(connectionId);
+      if (token == null) return const [];
+      return await apiClient.fetchFieldInfos(
+        connection: connection,
+        token: token,
+        measurement: measurement,
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
   Future<List<String>> getTagKeys(
     String connectionId,
     String measurement,

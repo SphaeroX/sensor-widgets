@@ -3,8 +3,10 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
@@ -54,6 +56,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   bool _isFormulaEnabled = false;
   String _formula = '';
   List<FormulaVariable> _formulaVariables = [];
+  List<FormulaStep> _formulaSteps = [];
+
+  /// Multi-value rows that are calculated by their own formula.
+  List<SensorQueryItem> _formulaRows = [];
 
   WidgetPreviewData? _previewData;
   bool _isLoadingPreview = false;
@@ -69,13 +75,19 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ? Map<String, String>.from(edit!.tagFilters!)
         : {};
     _multiItems = edit?.items != null
-        ? List<SensorQueryItem>.from(edit!.items!)
+        ? edit!.items!.where((i) => !i.hasFormula).toList()
+        : [];
+    _formulaRows = edit?.items != null
+        ? edit!.items!.where((i) => i.hasFormula).toList()
         : [];
     _isFormulaEnabled =
         edit?.formula != null && edit!.formula!.trim().isNotEmpty;
     _formula = edit?.formula ?? '';
     _formulaVariables = edit?.formulaVariables != null
         ? List<FormulaVariable>.from(edit!.formulaVariables!)
+        : [];
+    _formulaSteps = edit?.formulaSteps != null
+        ? List<FormulaStep>.from(edit!.formulaSteps!)
         : [];
 
     _titleController = TextEditingController(text: edit?.title ?? '');
@@ -108,7 +120,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       text: (edit?.max ?? 100.0).toString(),
     );
     _multiFieldsController = TextEditingController(
-      text: edit?.items?.map((i) => i.field).join(', ') ?? '',
+      text:
+          edit?.items
+              ?.where((i) => !i.hasFormula)
+              .map((i) => i.field)
+              .join(', ') ??
+          '',
     );
 
     if (_selectedConnectionId != null) {
@@ -163,18 +180,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
     List<SensorQueryItem>? items;
     if (_selectedType == WidgetType.multiValue) {
+      var plain = <SensorQueryItem>[];
       if (_multiItems.isNotEmpty) {
-        items = _multiItems;
+        plain = _multiItems;
       } else if (_multiFieldsController.text.trim().isNotEmpty) {
         final rawFields = _multiFieldsController.text
             .split(',')
             .map((s) => s.trim())
             .where((s) => s.isNotEmpty)
             .toList();
-        items = rawFields
+        plain = rawFields
             .map<SensorQueryItem>((f) => SensorQueryItem(field: f, label: f))
             .toList();
       }
+      final all = [...plain, ..._formulaRows];
+      items = all.isEmpty ? null : all;
     }
 
     return WidgetDefinition(
@@ -215,6 +235,171 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       formulaVariables: _isFormulaEnabled && _formulaVariables.isNotEmpty
           ? _formulaVariables
           : null,
+      formulaSteps: _isFormulaEnabled && _formulaSteps.isNotEmpty
+          ? _formulaSteps
+          : null,
+    );
+  }
+
+  Future<List<InfluxFieldInfo>> _loadFieldInfos(String measurement) async {
+    final connectionId = _selectedConnectionId;
+    if (connectionId == null) return const [];
+    return ref
+        .read(schemaDiscoveryControllerProvider)
+        .getFieldInfos(connectionId, measurement);
+  }
+
+  Future<List<String>> _loadTagKeys(String measurement) async {
+    final connectionId = _selectedConnectionId;
+    if (connectionId == null) return const [];
+    return ref
+        .read(schemaDiscoveryControllerProvider)
+        .getTagKeys(connectionId, measurement);
+  }
+
+  Future<List<String>> _loadTagValues(String measurement, String key) async {
+    final connectionId = _selectedConnectionId;
+    if (connectionId == null) return const [];
+    return ref
+        .read(schemaDiscoveryControllerProvider)
+        .getTagValues(connectionId, measurement, key);
+  }
+
+  void _addFormulaRow(EditorSchemaState schemaState) {
+    final taken = {
+      ..._multiItems.map((i) => i.field),
+      ..._formulaRows.map((i) => i.field),
+    };
+    var n = _formulaRows.length + 1;
+    while (taken.contains('formula_$n')) {
+      n++;
+    }
+    final defaultField = schemaState.fields.items.isNotEmpty
+        ? schemaState.fields.items.first.key
+        : 'value';
+    setState(() {
+      _formulaRows = [
+        ..._formulaRows,
+        SensorQueryItem(
+          field: 'formula_$n',
+          label: 'Berechnung $n',
+          formula: '',
+          formulaVariables: [FormulaVariable(name: 'A', field: defaultField)],
+          formulaSteps: const [],
+        ),
+      ];
+    });
+  }
+
+  void _updateFormulaRow(
+    int index, {
+    String? label,
+    String? formula,
+    List<FormulaVariable>? variables,
+    List<FormulaStep>? steps,
+  }) {
+    final old = _formulaRows[index];
+    final updated = List<SensorQueryItem>.from(_formulaRows);
+    updated[index] = SensorQueryItem(
+      field: old.field,
+      label: label ?? old.label,
+      unit: old.unit,
+      decimalPlaces: old.decimalPlaces,
+      formula: formula ?? old.formula,
+      formulaVariables: variables ?? old.formulaVariables,
+      formulaSteps: steps ?? old.formulaSteps,
+    );
+    setState(() => _formulaRows = updated);
+  }
+
+  Widget _buildFormulaRowsSection(EditorSchemaState schemaState) {
+    return Card(
+      key: const Key('multi_formula_rows_section'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    'Berechnete Zeilen (Formel)',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                TextButton.icon(
+                  key: const Key('add_formula_row_button'),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Formel-Zeile'),
+                  onPressed: () => _addFormulaRow(schemaState),
+                ),
+              ],
+            ),
+            if (_formulaRows.isEmpty)
+              Text(
+                'Optional: Zeilen, deren Wert aus einer eigenen Formel berechnet wird.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            for (var i = 0; i < _formulaRows.length; i++)
+              Padding(
+                key: Key('formula_row_$i'),
+                padding: const EdgeInsets.only(top: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            key: Key('formula_row_label_$i'),
+                            initialValue: _formulaRows[i].label,
+                            decoration: const InputDecoration(
+                              labelText: 'Bezeichnung der Zeile',
+                              border: OutlineInputBorder(),
+                              isDense: true,
+                            ),
+                            onChanged: (v) => _updateFormulaRow(i, label: v),
+                          ),
+                        ),
+                        IconButton(
+                          key: Key('delete_formula_row_$i'),
+                          icon: const Icon(Icons.delete_outline),
+                          tooltip: 'Zeile löschen',
+                          onPressed: () => setState(
+                            () =>
+                                _formulaRows = List.of(_formulaRows)
+                                  ..removeAt(i),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    FormulaEditorSection(
+                      showEnableSwitch: false,
+                      isEnabled: true,
+                      onEnabledChanged: (_) {},
+                      formula: _formulaRows[i].formula ?? '',
+                      onFormulaChanged: (v) => _updateFormulaRow(i, formula: v),
+                      variables: _formulaRows[i].formulaVariables ?? const [],
+                      onVariablesChanged: (v) =>
+                          _updateFormulaRow(i, variables: v),
+                      steps: _formulaRows[i].formulaSteps ?? const [],
+                      onStepsChanged: (v) => _updateFormulaRow(i, steps: v),
+                      availableFields: schemaState.fields.items,
+                      availableMeasurements: schemaState.measurements.items,
+                      defaultMeasurement: _measurementController.text.trim(),
+                      fieldLoader: _loadFieldInfos,
+                      tagKeyLoader: _loadTagKeys,
+                      tagValueLoader: _loadTagValues,
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -255,6 +440,40 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ),
         );
         return;
+      }
+      final stepErr = FormulaEvaluator.validateSteps(
+        _formulaSteps,
+        _formula,
+        variableNames: _formulaVariables.map((v) => v.name).toList(),
+      );
+      if (stepErr != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ungültige Zwischenschritte: $stepErr')),
+        );
+        return;
+      }
+    }
+
+    if (_selectedType == WidgetType.multiValue) {
+      for (final row in _formulaRows) {
+        final vars = row.formulaVariables ?? const <FormulaVariable>[];
+        final rowErr = (row.formula ?? '').trim().isEmpty
+            ? 'Formel darf nicht leer sein'
+            : vars.isEmpty
+            ? 'Keine Variable definiert'
+            : FormulaEvaluator.validateSteps(
+                row.formulaSteps ?? const [],
+                row.formula!,
+                variableNames: vars.map((v) => v.name).toList(),
+              );
+        if (rowErr != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Formelzeile "${row.label ?? row.field}": $rowErr'),
+            ),
+          );
+          return;
+        }
       }
     }
 
@@ -493,10 +712,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                               onReload: () =>
                                   schemaNotifier.reloadFieldsAndTags(),
                               validator: (items) =>
-                                  (items == null || items.isEmpty)
+                                  ((items == null || items.isEmpty) &&
+                                      _formulaRows.isEmpty)
                                   ? 'Mindestens 1 Feld auswählen'
                                   : null,
                             ),
+                            const SizedBox(height: 12),
+                            _buildFormulaRowsSection(schemaState),
                           ] else ...[
                             SearchableSchemaPicker(
                               fieldKey: const Key('widget_field_field'),
@@ -545,6 +767,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           // Formula & Calculation Section
                           if (_selectedType != WidgetType.multiValue) ...[
                             FormulaEditorSection(
+                              steps: _formulaSteps,
+                              onStepsChanged: (steps) =>
+                                  setState(() => _formulaSteps = steps),
+                              defaultMeasurement: _measurementController.text
+                                  .trim(),
+                              fieldLoader: _loadFieldInfos,
+                              tagKeyLoader: _loadTagKeys,
+                              tagValueLoader: _loadTagValues,
                               isEnabled: _isFormulaEnabled,
                               onEnabledChanged: (val) =>
                                   setState(() => _isFormulaEnabled = val),
