@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/core/utils/number_formatter.dart';
+import 'package:sensor_widgets/domain/chart/chart_color.dart';
+import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
@@ -17,25 +19,81 @@ class WidgetLivePreviewCard extends StatelessWidget {
     this.previewData,
   });
 
+  Color? _color(String? hex) {
+    final argb = hex == null ? null : parseHexColor(hex);
+    return argb == null ? null : Color(argb);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final appearance = widgetDef.appearance;
+    if (appearance == null) return _buildCard(context);
+
+    // Same parameters as the native widgets: text and accent colors, font scale.
+    final base = Theme.of(context);
+    final text = _color(appearance.textColor);
+    final accent = _color(appearance.accentColor);
+    var scheme = base.colorScheme;
+    var textTheme = base.textTheme;
+    if (text != null) {
+      scheme = scheme.copyWith(
+        onSurface: text,
+        onSurfaceVariant: text.withValues(alpha: 0.7),
+        onPrimaryContainer: text,
+      );
+      textTheme = textTheme.apply(bodyColor: text, displayColor: text);
+    }
+    if (accent != null) scheme = scheme.copyWith(primary: accent);
+
+    return Theme(
+      data: base.copyWith(colorScheme: scheme, textTheme: textTheme),
+      child: MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          textScaler: TextScaler.linear(
+            appearance.fontScale ?? WidgetAppearance.defaultFontScale,
+          ),
+        ),
+        child: Builder(builder: _buildCard),
+      ),
+    );
+  }
+
+  Widget _buildCard(BuildContext context) {
     final theme = Theme.of(context);
+    final appearance = widgetDef.appearance;
+    final background = _color(appearance?.backgroundColor);
+    final radius =
+        appearance?.cornerRadius ?? WidgetAppearance.defaultCornerRadius;
+    final opacity = appearance?.backgroundOpacity;
 
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      color: appearance == null
+          ? null
+          : (background ?? theme.colorScheme.surface).withValues(
+              alpha: opacity ?? WidgetAppearance.defaultBackgroundOpacity,
+            ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(radius),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          gradient: appearance != null
+              ? null
+              : LinearGradient(
+                  colors: [
+                    theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.4,
+                    ),
+                    theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.8,
+                    ),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "w-styled",
+      "type": "single_value",
+      "title": "Wohnzimmer",
+      "connectionId": "conn-1",
+      "measurement": "climate",
+      "field": "temp",
+      "appearance": {
+        "backgroundColor": "#102030",
+        "backgroundOpacity": 0.5,
+        "textColor": "#FFEEAA",
+        "accentColor": "#33CC99",
+        "fontScale": 1.2,
+        "cornerRadius": 24
+      }
+    },
+    {
+      "id": "w-plain",
+      "type": "single_value",
+      "title": "Ohne Aussehen",
+      "connectionId": "conn-1",
+      "measurement": "climate",
+      "field": "temp"
+    },
+    {
+      "id": "w-partial",
+      "type": "single_value",
+      "title": "Teilweise",
+      "connectionId": "conn-1",
+      "measurement": "climate",
+      "field": "temp",
+      "appearance": { "accentColor": "#FF5722" }
+    }
+  ]
+}

@@ -52,8 +52,8 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 ## 2. Aktueller Status
 
 * **Status:** Meilenstein 4 geplant (Meilensteine 1 bis 3 vollständig umgesetzt und verifiziert)
-* **Aktiver Task:** Keiner (nächster Task: `Task_32`; `Task_21` zurückgestellt)
-* **Fortschritt:** 30 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 10/13, Task_21 zurückgestellt)
+* **Aktiver Task:** Keiner (nächster Task: `Task_33`; `Task_21` zurückgestellt)
+* **Fortschritt:** 31 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 11/13, Task_21 zurückgestellt)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -88,7 +88,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_29` | Gradient- und Chart-Style-Kontrakt + Dart-Chart & Vorschau | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_29.md` |
 | `Task_30` | Native Gradienten & Chart-Style (Android Glance, iOS WidgetKit) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_30.md` (Optik auf Geraet nicht geprueft) |
 | `Task_31` | App-UI-Redesign (Dashboard, Editor, Typ-Kacheln, Hell/Dunkel) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_31.md` (Dropdown bleibt, siehe Task) |
-| `Task_32` | Widget-Optik pro Widget mit Vorschau-Parität | `Offen` | `Roadmap/Tasks/Task_32.md` |
+| `Task_32` | Widget-Optik pro Widget mit Vorschau-Parität | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_32.md` (Optik auf Geraeten nicht geprueft) |
 | `Task_33` | End-to-End-Verifikation, CI & Dokumentation (Meilenstein 4) | `Offen` | `Roadmap/Tasks/Task_33.md` |
 
 *(Hinweis: Sobald ein Task ins `Archiv/` verschoben wird, wird der Status hier auf `Erledigt` gesetzt.)*

@@ -173,6 +173,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
     public let formulaSteps: [FormulaStep]?
     public let gapPolicy: String?
     public let chartStyle: ChartStyle?
+    public let appearance: WidgetAppearance?
 
     public init(
         id: String,
@@ -197,7 +198,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         formulaVariables: [FormulaVariable]? = nil,
         formulaSteps: [FormulaStep]? = nil,
         gapPolicy: String? = nil,
-        chartStyle: ChartStyle? = nil
+        chartStyle: ChartStyle? = nil,
+        appearance: WidgetAppearance? = nil
     ) {
         self.id = id
         self.type = type
@@ -222,6 +224,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         self.formulaSteps = formulaSteps
         self.gapPolicy = gapPolicy
         self.chartStyle = chartStyle
+        self.appearance = appearance
     }
 }
 

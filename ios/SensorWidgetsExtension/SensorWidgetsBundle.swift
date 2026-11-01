@@ -14,11 +14,7 @@ public struct SensorWidget: Widget {
         ) { entry in
             SensorWidgetEntryView(entry: entry)
                 .containerBackground(for: .widget) {
-                    #if canImport(UIKit)
-                    Color(uiColor: .systemBackground)
-                    #else
-                    Color.clear
-                    #endif
+                    SensorWidgetBackground(appearance: entry.widget?.appearance)
                 }
         }
         .configurationDisplayName("InfluxDB Sensor")

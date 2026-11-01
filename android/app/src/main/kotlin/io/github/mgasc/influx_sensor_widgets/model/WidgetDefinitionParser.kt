@@ -101,6 +101,24 @@ object WidgetDefinitionParser {
             formulaSteps = formulaSteps,
             gapPolicy = json.optString("gapPolicy").takeIf { it.isNotEmpty() },
             chartStyle = parseChartStyle(json),
+            appearance = parseAppearance(json),
+        )
+    }
+
+    private fun parseAppearance(owner: JSONObject): WidgetAppearance? {
+        if (!owner.has("appearance") || owner.isNull("appearance")) return null
+        val obj = owner.getJSONObject("appearance")
+
+        fun str(key: String) = obj.optString(key).takeIf { it.isNotEmpty() }
+
+        fun num(key: String) = if (obj.has(key) && !obj.isNull(key)) obj.getDouble(key).toFloat() else null
+        return WidgetAppearance(
+            backgroundColor = str("backgroundColor"),
+            backgroundOpacity = num("backgroundOpacity"),
+            textColor = str("textColor"),
+            accentColor = str("accentColor"),
+            fontScale = num("fontScale"),
+            cornerRadius = num("cornerRadius"),
         )
     }
 

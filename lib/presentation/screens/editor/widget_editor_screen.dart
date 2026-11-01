@@ -10,11 +10,13 @@ import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
+import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/appearance_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/chart_style_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
@@ -61,6 +63,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   List<FormulaVariable> _formulaVariables = [];
   List<FormulaStep> _formulaSteps = [];
   ChartStyle? _chartStyle;
+  WidgetAppearance? _appearance;
 
   /// Multi-value rows that are calculated by their own formula.
   List<SensorQueryItem> _formulaRows = [];
@@ -91,6 +94,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ? List<FormulaVariable>.from(edit!.formulaVariables!)
         : [];
     _chartStyle = edit?.chartStyle;
+    _appearance = edit?.appearance;
     _formulaSteps = edit?.formulaSteps != null
         ? List<FormulaStep>.from(edit!.formulaSteps!)
         : [];
@@ -244,6 +248,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ? _formulaSteps
           : null,
       chartStyle: _selectedType == WidgetType.historyChart ? _chartStyle : null,
+      appearance: _appearance,
     );
   }
 
@@ -860,6 +865,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                       onChanged: (style) => setState(() => _chartStyle = style),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  AppearanceEditor(
+                    appearance: _appearance,
+                    onChanged: (a) => setState(() => _appearance = a),
+                  ),
                   const SizedBox(height: 24),
 
                   ElevatedButton.icon(

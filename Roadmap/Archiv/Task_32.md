@@ -47,11 +47,11 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Alle `appearance`-Werte werden in Dart, Kotlin und Swift gelesen (Fixture-Tests).
-- [ ] Vorschau spiegelt die Einstellungen.
-- [ ] Widgets ohne `appearance` sehen aus wie vorher.
-- [ ] Plattformgrenzen sind dokumentiert.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Alle `appearance`-Werte werden in Dart, Kotlin und Swift gelesen (Fixture-Tests).
+- [x] Vorschau spiegelt die Einstellungen.
+- [x] Widgets ohne `appearance` sehen aus wie vorher.
+- [x] Plattformgrenzen sind dokumentiert.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -65,19 +65,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Kontrakt `appearance` in Dart/Kotlin/Swift mit gemeinsamem Fixture; `AppearanceEditor` im Editor fuer alle Typen; Vorschau-Karte folgt Hintergrund, Transparenz, Rundung, Text-/Akzentfarbe, Schriftgroesse; Android `AppearancePalette` + CompositionLocal in Glance; iOS `AppearanceResolver`, `AppearanceModifier`, `SensorWidgetBackground`. Linienstaerke bleibt in `chartStyle.lineWidth` (Task_29), nicht doppelt in `appearance`.
+- **Learnings & Stolpersteine:** Glance-Texte lassen sich zentral per `CompositionLocal` einfaerben/skalieren (Regex-Ersetzung der Farbkonstanten und `N.sp`). iOS kennt keine freie Eckenrundung fuer Widgets; Android nur ab 12. Der `AppearanceModifier` darf `ViewModifier`-`body` mit `@ViewBuilder` bedingt liefern, damit Widgets ohne Schriftgroesse das System-Dynamic-Type behalten.
+- **Wichtige Entscheidungen und ihre Gründe:** Defaults entsprechen exakt den bisherigen Werten (Tests: `widgetsWithoutAppearanceKeepTheOriginalLook`, Dart-Test "without appearance the card looks like before"). Ungueltige Werte fallen auf den Default zurueck bzw. werden geklemmt (Kotlin/Swift) und blockieren in Dart das Speichern (`isValid`).
+- **Auswirkungen auf Folge-Tasks:** Task_33 fuehrt als offene, nicht automatisiert pruefbare Punkte: Optik auf echtem Android-Geraet (Hintergrund, Rundung < Android 12, Schrift) und iOS-WidgetKit (Hintergrund/Tint).
+- **Hinweise zu Tests und Befehlen:** `flutter test test/domain/models/widget_appearance_test.dart test/presentation/widgets/editor/appearance_editor_test.dart test/presentation/widgets/preview/widget_live_preview_card_appearance_test.dart test/presentation/screens/editor/widget_editor_screen_appearance_test.dart`; Android `AppearancePaletteTest`; iOS `AppearanceTests` (CI).

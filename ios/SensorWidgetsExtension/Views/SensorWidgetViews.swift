@@ -91,7 +91,7 @@ public struct SingleValueWidgetView: View {
             Spacer()
 
             Text(WidgetViewHelpers.formatValue(value, decimalPlaces: widget.decimalPlaces, unit: widget.unit))
-                .font(.system(size: 26, weight: .bold, design: .rounded))
+                .appearanceFont(size: 26, weight: .bold, design: .rounded)
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
@@ -351,7 +351,7 @@ public struct GaugeBarWidgetView: View {
                     Spacer()
                     Text(String(format: "%.0f", maxVal))
                 }
-                .font(.system(size: 9))
+                .appearanceFont(size: 9)
                 .foregroundStyle(.secondary)
             }
 
@@ -399,10 +399,10 @@ public struct AggregateWidgetView: View {
     private func aggItem(label: String, value: Double?, decimals: Int, color: Color) -> some View {
         VStack(alignment: .center, spacing: 2) {
             Text(label)
-                .font(.system(size: 9, weight: .bold))
+                .appearanceFont(size: 9, weight: .bold)
                 .foregroundStyle(.secondary)
             Text(value != nil ? String(format: "%.\(decimals)f", value!) : "--")
-                .font(.system(size: 13, weight: .bold))
+                .appearanceFont(size: 13, weight: .bold)
                 .foregroundStyle(color)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
@@ -457,6 +457,98 @@ public struct MultiValueWidgetView: View {
     }
 }
 
+// MARK: - Appearance
+
+private struct WidgetFontScaleKey: EnvironmentKey {
+    static let defaultValue: Double = 1.0
+}
+
+extension EnvironmentValues {
+    /// Font scale of the widget's `appearance` (1 = unchanged).
+    var widgetFontScale: Double {
+        get { self[WidgetFontScaleKey.self] }
+        set { self[WidgetFontScaleKey.self] = newValue }
+    }
+}
+
+private struct AppearanceFontModifier: ViewModifier {
+    @Environment(\.widgetFontScale) private var scale
+    let size: CGFloat
+    let weight: Font.Weight
+    let design: Font.Design
+
+    func body(content: Content) -> some View {
+        content.font(.system(size: size * CGFloat(scale), weight: weight, design: design))
+    }
+}
+
+extension View {
+    /// Fixed-size font that follows the widget's configured font scale.
+    func appearanceFont(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> some View {
+        modifier(AppearanceFontModifier(size: size, weight: weight, design: design))
+    }
+}
+
+extension ResolvedAppearance {
+    public var textColor: Color? { textARGB.map { Color(argb: $0) } }
+    public var accentColor: Color? { accentARGB.map { Color(argb: $0) } }
+    public var backgroundColor: Color? { backgroundARGB.map { Color(argb: $0) } }
+
+    /// Dynamic Type step approximating the font scale; nil when no scale is configured.
+    public var dynamicTypeSize: DynamicTypeSize? {
+        guard hasCustomFontScale else { return nil }
+        switch fontScale {
+        case ..<0.9: return .small
+        case ..<1.1: return .large
+        case ..<1.25: return .xLarge
+        default: return .xxLarge
+        }
+    }
+}
+
+private struct AppearanceModifier: ViewModifier {
+    let resolved: ResolvedAppearance
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        let styled = content
+            .environment(\.widgetFontScale, resolved.fontScale)
+            .foregroundStyle(resolved.textColor ?? Color.primary)
+            .tint(resolved.accentColor ?? Color.accentColor)
+        if let size = resolved.dynamicTypeSize {
+            styled.dynamicTypeSize(size)
+        } else {
+            styled
+        }
+    }
+}
+
+/// Container background of a widget, honoring `appearance.backgroundColor` / `backgroundOpacity`.
+public struct SensorWidgetBackground: View {
+    public let appearance: WidgetAppearance?
+
+    public init(appearance: WidgetAppearance?) {
+        self.appearance = appearance
+    }
+
+    public var body: some View {
+        let resolved = AppearanceResolver.resolve(appearance)
+        if let color = resolved.backgroundColor {
+            color.opacity(resolved.backgroundOpacity)
+        } else {
+            defaultBackground.opacity(resolved.backgroundOpacity)
+        }
+    }
+
+    private var defaultBackground: Color {
+        #if canImport(UIKit)
+        Color(uiColor: .systemBackground)
+        #else
+        Color.clear
+        #endif
+    }
+}
+
 // MARK: - Root Entry View
 
 public struct SensorWidgetEntryView: View {
@@ -465,10 +557,11 @@ public struct SensorWidgetEntryView: View {
     public var body: some View {
         if let widget = entry.widget {
             contentView(for: widget)
+                .modifier(AppearanceModifier(resolved: AppearanceResolver.resolve(widget.appearance)))
                 .overlay(alignment: .bottomLeading) {
                     if let warning = entry.data?.warningMessage {
                         Text(warning)
-                            .font(.system(size: 8))
+                            .appearanceFont(size: 8)
                             .foregroundStyle(.red)
                             .lineLimit(2)
                     }

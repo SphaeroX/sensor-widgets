@@ -63,7 +63,7 @@ object WidgetUiStateMapper {
         val state =
             mapTypeState(widget, cacheObj, timestampStr)
         val warning = cacheObj.optString("warning").takeIf { it.isNotEmpty() }
-        return if (warning != null) state.copy(warningMessage = warning) else state
+        return state.copy(warningMessage = warning, appearance = widget.appearance)
     }
 
     private fun mapTypeState(

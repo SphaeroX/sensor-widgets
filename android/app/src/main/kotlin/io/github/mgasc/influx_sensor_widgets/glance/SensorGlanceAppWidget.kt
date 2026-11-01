@@ -2,6 +2,8 @@ package io.github.mgasc.influx_sensor_widgets.glance
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,11 +44,22 @@ import io.github.mgasc.influx_sensor_widgets.model.WidgetType
 import io.github.mgasc.influx_sensor_widgets.storage.WidgetStorageReader
 import io.github.mgasc.influx_sensor_widgets.worker.WidgetRefreshWorker
 
-private val ColorWhite = ColorProvider(Color.White)
-private val ColorTextMuted = ColorProvider(Color(0xFFA6ADC8))
-private val ColorPrimary = ColorProvider(Color(0xFF89B4FA))
 private val ColorError = ColorProvider(Color(0xFFF38BA8))
-private val ColorBg = ColorProvider(Color(0xFF1E1E2E))
+
+/** Glance color providers and scale of the current widget (see [AppearancePalette]). */
+private class GlancePalette(
+    val palette: AppearancePalette,
+) {
+    val text = ColorProvider(Color(palette.text))
+    val muted = ColorProvider(Color(palette.muted))
+    val accent = ColorProvider(Color(palette.accent))
+    val background = ColorProvider(Color(palette.background))
+
+    fun sp(size: Float) = (size * palette.fontScale).sp
+}
+
+private val LocalPalette = staticCompositionLocalOf { GlancePalette(AppearancePalette.resolve(null)) }
+
 private val ColorTrack = ColorProvider(Color(0xFF313244))
 private val ColorDotActive = ColorProvider(Color(0xFFA6E3A1))
 private val ColorDotInactive = ColorProvider(Color(0xFF585B70))
@@ -95,12 +108,19 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
 
     @Composable
     private fun WidgetRootContent(state: WidgetUiState) {
+        CompositionLocalProvider(LocalPalette provides GlancePalette(AppearancePalette.resolve(state.appearance))) {
+            WidgetRootBox(state)
+        }
+    }
+
+    @Composable
+    private fun WidgetRootBox(state: WidgetUiState) {
         Box(
             modifier =
                 GlanceModifier
                     .fillMaxSize()
-                    .background(ColorBg)
-                    .cornerRadius(16.dp)
+                    .background(LocalPalette.current.background)
+                    .cornerRadius(LocalPalette.current.palette.cornerRadiusDp.dp)
                     .padding(12.dp)
                     .clickable(actionStartActivity<MainActivity>()),
         ) {
@@ -119,7 +139,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     ) {
                         Text(
                             text = state.warningMessage,
-                            style = TextStyle(color = ColorError, fontSize = 10.sp),
+                            style = TextStyle(color = ColorError, fontSize = LocalPalette.current.sp(10f)),
                             maxLines = 2,
                         )
                     }
@@ -137,12 +157,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         ) {
             Text(
                 text = "Widget einrichten",
-                style = TextStyle(color = ColorWhite, fontWeight = FontWeight.Bold, fontSize = 14.sp),
+                style = TextStyle(color = LocalPalette.current.text, fontWeight = FontWeight.Bold, fontSize = LocalPalette.current.sp(14f)),
             )
             Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
                 text = "Tippen zum Öffnen der App",
-                style = TextStyle(color = ColorTextMuted, fontSize = 11.sp),
+                style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(11f)),
             )
         }
     }
@@ -154,7 +174,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             Spacer(modifier = GlanceModifier.height(12.dp))
             Text(
                 text = "Daten werden abgerufen...",
-                style = TextStyle(color = ColorTextMuted, fontSize = 12.sp),
+                style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(12f)),
             )
         }
     }
@@ -169,7 +189,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             Spacer(modifier = GlanceModifier.height(8.dp))
             Text(
                 text = error,
-                style = TextStyle(color = ColorError, fontSize = 11.sp),
+                style = TextStyle(color = ColorError, fontSize = LocalPalette.current.sp(11f)),
                 maxLines = 2,
             )
         }
@@ -210,9 +230,9 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                 text = title,
                 style =
                     TextStyle(
-                        color = ColorWhite,
+                        color = LocalPalette.current.text,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 13.sp,
+                        fontSize = LocalPalette.current.sp(13f),
                     ),
                 maxLines = 1,
                 modifier = GlanceModifier.defaultWeight(),
@@ -220,7 +240,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             if (timestamp.isNotEmpty()) {
                 Text(
                     text = timestamp,
-                    style = TextStyle(color = ColorTextMuted, fontSize = 10.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }
             if (widgetId != null) {
@@ -229,9 +249,9 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     text = "↻",
                     style =
                         TextStyle(
-                            color = ColorPrimary,
+                            color = LocalPalette.current.accent,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
+                            fontSize = LocalPalette.current.sp(14f),
                         ),
                     modifier =
                         GlanceModifier.clickable(
@@ -254,16 +274,16 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                 text = state.singleValue ?: "--",
                 style =
                     TextStyle(
-                        color = ColorPrimary,
+                        color = LocalPalette.current.accent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 28.sp,
+                        fontSize = LocalPalette.current.sp(28f),
                     ),
             )
             if (!state.unit.isNullOrEmpty()) {
                 Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = state.unit,
-                    style = TextStyle(color = ColorTextMuted, fontSize = 14.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(14f)),
                 )
             }
         }
@@ -278,12 +298,17 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "${state.singleValue ?: "--"} ${state.unit ?: ""}",
-                    style = TextStyle(color = ColorWhite, fontWeight = FontWeight.Bold, fontSize = 16.sp),
+                    style =
+                        TextStyle(
+                            color = LocalPalette.current.text,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = LocalPalette.current.sp(16f),
+                        ),
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 Text(
                     text = "Min: ${state.chartMinStr ?: "--"}  Max: ${state.chartMaxStr ?: "--"}",
-                    style = TextStyle(color = ColorTextMuted, fontSize = 10.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }
             Spacer(modifier = GlanceModifier.height(4.dp))
@@ -321,11 +346,16 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             Column {
                 Text(
                     text = "${state.singleValue ?: "--"} ${state.unit ?: ""}",
-                    style = TextStyle(color = ColorWhite, fontWeight = FontWeight.Bold, fontSize = 20.sp),
+                    style =
+                        TextStyle(
+                            color = LocalPalette.current.text,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = LocalPalette.current.sp(20f),
+                        ),
                 )
                 Text(
                     text = if (active) "Status: Aktiv" else "Status: Inaktiv",
-                    style = TextStyle(color = ColorTextMuted, fontSize = 10.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }
         }
@@ -341,7 +371,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             ) {
                 Text(
                     text = "${state.singleValue ?: "--"} ${state.unit ?: ""}",
-                    style = TextStyle(color = ColorPrimary, fontWeight = FontWeight.Bold, fontSize = 18.sp),
+                    style =
+                        TextStyle(
+                            color = LocalPalette.current.accent,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = LocalPalette.current.sp(18f),
+                        ),
                 )
             }
             Spacer(modifier = GlanceModifier.height(8.dp))
@@ -360,7 +395,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                             GlanceModifier
                                 .fillMaxWidth()
                                 .height(8.dp)
-                                .background(ColorPrimary)
+                                .background(LocalPalette.current.accent)
                                 .cornerRadius(4.dp),
                     ) {}
                 }
@@ -369,12 +404,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             Row(modifier = GlanceModifier.fillMaxWidth()) {
                 Text(
                     text = "${state.gaugeMinStr ?: "0"} ${state.unit ?: ""}",
-                    style = TextStyle(color = ColorTextMuted, fontSize = 9.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(9f)),
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 Text(
                     text = "${state.gaugeMaxStr ?: "100"} ${state.unit ?: ""}",
-                    style = TextStyle(color = ColorTextMuted, fontSize = 9.sp),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(9f)),
                 )
             }
         }
@@ -412,12 +447,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         ) {
             Text(
                 text = label,
-                style = TextStyle(color = ColorTextMuted, fontSize = 9.sp),
+                style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(9f)),
             )
             Spacer(modifier = GlanceModifier.height(2.dp))
             Text(
                 text = value ?: "--",
-                style = TextStyle(color = ColorWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                style = TextStyle(color = LocalPalette.current.text, fontWeight = FontWeight.Bold, fontSize = LocalPalette.current.sp(12f)),
             )
         }
     }
@@ -433,12 +468,17 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                 ) {
                     Text(
                         text = key,
-                        style = TextStyle(color = ColorTextMuted, fontSize = 11.sp),
+                        style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(11f)),
                         modifier = GlanceModifier.defaultWeight(),
                     )
                     Text(
                         text = value,
-                        style = TextStyle(color = ColorWhite, fontWeight = FontWeight.Bold, fontSize = 12.sp),
+                        style =
+                            TextStyle(
+                                color = LocalPalette.current.text,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = LocalPalette.current.sp(12f),
+                            ),
                     )
                 }
                 Spacer(modifier = GlanceModifier.height(2.dp))

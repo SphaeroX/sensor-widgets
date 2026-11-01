@@ -4,6 +4,7 @@ import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
+import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 
 /// Specification for a configured home screen widget.
@@ -46,6 +47,9 @@ class WidgetDefinition {
   /// Optional history chart styling (gradient, fill, grid, axes, markers).
   final ChartStyle? chartStyle;
 
+  /// Optional per-widget look (colors, font scale, corner radius).
+  final WidgetAppearance? appearance;
+
   const WidgetDefinition({
     required this.id,
     required this.type,
@@ -70,6 +74,7 @@ class WidgetDefinition {
     this.formulaSteps,
     this.gapPolicy,
     this.chartStyle,
+    this.appearance,
   });
 
   bool get isValid {
@@ -78,6 +83,7 @@ class WidgetDefinition {
       return false;
     }
     if (chartStyle != null && !chartStyle!.isValid) return false;
+    if (appearance != null && !appearance!.isValid) return false;
     if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
 
     if (formula != null && formula!.trim().isNotEmpty) {
@@ -157,6 +163,11 @@ class WidgetDefinition {
       chartStyle: json['chartStyle'] != null
           ? ChartStyle.fromJson(json['chartStyle'] as Map<String, dynamic>)
           : null,
+      appearance: json['appearance'] != null
+          ? WidgetAppearance.fromJson(
+              json['appearance'] as Map<String, dynamic>,
+            )
+          : null,
     );
   }
 
@@ -200,6 +211,7 @@ class WidgetDefinition {
     }
     if (gapPolicy != null) map['gapPolicy'] = gapPolicy;
     if (chartStyle != null) map['chartStyle'] = chartStyle!.toJson();
+    if (appearance != null) map['appearance'] = appearance!.toJson();
     return map;
   }
 
@@ -227,6 +239,7 @@ class WidgetDefinition {
     List<FormulaStep>? formulaSteps,
     String? gapPolicy,
     ChartStyle? chartStyle,
+    WidgetAppearance? appearance,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -253,6 +266,7 @@ class WidgetDefinition {
       formulaSteps: formulaSteps ?? this.formulaSteps,
       gapPolicy: gapPolicy ?? this.gapPolicy,
       chartStyle: chartStyle ?? this.chartStyle,
+      appearance: appearance ?? this.appearance,
     );
   }
 }
