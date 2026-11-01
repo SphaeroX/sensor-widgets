@@ -181,9 +181,9 @@ final class FormulaSeriesTests: XCTestCase {
     }
 
     func testGapPolicyDecoding() throws {
-        let json = """
+        let json = Data("""
         {"id":"w","type":"history_chart","title":"t","connectionId":"c","measurement":"m","gapPolicy":"previous"}
-        """.data(using: .utf8)!
+        """.utf8)
         let widget = try JSONDecoder().decode(WidgetDefinition.self, from: json)
         XCTAssertEqual(widget.gapPolicy, "previous")
     }
