@@ -276,9 +276,10 @@ void main() {
           'Temp 24h Chart',
         );
         // Switch widget type to History Chart
-        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('History Chart').last);
+        await tester.ensureVisible(
+          find.byKey(const Key('type_tile_history_chart')),
+        );
+        await tester.tap(find.byKey(const Key('type_tile_history_chart')));
         await tester.pumpAndSettle();
 
         await tester.enterText(

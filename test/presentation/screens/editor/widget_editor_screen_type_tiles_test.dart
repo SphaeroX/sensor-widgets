@@ -65,24 +65,10 @@ void main() {
     expect(find.byKey(const Key('indicator_threshold_field')), findsOneWidget);
   });
 
-  testWidgets('the legacy type dropdown stays in sync with the tiles', (
-    tester,
-  ) async {
-    await pump(tester);
-
-    await tester.ensureVisible(find.byKey(const Key('type_tile_gauge_bar')));
-    await tester.tap(find.byKey(const Key('type_tile_gauge_bar')));
-    await tester.pumpAndSettle();
-
-    final dropdown = tester.widget<DropdownButtonFormField<dynamic>>(
-      find.byKey(const Key('widget_type_dropdown')),
-    );
-    expect(dropdown.initialValue.toString(), contains('gaugeBar'));
-  });
-
   testWidgets('editor sections have headings', (tester) async {
     await pump(tester);
     expect(find.text('Basis-Einstellungen'), findsOneWidget);
     expect(find.text('Widget-Typ'), findsOneWidget);
+    expect(find.byKey(const Key('widget_type_dropdown')), findsNothing);
   });
 }

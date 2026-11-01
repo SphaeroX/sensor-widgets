@@ -708,25 +708,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                             },
                           ),
                           const SizedBox(height: 12),
-                          DropdownButtonFormField<WidgetType>(
-                            key: const Key('widget_type_dropdown'),
-                            initialValue: _selectedType,
-                            decoration: const InputDecoration(
-                              labelText: 'Widget Typ',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: WidgetType.values.map((t) {
-                              return DropdownMenuItem(
-                                value: t,
-                                child: Text(t.label),
-                              );
-                            }).toList(),
-                            onChanged: (t) {
-                              if (t != null) {
-                                setState(() => _selectedType = t);
-                              }
-                            },
-                          ),
                           const SizedBox(height: 16),
                           Text(
                             'Widget-Typ',
@@ -734,6 +715,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           ),
                           const SizedBox(height: 8),
                           WidgetTypeSelector(
+                            key: const Key('widget_type_selector'),
                             selected: _selectedType,
                             onSelected: (t) =>
                                 setState(() => _selectedType = t),

@@ -45,7 +45,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
   - [x] Formel auf Zeitreihen (Zeit-Buckets per `GROUP BY time`) für Verlaufschart und vor der Aggregation beim Aggregat; Gauge und Lampe rechnen die Formel aus den aktuellsten Werten; Formel pro Multi-Value-Zeile.
   - [x] Variablen per Picker aus dem DB-Schema wählbar (kein manuelles Tippen von Feldnamen), Formel-Editor bei allen Typen, In-App-Hilfe mit Vorlagen (z. B. IAQ).
   - [x] Frei konfigurierbarer Farbverlauf nach Wert im Verlaufschart (Dart, Android, iOS).
-  - [x] Styling: App-UI-Redesign (Material 3, Hell/Dunkel, Typ-Kacheln), Widget-Optik pro Widget, Vorschau-Parität (Typ-Dropdown bleibt vorerst, siehe `Task_31`).
+  - [x] Styling: App-UI-Redesign (Material 3, Hell/Dunkel, Typ-Kacheln), Widget-Optik pro Widget, Vorschau-Parität.
 
 ---
 
@@ -87,7 +87,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_28` | Hilfe-Seite & Formel-Vorlagen (z. B. IAQ) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_28.md` |
 | `Task_29` | Gradient- und Chart-Style-Kontrakt + Dart-Chart & Vorschau | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_29.md` |
 | `Task_30` | Native Gradienten & Chart-Style (Android Glance, iOS WidgetKit) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_30.md` (Optik auf Geraet nicht geprueft) |
-| `Task_31` | App-UI-Redesign (Dashboard, Editor, Typ-Kacheln, Hell/Dunkel) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_31.md` (Dropdown bleibt, siehe Task) |
+| `Task_31` | App-UI-Redesign (Dashboard, Editor, Typ-Kacheln, Hell/Dunkel) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_31.md` |
 | `Task_32` | Widget-Optik pro Widget mit Vorschau-Parität | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_32.md` (Optik auf Geraeten nicht geprueft) |
 | `Task_33` | End-to-End-Verifikation, CI & Dokumentation (Meilenstein 4) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_33.md` |
 

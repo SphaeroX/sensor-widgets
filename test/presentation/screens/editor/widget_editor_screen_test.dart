@@ -90,7 +90,7 @@ void main() {
         find.byKey(const Key('widget_connection_dropdown')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('widget_type_dropdown')), findsOneWidget);
+      expect(find.byKey(const Key('widget_type_selector')), findsOneWidget);
       expect(find.byKey(const Key('widget_measurement_field')), findsOneWidget);
       expect(find.byKey(const Key('widget_field_field')), findsOneWidget);
     });
@@ -102,9 +102,10 @@ void main() {
         await tester.pumpAndSettle();
 
         // Switch to History Chart
-        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('History Chart').last);
+        await tester.ensureVisible(
+          find.byKey(const Key('type_tile_history_chart')),
+        );
+        await tester.tap(find.byKey(const Key('type_tile_history_chart')));
         await tester.pumpAndSettle();
 
         expect(
@@ -113,9 +114,10 @@ void main() {
         );
 
         // Switch to Indicator Lamp
-        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Indicator Lamp').last);
+        await tester.ensureVisible(
+          find.byKey(const Key('type_tile_indicator_lamp')),
+        );
+        await tester.tap(find.byKey(const Key('type_tile_indicator_lamp')));
         await tester.pumpAndSettle();
 
         expect(
@@ -124,9 +126,10 @@ void main() {
         );
 
         // Switch to Gauge Bar
-        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Gauge Bar').last);
+        await tester.ensureVisible(
+          find.byKey(const Key('type_tile_gauge_bar')),
+        );
+        await tester.tap(find.byKey(const Key('type_tile_gauge_bar')));
         await tester.pumpAndSettle();
 
         expect(find.byKey(const Key('gauge_min_field')), findsOneWidget);
@@ -302,9 +305,10 @@ void main() {
         );
 
         // Switch to Multi-Value
-        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
-        await tester.pumpAndSettle();
-        await tester.tap(find.text('Multi Value').last);
+        await tester.ensureVisible(
+          find.byKey(const Key('type_tile_multi_value')),
+        );
+        await tester.tap(find.byKey(const Key('type_tile_multi_value')));
         await tester.pumpAndSettle();
 
         // Set measurement
