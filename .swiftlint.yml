@@ -18,5 +18,5 @@ disabled_rules:
   - redundant_string_enum_value
 
 line_length:
-  warning: 140
-  error: 160
+  warning: 180
+  error: 220
