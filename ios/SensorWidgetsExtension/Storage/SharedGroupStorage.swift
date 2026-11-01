@@ -46,9 +46,9 @@ public final class SharedGroupStorage {
         }
 
         let decoder = JSONDecoder()
-        if let envelope = try? decoder.decode(WidgetDefinitionsEnvelope.self, data: data) {
+        if let envelope = try? decoder.decode(WidgetDefinitionsEnvelope.self, from: data) {
             return envelope.widgets
-        } else if let array = try? decoder.decode([WidgetDefinition].self, data: data) {
+        } else if let array = try? decoder.decode([WidgetDefinition].self, from: data) {
             return array
         }
         return []
@@ -67,7 +67,7 @@ public final class SharedGroupStorage {
         }
 
         let decoder = JSONDecoder()
-        return (try? decoder.decode([InfluxConnection].self, data: data)) ?? []
+        return (try? decoder.decode([InfluxConnection].self, from: data)) ?? []
     }
 
     public func loadConnection(id: String) -> InfluxConnection? {
@@ -113,7 +113,7 @@ public final class SharedGroupStorage {
         guard let data = userDefaults?.data(forKey: "widget_cache_\(widgetId)") else {
             return nil
         }
-        return try? JSONDecoder().decode(CachedSensorData.self, data: data)
+        return try? JSONDecoder().decode(CachedSensorData.self, from: data)
     }
 
     public func saveCachedData(widgetId: String, data: CachedSensorData) {

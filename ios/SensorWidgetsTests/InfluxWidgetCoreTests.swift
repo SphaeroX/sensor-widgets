@@ -37,7 +37,7 @@ final class InfluxWidgetCoreTests: XCTestCase {
 
     func testWidgetDefinitionsDecoding() throws {
         let data = loadFixture(named: "widget_definitions_v1.json", subdirectory: "widget_definitions")
-        let envelope = try JSONDecoder().decode(WidgetDefinitionsEnvelope.self, data: data)
+        let envelope = try JSONDecoder().decode(WidgetDefinitionsEnvelope.self, from: data)
 
         XCTAssertEqual(envelope.schemaVersion, 1)
         XCTAssertEqual(envelope.widgets.count, 6)
