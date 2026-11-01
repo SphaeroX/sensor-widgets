@@ -1,4 +1,5 @@
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
@@ -42,6 +43,9 @@ class WidgetDefinition {
   /// How time buckets with missing variables are handled: `skip` (default) or `previous`.
   final String? gapPolicy;
 
+  /// Optional history chart styling (gradient, fill, grid, axes, markers).
+  final ChartStyle? chartStyle;
+
   const WidgetDefinition({
     required this.id,
     required this.type,
@@ -65,6 +69,7 @@ class WidgetDefinition {
     this.formulaVariables,
     this.formulaSteps,
     this.gapPolicy,
+    this.chartStyle,
   });
 
   bool get isValid {
@@ -72,6 +77,7 @@ class WidgetDefinition {
     if (gapPolicy != null && gapPolicy != 'skip' && gapPolicy != 'previous') {
       return false;
     }
+    if (chartStyle != null && !chartStyle!.isValid) return false;
     if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
 
     if (formula != null && formula!.trim().isNotEmpty) {
@@ -148,6 +154,9 @@ class WidgetDefinition {
                 .toList()
           : null,
       gapPolicy: json['gapPolicy'] as String?,
+      chartStyle: json['chartStyle'] != null
+          ? ChartStyle.fromJson(json['chartStyle'] as Map<String, dynamic>)
+          : null,
     );
   }
 
@@ -190,6 +199,7 @@ class WidgetDefinition {
       map['formulaSteps'] = formulaSteps!.map((e) => e.toJson()).toList();
     }
     if (gapPolicy != null) map['gapPolicy'] = gapPolicy;
+    if (chartStyle != null) map['chartStyle'] = chartStyle!.toJson();
     return map;
   }
 
@@ -216,6 +226,7 @@ class WidgetDefinition {
     List<FormulaVariable>? formulaVariables,
     List<FormulaStep>? formulaSteps,
     String? gapPolicy,
+    ChartStyle? chartStyle,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -241,6 +252,7 @@ class WidgetDefinition {
       formulaVariables: formulaVariables ?? this.formulaVariables,
       formulaSteps: formulaSteps ?? this.formulaSteps,
       gapPolicy: gapPolicy ?? this.gapPolicy,
+      chartStyle: chartStyle ?? this.chartStyle,
     );
   }
 }

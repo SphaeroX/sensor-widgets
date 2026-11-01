@@ -1,0 +1,94 @@
+{
+  "description": "Shared by Dart, Kotlin and Swift. Channels are interpolated linearly and rounded half away from zero; values outside the stop range use the nearest stop; stops may be unsorted.",
+  "cases": [
+    {
+      "name": "at_first_stop",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 50, "color": "#FFFF00" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": 0,
+      "expected": "#FF0000"
+    },
+    {
+      "name": "between_first_and_second",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 50, "color": "#FFFF00" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": 20,
+      "expected": "#FF6600"
+    },
+    {
+      "name": "exactly_on_middle_stop",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 50, "color": "#FFFF00" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": 50,
+      "expected": "#FFFF00"
+    },
+    {
+      "name": "between_second_and_third",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 50, "color": "#FFFF00" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": 80,
+      "expected": "#66FF00"
+    },
+    {
+      "name": "below_first_stop_uses_first_color",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": -10,
+      "expected": "#FF0000"
+    },
+    {
+      "name": "above_last_stop_uses_last_color",
+      "stops": [
+        { "value": 0, "color": "#FF0000" },
+        { "value": 100, "color": "#00FF00" }
+      ],
+      "value": 120,
+      "expected": "#00FF00"
+    },
+    {
+      "name": "single_stop_applies_everywhere",
+      "stops": [{ "value": 10, "color": "#123456" }],
+      "value": 999,
+      "expected": "#123456"
+    },
+    {
+      "name": "unsorted_stops_are_sorted",
+      "stops": [
+        { "value": 100, "color": "#00FF00" },
+        { "value": 0, "color": "#FF0000" },
+        { "value": 50, "color": "#FFFF00" }
+      ],
+      "value": 20,
+      "expected": "#FF6600"
+    },
+    {
+      "name": "descending_direction_green_to_red",
+      "stops": [
+        { "value": 0, "color": "#00FF00" },
+        { "value": 100, "color": "#FF0000" }
+      ],
+      "value": 20,
+      "expected": "#33CC00"
+    },
+    {
+      "name": "no_stops_gives_no_color",
+      "stops": [],
+      "value": 5,
+      "expected": null
+    }
+  ]
+}

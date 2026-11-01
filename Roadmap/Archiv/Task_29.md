@@ -47,10 +47,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Farbwert zu Y-Wert wird korrekt interpoliert (Tests inkl. Grenzfälle).
-- [ ] Vorschau zeigt Verlauf nach Wert, belegt durch Painter-/Widget-Test.
-- [ ] Widgets ohne `chartStyle` sehen unverändert aus.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Farbwert zu Y-Wert wird korrekt interpoliert (Tests inkl. Grenzfälle).
+- [x] Vorschau zeigt Verlauf nach Wert, belegt durch Painter-/Widget-Test.
+- [x] Widgets ohne `chartStyle` sehen unverändert aus.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -64,19 +64,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** `ChartStyle`/`ColorStop`, Farb-Interpolation und Gradient-Aufbau, `HistoryChartPainter`, `ChartStyleEditor`, Vorschau-Anbindung, Editor-Integration, Fixtures (`widget_definition_chart_style.json`, `color_interpolation_cases.json`). Painter-Tests laufen ueber einen aufzeichnenden `Canvas` (kein Golden, plattformunabhaengig).
+- **Learnings & Stolpersteine:** `Colors.blue` (MaterialColor) ist nicht `==` zu einer gleichfarbigen `Color`: in Tests `toARGB32()` vergleichen. Widget-Tests, die zwei Editor-Varianten nacheinander pumpen, brauchen einen `UniqueKey` am `ProviderScope`, sonst bleibt der State erhalten.
+- **Wichtige Entscheidungen und ihre Gründe:** Farbe wird hex-textbasiert eingegeben (kein Color-Picker-Package, keine neue Dependency). Fuellung nutzt denselben Gradient mit Alpha 0x59. Gradient laeuft ueber den sichtbaren Datenbereich (min..max der Reihe).
+- **Auswirkungen auf Folge-Tasks:** Task_30 muss `chartStyle` in Kotlin und Swift parsen und `interpolateColor`/`buildGradient` anhand von `fixtures/chart/color_interpolation_cases.json` nachbauen; Rundung half away from zero. Task_32 kann `appearance` neben `chartStyle` ergaenzen; Task_31 beachtet die Keys `chart_style_editor`, `preset_*`, `color_stop_*`.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/domain/chart test/domain/models/chart_style_test.dart test/presentation/widgets/preview/history_chart_painter_test.dart test/presentation/widgets/editor/chart_style_editor_test.dart`.

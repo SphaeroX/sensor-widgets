@@ -52,8 +52,8 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 ## 2. Aktueller Status
 
 * **Status:** Meilenstein 4 geplant (Meilensteine 1 bis 3 vollständig umgesetzt und verifiziert)
-* **Aktiver Task:** Keiner (nächster Task: `Task_29`; `Task_21` zurückgestellt)
-* **Fortschritt:** 27 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 7/13, Task_21 zurückgestellt)
+* **Aktiver Task:** Keiner (nächster Task: `Task_30`; `Task_21` zurückgestellt)
+* **Fortschritt:** 28 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 8/13, Task_21 zurückgestellt)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -85,7 +85,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_26` | Multi-Value: Formel pro Zeile (Dart, Android, iOS) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_26.md` |
 | `Task_27` | Editor: Variablen per Picker, Formel für alle Typen, Zwischenformeln | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_27.md` |
 | `Task_28` | Hilfe-Seite & Formel-Vorlagen (z. B. IAQ) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_28.md` |
-| `Task_29` | Gradient- und Chart-Style-Kontrakt + Dart-Chart & Vorschau | `Offen` | `Roadmap/Tasks/Task_29.md` |
+| `Task_29` | Gradient- und Chart-Style-Kontrakt + Dart-Chart & Vorschau | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_29.md` |
 | `Task_30` | Native Gradienten & Chart-Style (Android Glance, iOS WidgetKit) | `Offen` | `Roadmap/Tasks/Task_30.md` |
 | `Task_31` | App-UI-Redesign (Dashboard, Editor, Typ-Kacheln, Hell/Dunkel) | `Offen` | `Roadmap/Tasks/Task_31.md` |
 | `Task_32` | Widget-Optik pro Widget mit Vorschau-Parität | `Offen` | `Roadmap/Tasks/Task_32.md` |

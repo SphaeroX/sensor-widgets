@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "w-chart",
+      "type": "history_chart",
+      "title": "IAQ Verlauf",
+      "connectionId": "conn-1",
+      "measurement": "sen66",
+      "field": "iaq",
+      "timeRange": "24h",
+      "aggregationInterval": "1h",
+      "chartStyle": {
+        "colorStops": [
+          { "value": 0, "color": "#FF0000" },
+          { "value": 50, "color": "#FFFF00" },
+          { "value": 100, "color": "#00FF00" }
+        ],
+        "fillArea": true,
+        "showGrid": true,
+        "showAxes": true,
+        "markMinMax": true,
+        "lineWidth": 3.0
+      }
+    },
+    {
+      "id": "w-chart-plain",
+      "type": "history_chart",
+      "title": "Ohne Stil",
+      "connectionId": "conn-1",
+      "measurement": "sen66",
+      "field": "iaq"
+    }
+  ]
+}

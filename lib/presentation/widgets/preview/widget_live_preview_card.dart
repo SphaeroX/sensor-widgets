@@ -4,6 +4,7 @@ import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
 
 /// Live preview card rendering mock native representation for all 6 widget types.
 class WidgetLivePreviewCard extends StatelessWidget {
@@ -229,32 +230,48 @@ class WidgetLivePreviewCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            SizedBox(
-              height: 60,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: points.map((p) {
-                  final range = (maxVal - minVal) == 0
-                      ? 1.0
-                      : (maxVal - minVal);
-                  final ratio = ((p.value - minVal) / range).clamp(0.1, 1.0);
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1),
-                      child: Container(
-                        height: 60 * ratio,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.7,
+            if (widgetDef.chartStyle != null)
+              SizedBox(
+                height: 90,
+                width: double.infinity,
+                child: CustomPaint(
+                  key: const Key('history_chart_canvas'),
+                  painter: HistoryChartPainter(
+                    values: points.map((p) => p.value).toList(),
+                    style: widgetDef.chartStyle!,
+                    lineColor: theme.colorScheme.primary,
+                    labelColor: theme.colorScheme.onSurfaceVariant,
+                    gridColor: theme.colorScheme.outlineVariant,
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                height: 60,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: points.map((p) {
+                    final range = (maxVal - minVal) == 0
+                        ? 1.0
+                        : (maxVal - minVal);
+                    final ratio = ((p.value - minVal) / range).clamp(0.1, 1.0);
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1),
+                        child: Container(
+                          height: 60 * ratio,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.7,
+                            ),
+                            borderRadius: BorderRadius.circular(2),
                           ),
-                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
-            ),
           ],
         );
 

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
@@ -14,6 +15,7 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/chart_style_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
@@ -57,6 +59,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   String _formula = '';
   List<FormulaVariable> _formulaVariables = [];
   List<FormulaStep> _formulaSteps = [];
+  ChartStyle? _chartStyle;
 
   /// Multi-value rows that are calculated by their own formula.
   List<SensorQueryItem> _formulaRows = [];
@@ -86,6 +89,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     _formulaVariables = edit?.formulaVariables != null
         ? List<FormulaVariable>.from(edit!.formulaVariables!)
         : [];
+    _chartStyle = edit?.chartStyle;
     _formulaSteps = edit?.formulaSteps != null
         ? List<FormulaStep>.from(edit!.formulaSteps!)
         : [];
@@ -238,6 +242,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       formulaSteps: _isFormulaEnabled && _formulaSteps.isNotEmpty
           ? _formulaSteps
           : null,
+      chartStyle: _selectedType == WidgetType.historyChart ? _chartStyle : null,
     );
   }
 
@@ -836,6 +841,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
                   // Type-Specific Configuration
                   _buildTypeSpecificSettings(context),
+                  if (_selectedType == WidgetType.historyChart) ...[
+                    const SizedBox(height: 16),
+                    ChartStyleEditor(
+                      style: _chartStyle,
+                      onChanged: (style) => setState(() => _chartStyle = style),
+                    ),
+                  ],
                   const SizedBox(height: 24),
 
                   ElevatedButton.icon(
