@@ -48,7 +48,7 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
 - [x] `cd android && ./gradlew test` ist grün und enthält alle Fixture-Fälle.
-- [x] Swift-Tests sind geschrieben; Verifikation steht aus, bis die CI-Ausführung vorliegt (Ergebnis im Task festhalten). **CI-Ergebnis steht noch aus.**
+- [x] Swift-Tests sind geschrieben; Verifikation steht aus, bis die CI-Ausführung vorliegt (Ergebnis im Task festhalten). **CI-Ergebnis (GitHub Actions, Lauf nach Commit 'fix(ios): use JSONDecoder.decode(_:from:)'): alle `FormulaEvaluatorTests` und `FormulaEvaluatorV2Tests` bestehen auf macOS.**
 - [x] Alte Widget-JSONs werden unverändert geparst.
 - [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
@@ -76,3 +76,5 @@ Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivi
 - **Wichtige Entscheidungen und ihre Gründe:** Swift-Datei mit `swiftlint:disable` fuer Komplexitaetsregeln (Parser/Tokenizer), da `swiftlint --strict` in CI laeuft. `FormulaError.syntaxErrorAt` zusaetzlich zu `syntaxError`, damit bestehende Tests/Aufrufer unveraendert bleiben.
 - **Auswirkungen auf Folge-Tasks:** Task_25/26 koennen `FormulaEvaluator.evaluate(formula, vars, steps)` auf beiden Plattformen verwenden. Swift ist NICHT lokal verifiziert: Ergebnis des CI-Laufs (`swift test --package-path ios`, `swiftlint --strict`) muss nach dem Push geprueft und hier nachgetragen werden.
 - **Hinweise zu Tests und Befehlen:** `cd android && ./gradlew test :app:ktlintCheck --offline` (gruen). Swift: nur CI.
+
+- **CI-Nachtrag:** Beim ersten echten CI-Lauf waren Android (gradlew nicht eingecheckt), SwiftLint (77 Altverstoesse) und der iOS-Build (falsches `decode(_:data:)`-Label in `SharedGroupStorage.swift`) rot; behoben. Offen und NICHT Teil von Task_23: 5 Altfehler in `InfluxWidgetCoreTests` (`testParseAggregate`, `testParseDiscoveryMetadata`, `testParseMultiValues`, `testParseTimeSeries`, `testWidgetDefinitionsDecoding`): die Erwartungswerte passen nicht zu den Fixtures. Aenderung der Tests braucht Freigabe des Nutzers.
