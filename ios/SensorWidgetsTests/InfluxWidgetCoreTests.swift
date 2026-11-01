@@ -52,9 +52,9 @@ final class InfluxWidgetCoreTests: XCTestCase {
 
         let single = envelope.widgets.first { $0.type == .singleValue }
         XCTAssertNotNil(single)
-        XCTAssertEqual(single?.id, "w_single_temp")
+        XCTAssertEqual(single?.id, "widget-1-single-value")
         XCTAssertEqual(single?.measurement, "temperature")
-        XCTAssertEqual(single?.field, "temp")
+        XCTAssertEqual(single?.field, "value")
         XCTAssertEqual(single?.unit, "°C")
         XCTAssertEqual(single?.decimalPlaces, 1)
     }
@@ -130,8 +130,8 @@ final class InfluxWidgetCoreTests: XCTestCase {
     func testParseTimeSeries() throws {
         let data = loadFixture(named: "history_series_response.json", subdirectory: "influx")
         let points = try InfluxResponseParser.parseTimeSeries(data: data, fieldName: "mean")
-        XCTAssertEqual(points.count, 5)
-        XCTAssertEqual(points.first?.value, 20.1)
+        XCTAssertEqual(points.count, 6)
+        XCTAssertEqual(points.first?.value, 19.8)
         XCTAssertEqual(points.last?.value, 21.5)
     }
 
@@ -139,16 +139,16 @@ final class InfluxWidgetCoreTests: XCTestCase {
         let data = loadFixture(named: "aggregate_min_max_mean_response.json", subdirectory: "influx")
         let agg = try InfluxResponseParser.parseAggregate(data: data)
         XCTAssertEqual(agg["min"], 18.2)
-        XCTAssertEqual(agg["max"], 24.7)
-        XCTAssertEqual(agg["mean"], 21.45)
+        XCTAssertEqual(agg["max"], 23.9)
+        XCTAssertEqual(agg["mean"], 21.1)
     }
 
     func testParseMultiValues() throws {
         let data = loadFixture(named: "multi_series_room_response.json", subdirectory: "influx")
-        let multi = try InfluxResponseParser.parseMultiValues(data: data, fields: ["temp", "humidity", "battery"])
-        XCTAssertEqual(multi["temp"]?.value, 21.5)
-        XCTAssertEqual(multi["humidity"]?.value, 45.2)
-        XCTAssertEqual(multi["battery"]?.value, 92.0)
+        let multi = try InfluxResponseParser.parseMultiValues(data: data, fields: ["temperature", "humidity", "co2"])
+        XCTAssertEqual(multi["temperature"]?.value, 22.3)
+        XCTAssertEqual(multi["humidity"]?.value, 48.5)
+        XCTAssertEqual(multi["co2"]?.value, 620.0)
     }
 
     func testParseDiscoveryMetadata() throws {
@@ -158,7 +158,7 @@ final class InfluxWidgetCoreTests: XCTestCase {
 
         let fieldKeysData = loadFixture(named: "show_field_keys_response.json", subdirectory: "influx")
         let fields = try InfluxResponseParser.parseFieldKeys(data: fieldKeysData)
-        XCTAssertTrue(fields.contains("temp"))
+        XCTAssertTrue(fields.contains("temperature"))
 
         let tagKeysData = loadFixture(named: "show_tag_keys_response.json", subdirectory: "influx")
         let tagKeys = try InfluxResponseParser.parseTagKeys(data: tagKeysData)
