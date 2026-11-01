@@ -5,3 +5,18 @@ excluded:
   - ios/.symlinks
   - ios/Flutter
   - ios/build
+  - ios/Runner
+
+# Parser/tokenizer/timeline code uses short local names and long functions;
+# these style rules are relaxed project-wide.
+disabled_rules:
+  - identifier_name
+  - function_body_length
+  - cyclomatic_complexity
+  - type_body_length
+  - file_length
+  - redundant_string_enum_value
+
+line_length:
+  warning: 140
+  error: 160

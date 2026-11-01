@@ -1,5 +1,4 @@
 import Foundation
-// swiftlint:disable cyclomatic_complexity function_body_length type_body_length file_length
 
 public enum FormulaError: LocalizedError, Equatable {
     case emptyFormula
