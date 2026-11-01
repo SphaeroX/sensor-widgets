@@ -95,6 +95,9 @@ final RegExp _identPattern = RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$');
 class FormulaEvaluator {
   FormulaEvaluator._();
 
+  /// Names of all supported functions (used by the in-app help).
+  static List<String> get functionNames => _functions.keys.toList();
+
   /// Validates formula syntax. Returns null if valid, or an error description
   /// string that includes the 1-based error position where known.
   static String? validateSyntax(String formula) {

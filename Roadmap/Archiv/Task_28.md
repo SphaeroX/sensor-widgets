@@ -45,10 +45,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Jede Evaluator-Funktion hat einen Hilfeeintrag (automatischer Test).
-- [ ] IAQ-Vorlage (SEN66, `min` über vier Teil-Scores) rechnet mit Beispielwerten korrekt (Test, inkl. Fall, dass der schlechteste Score das Ergebnis bestimmt).
-- [ ] Vorlage lässt sich im Editor übernehmen und anschließend anpassen.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Jede Evaluator-Funktion hat einen Hilfeeintrag (automatischer Test).
+- [x] IAQ-Vorlage (SEN66, `min` über vier Teil-Scores) rechnet mit Beispielwerten korrekt (Test, inkl. Fall, dass der schlechteste Score das Ergebnis bestimmt).
+- [x] Vorlage lässt sich im Editor übernehmen und anschließend anpassen.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -70,19 +70,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Hilfe-Daten und Vorlagen (`formula_help_content.dart`), `FormulaHelpScreen`, Hilfe-Button im Formel-Editor (Vorlage uebernehmen) und im Dashboard, `FormulaEvaluator.functionNames`, Speichern-Sperre bei Variablen ohne Feld. Vorlagen: IAQ SEN66 (Schwellen wie in der Task-Beschreibung), Celsius in Fahrenheit, Mittelwert zweier Sensoren.
+- **Learnings & Stolpersteine:** `scrollUntilVisible` laesst Elemente teilweise sichtbar; vor `tap` zusaetzlich `ensureVisible` aufrufen. Beispiel-Formeln der Hilfe duerfen keine Variablen enthalten (Test wertet sie mit leerer Variablenmenge aus), z. B. `abs(0 - 3)` statt `abs(-3)`.
+- **Wichtige Entscheidungen und ihre Gründe:** Vorlagenvariablen haben leeres `field`; der Nutzer ordnet sie per Picker zu (Hinweis per SnackBar). Bereits zugeordnete Variablen gleichen Namens bleiben erhalten.
+- **Auswirkungen auf Folge-Tasks:** Task_31 (Redesign) muss die Hilfe-Schaltflaechen (Keys `formula_help_button`, `open_formula_help_btn`) behalten.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/presentation/help test/presentation/screens/dashboard/widgets_dashboard_help_test.dart`.

@@ -4,6 +4,8 @@ import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
+import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
 
 /// Loads the field keys (with type) of a measurement.
@@ -195,6 +197,30 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     widget.onVariablesChanged(updated);
   }
 
+  Future<void> _openHelp() async {
+    final template = await Navigator.of(context).push<FormulaTemplate>(
+      MaterialPageRoute(
+        builder: (_) => const FormulaHelpScreen(applyEnabled: true),
+      ),
+    );
+    if (template == null || !mounted) return;
+
+    final existing = {for (final v in widget.variables) v.name: v};
+    widget.onVariablesChanged([
+      for (final v in template.variables)
+        existing[v.name]?.field.isNotEmpty == true ? existing[v.name]! : v,
+    ]);
+    widget.onStepsChanged?.call(List.of(template.steps));
+    widget.onFormulaChanged(template.formula);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Vorlage "${template.title}" übernommen. Bitte die Variablen zuordnen.',
+        ),
+      ),
+    );
+  }
+
   void _addStep() {
     final taken = widget.steps.map((s) => s.name).toSet();
     var n = 1;
@@ -272,11 +298,23 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
               ),
             if (widget.isEnabled) ...[
               if (widget.showEnableSwitch) const Divider(height: 24),
-              Text(
-                'Mathematische Formel',
-                style: Theme.of(context).textTheme.titleSmall,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Mathematische Formel',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  IconButton(
+                    key: const Key('formula_help_button'),
+                    icon: const Icon(Icons.help_outline, size: 20),
+                    tooltip: 'Hilfe und Vorlagen',
+                    visualDensity: VisualDensity.compact,
+                    onPressed: _openHelp,
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
               TextFormField(
                 key: const Key('formula_input_field'),
                 controller: _formulaController,

@@ -441,6 +441,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         );
         return;
       }
+      if (_formulaVariables.any((v) => v.field.trim().isEmpty)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bitte allen Variablen ein Feld zuordnen.'),
+          ),
+        );
+        return;
+      }
       final stepErr = FormulaEvaluator.validateSteps(
         _formulaSteps,
         _formula,

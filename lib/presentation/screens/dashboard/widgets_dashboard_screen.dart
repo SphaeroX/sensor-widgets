@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 
@@ -34,6 +35,18 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                   ),
                 );
               }
+            },
+          ),
+          IconButton(
+            key: const Key('open_formula_help_btn'),
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'Formel-Hilfe',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const FormulaHelpScreen(),
+                ),
+              );
             },
           ),
           IconButton(
