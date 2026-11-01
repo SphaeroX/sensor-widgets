@@ -46,10 +46,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Alle Suiten, Formatter und Linter laufen ohne Fehler.
-- [ ] E2E-Szenario grün.
-- [ ] iOS-Verifikation: CI-Lauf grün oder ehrlich als ausstehend dokumentiert.
-- [ ] `docs/` und `Roadmap/README.md` sind aktuell.
+- [x] Alle Suiten, Formatter und Linter laufen ohne Fehler.
+- [x] E2E-Szenario grün.
+- [x] iOS-Verifikation: CI-Lauf grün oder ehrlich als ausstehend dokumentiert.
+- [x] `docs/` und `Roadmap/README.md` sind aktuell.
 
 ## Offene Fragen / Annahmen
 
@@ -63,19 +63,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** E2E-Test `test/e2e_formula_gradient_flow_test.dart` (headless) plus Geraete-Wrapper `integration_test/formula_gradient_flow_test.dart`; Regressionstests fuer alte Widget-JSONs; `docs/` (project-brief, testing, architecture) und `Roadmap/README.md` aktualisiert. **Der E2E-Test deckte zwei echte Luecken auf:** (1) `FormulaEditorSection` setzte beim Uebernehmen einer Vorlage Controller waehrend des Builds ("setState() called during build"), behoben mit Test `formula_editor_section_external_update_test.dart`; (2) `gapPolicy` war in Dart/Kotlin/Swift umgesetzt, aber im Editor nicht einstellbar, ergaenzt als Karte "Luecken im Verlauf" mit Test `widget_editor_screen_gap_policy_test.dart`.
+- **Learnings & Stolpersteine:** Lazy-Listen (Hilfe-Screen) brauchen im Test `scrollUntilVisible` statt `ensureVisible`. Der gesamte Meilenstein ist nur durch Zusammenspiel der drei Plattformen abgesichert; Kotlin laeuft lokal, Swift nur in CI.
+- **Wichtige Entscheidungen und ihre Gründe:** Der E2E-Test liegt in `test/` (laeuft ohne Geraet in CI) und wird von `integration_test/` wiederverwendet, analog zum bestehenden Formel-Flow-Test.
+- **Auswirkungen auf Folge-Tasks:** Keine offenen Roadmap-Tasks ausser `Task_21`. Offen fuer den Nutzer: (a) `Task_21` Dashboard-Layout-Bug mit Screenshot/Geraetedaten reproduzieren; (b) Entfernen des Typ-Dropdowns `widget_type_dropdown` (nur nach Freigabe fuer die Anpassung dreier bestehender Tests); (c) manuelle Geraetepruefung von Gradient und Optik (Android und iOS).
+- **Hinweise zu Tests und Befehlen:** Komplettlauf: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`, `cd android && ./gradlew test :app:ktlintCheck`; iOS und Gesamt-CI: GitHub Actions (`CI`-Workflow).

@@ -101,10 +101,25 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
   @override
   void didUpdateWidget(covariant FormulaEditorSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.formula != _formulaController.text) {
-      _formulaController.text = widget.formula;
-    }
+    _syncFormulaController();
     _syncStepControllers();
+  }
+
+  /// Controllers that already have listeners (the text fields) must not change
+  /// while the framework is building, so those updates run after the frame.
+  void _applyAfterFrame(VoidCallback update) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) update();
+    });
+  }
+
+  void _syncFormulaController() {
+    if (widget.formula == _formulaController.text) return;
+    _applyAfterFrame(() {
+      if (widget.formula != _formulaController.text) {
+        _formulaController.text = widget.formula;
+      }
+    });
   }
 
   @override
@@ -117,6 +132,7 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
   }
 
   void _syncStepControllers() {
+    final existing = _stepNameControllers.length;
     while (_stepNameControllers.length < widget.steps.length) {
       _stepNameControllers.add(TextEditingController());
       _stepExprControllers.add(TextEditingController());
@@ -126,11 +142,28 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
       _stepExprControllers.removeLast().dispose();
     }
     for (var i = 0; i < widget.steps.length; i++) {
-      if (_stepNameControllers[i].text != widget.steps[i].name) {
-        _stepNameControllers[i].text = widget.steps[i].name;
+      final step = widget.steps[i];
+      final name = _stepNameControllers[i];
+      final expression = _stepExprControllers[i];
+      // New controllers have no listeners yet and can be filled right away.
+      if (i >= existing) {
+        name.text = step.name;
+        expression.text = step.expression;
+        continue;
       }
-      if (_stepExprControllers[i].text != widget.steps[i].expression) {
-        _stepExprControllers[i].text = widget.steps[i].expression;
+      if (name.text != step.name || expression.text != step.expression) {
+        _applyAfterFrame(() {
+          if (i >= widget.steps.length || i >= _stepNameControllers.length) {
+            return;
+          }
+          final current = widget.steps[i];
+          if (_stepNameControllers[i].text != current.name) {
+            _stepNameControllers[i].text = current.name;
+          }
+          if (_stepExprControllers[i].text != current.expression) {
+            _stepExprControllers[i].text = current.expression;
+          }
+        });
       }
     }
   }

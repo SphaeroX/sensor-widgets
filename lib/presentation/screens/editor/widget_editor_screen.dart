@@ -65,6 +65,9 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   ChartStyle? _chartStyle;
   WidgetAppearance? _appearance;
 
+  /// Gap handling of time buckets: null = skip (default) or 'previous'.
+  String? _gapPolicy;
+
   /// Multi-value rows that are calculated by their own formula.
   List<SensorQueryItem> _formulaRows = [];
 
@@ -95,6 +98,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         : [];
     _chartStyle = edit?.chartStyle;
     _appearance = edit?.appearance;
+    _gapPolicy = edit?.gapPolicy == 'previous' ? 'previous' : null;
     _formulaSteps = edit?.formulaSteps != null
         ? List<FormulaStep>.from(edit!.formulaSteps!)
         : [];
@@ -249,6 +253,56 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           : null,
       chartStyle: _selectedType == WidgetType.historyChart ? _chartStyle : null,
       appearance: _appearance,
+      gapPolicy: _usesTimeBuckets && _gapPolicy == 'previous'
+          ? _gapPolicy
+          : null,
+    );
+  }
+
+  /// History charts and aggregates with a formula are calculated per time bucket.
+  bool get _usesTimeBuckets =>
+      _isFormulaEnabled &&
+      (_selectedType == WidgetType.historyChart ||
+          _selectedType == WidgetType.aggregate);
+
+  Widget _buildGapPolicyCard() {
+    return Card(
+      key: const Key('gap_policy_card'),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Lücken im Verlauf',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Was passiert, wenn in einem Zeit-Bucket ein Wert der Formel fehlt?',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: [
+                ChoiceChip(
+                  key: const Key('gap_policy_skip'),
+                  label: const Text('Bucket überspringen'),
+                  selected: _gapPolicy != 'previous',
+                  onSelected: (_) => setState(() => _gapPolicy = null),
+                ),
+                ChoiceChip(
+                  key: const Key('gap_policy_previous'),
+                  label: const Text('Letzten Wert übernehmen'),
+                  selected: _gapPolicy == 'previous',
+                  onSelected: (_) => setState(() => _gapPolicy = 'previous'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -858,6 +912,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
                   // Type-Specific Configuration
                   _buildTypeSpecificSettings(context),
+                  if (_usesTimeBuckets) ...[
+                    const SizedBox(height: 16),
+                    _buildGapPolicyCard(),
+                  ],
                   if (_selectedType == WidgetType.historyChart) ...[
                     const SizedBox(height: 16),
                     ChartStyleEditor(

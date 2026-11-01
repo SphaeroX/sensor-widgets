@@ -7,8 +7,8 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 
 ## Core features
 - Widget types: single value (with unit and timestamp), history chart (selectable time range), indicator lamp that switches at a threshold (greater or less than), multi-value overview (e.g. a room with several sensors), aggregate over a time range (min, max, average), gauge or bar.
-- Local formula calculation: arithmetic expressions combining multiple InfluxDB fields/measurements (`+`, `-`, `*`, `/`, `()`, constants) evaluated locally before widget display.
-- Per-widget configuration: connection, measurement, field, formula, filter, time range, unit, colors, thresholds.
+- Local formula calculation for every widget type and every multi-value row: arithmetic expressions combining multiple InfluxDB fields/measurements (`+ - * /`, comparisons, `if`, functions such as `min`, `max`, `clamp`, `pow`, `sqrt`, `ln`, constants `pi`/`e`) with named intermediate steps. Variables are picked from the database schema. History charts and aggregates are calculated per time bucket with a configurable gap policy. An in-app help page with templates (e.g. IAQ for the Sensirion SEN66) explains the language.
+- Per-widget configuration: connection, measurement, field, formula, filter, time range, unit, colors, thresholds, value gradient for history charts (color stops, area fill, grid, axes, min/max markers) and appearance (background color and opacity, text and accent color, font scale, corner radius).
 - Widgets fetch their data themselves in the background and refresh on the platform schedule (about every 15-30 minutes).
 - Many widgets can be created and managed from the app.
 
@@ -28,7 +28,7 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 ## Decisions & status
 - Display title: `Sensor Widgets`, package/bundle ID: `io.github.mgasc.influx_sensor_widgets`.
 - Technical decisions: see `docs/architecture.md`.
-- Implementation roadmap: see `Roadmap/README.md` (`Task_01` – `Task_10` archived, `Task_11` – `Task_15` active for guided schema selection UX).
+- Implementation roadmap: see `Roadmap/README.md` (milestones 1 to 4 implemented; `Task_21`, a dashboard layout bug that could not be reproduced without a device, is deferred).
 - Store release remains optional and may be done later.
 
 ---

@@ -22,7 +22,7 @@ Verified in project environment:
 flutter test                                                    # all Dart tests
 flutter test test/path/to/file_test.dart                        # one file
 flutter test --plain-name "<test name>"                         # one test
-flutter test integration_test                                   # needs an emulator or device
+flutter test integration_test                                   # needs an emulator or device (wraps the headless flows of test/)
 cd android && ./gradlew test                                    # all Android unit tests
 cd android && ./gradlew test --tests "<fully.qualified.Class>"  # one Android test class
 cd android && ./gradlew :app:ktlintCheck                        # ktlint check
@@ -36,6 +36,13 @@ xcodebuild test -workspace ios/Runner.xcworkspace -scheme <scheme> -destination 
 ```
 
 Agents cannot run iOS tests locally. Push and read the GitHub Actions result.
+
+## Milestone 4 coverage
+- End-to-end (headless, runs in `flutter test`): `test/e2e_formula_gradient_flow_test.dart` builds an IAQ history chart purely by tapping (type tile, IAQ template, schema pickers for the variables, gap policy, gradient preset, area fill, appearance) and inspects the stored bridge JSON; `integration_test/formula_gradient_flow_test.dart` runs the same flow on a device.
+- Regression of old widget JSONs: `test/domain/models/widget_definition_regression_test.dart` (milestone 1 to 3 fixtures must parse and must not gain milestone 4 fields).
+- Shared contract fixtures read by Dart, Kotlin and Swift: `fixtures/formula/evaluator_cases.json` (`v2_*` sections), `fixtures/chart/color_interpolation_cases.json`, `fixtures/influx/bucketed_multi_field_response.json`, `fixtures/widget_definitions/widget_definition_{formula_steps,multi_formula,chart_style,appearance}.json`.
+- Windows tip: if `./gradlew test` fails with "Unable to delete directory", remove `build/app/intermediates/assets/debug` and `build/app/test-results` and run again; `./gradlew :app:ktlintFormat` fixes ktlint findings.
+- Not automatable here (documented manual checks): gradient and appearance in a real Android widget (Glance bitmap/background, corner radius below Android 12) and in WidgetKit (needs a device or Mac).
 
 ## Which tests to run when
 - Changes in `lib/`: the Dart tests of that area.

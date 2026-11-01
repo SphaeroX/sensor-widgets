@@ -39,21 +39,21 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
   - [x] Formel-Editor & Variablen-Mapping im Flutter Widget-Editor mit Syntax-Check und Live-Vorschau.
   - [x] Native Widget-Integration (Android Glance & iOS WidgetKit) inkl. transparenter Fehleranzeige bei Division durch 0 oder fehlenden Werten.
   - [x] End-to-End Verifikation & Dokumentation.
-- [ ] **Meilenstein 4 (`Task_21`–`Task_33`):** Formeln für alle Widgets, Gradienten & Styling:
-  - [ ] Dashboard-Layout-Bugfix (Liste scrollt unter die AppBar).
-  - [ ] Formel-Kontrakt v2: Funktionen (`min`, `max`, `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`, `round`, `floor`, `ceil`), Vergleiche, `if(...)`, Konstanten und benannte Zwischenformeln, identisch in Dart, Kotlin, Swift.
-  - [ ] Formel auf Zeitreihen (Zeit-Buckets per `GROUP BY time`) für Verlaufschart sowie vor der Aggregation bei Aggregat, Gauge, Lampe; Formel pro Multi-Value-Zeile.
-  - [ ] Variablen per Picker aus dem DB-Schema wählbar (kein manuelles Tippen von Feldnamen), Formel-Editor bei allen Typen, In-App-Hilfe mit Vorlagen (z. B. IAQ).
-  - [ ] Frei konfigurierbarer Farbverlauf nach Wert im Verlaufschart (Dart, Android, iOS).
-  - [ ] Styling: App-UI-Redesign (Material 3, Hell/Dunkel, Typ-Kacheln), Widget-Optik pro Widget, Vorschau-Parität.
+- [x] **Meilenstein 4 (`Task_21`–`Task_33`, bis auf zurückgestelltes `Task_21`):** Formeln für alle Widgets, Gradienten & Styling:
+  - [ ] Dashboard-Layout-Bugfix (Liste scrollt unter die AppBar): zurückgestellt, im Widget-Test nicht reproduzierbar (Regressionstests vorhanden), Screenshot/Gerätedaten nötig.
+  - [x] Formel-Kontrakt v2: Funktionen (`min`, `max`, `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`, `round`, `floor`, `ceil`), Vergleiche, `if(...)`, Konstanten und benannte Zwischenformeln, identisch in Dart, Kotlin, Swift.
+  - [x] Formel auf Zeitreihen (Zeit-Buckets per `GROUP BY time`) für Verlaufschart und vor der Aggregation beim Aggregat; Gauge und Lampe rechnen die Formel aus den aktuellsten Werten; Formel pro Multi-Value-Zeile.
+  - [x] Variablen per Picker aus dem DB-Schema wählbar (kein manuelles Tippen von Feldnamen), Formel-Editor bei allen Typen, In-App-Hilfe mit Vorlagen (z. B. IAQ).
+  - [x] Frei konfigurierbarer Farbverlauf nach Wert im Verlaufschart (Dart, Android, iOS).
+  - [x] Styling: App-UI-Redesign (Material 3, Hell/Dunkel, Typ-Kacheln), Widget-Optik pro Widget, Vorschau-Parität (Typ-Dropdown bleibt vorerst, siehe `Task_31`).
 
 ---
 
 ## 2. Aktueller Status
 
-* **Status:** Meilenstein 4 geplant (Meilensteine 1 bis 3 vollständig umgesetzt und verifiziert)
-* **Aktiver Task:** Keiner (nächster Task: `Task_33`; `Task_21` zurückgestellt)
-* **Fortschritt:** 31 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 11/13, Task_21 zurückgestellt)
+* **Status:** Meilensteine 1 bis 4 umgesetzt (nur `Task_21`, ein nicht reproduzierbarer Dashboard-Layout-Bug, ist zurückgestellt)
+* **Aktiver Task:** Keiner (alle Tasks abgearbeitet; offen nur `Task_21` (zurückgestellt))
+* **Fortschritt:** 32 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 12/13, Task_21 zurückgestellt)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -89,7 +89,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_30` | Native Gradienten & Chart-Style (Android Glance, iOS WidgetKit) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_30.md` (Optik auf Geraet nicht geprueft) |
 | `Task_31` | App-UI-Redesign (Dashboard, Editor, Typ-Kacheln, Hell/Dunkel) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_31.md` (Dropdown bleibt, siehe Task) |
 | `Task_32` | Widget-Optik pro Widget mit Vorschau-Parität | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_32.md` (Optik auf Geraeten nicht geprueft) |
-| `Task_33` | End-to-End-Verifikation, CI & Dokumentation (Meilenstein 4) | `Offen` | `Roadmap/Tasks/Task_33.md` |
+| `Task_33` | End-to-End-Verifikation, CI & Dokumentation (Meilenstein 4) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_33.md` |
 
 *(Hinweis: Sobald ein Task ins `Archiv/` verschoben wird, wird der Status hier auf `Erledigt` gesetzt.)*
 
