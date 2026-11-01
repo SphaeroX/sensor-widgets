@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "w-room",
+      "type": "multi_value",
+      "title": "Room",
+      "connectionId": "conn-1",
+      "measurement": "room",
+      "items": [
+        { "field": "temp", "label": "Temperatur", "unit": "°C" },
+        {
+          "field": "iaq",
+          "label": "IAQ",
+          "formula": "min(vocIdx, 100)",
+          "formulaVariables": [
+            { "name": "v", "field": "voc" }
+          ],
+          "formulaSteps": [
+            { "name": "vocIdx", "expression": "100 - v * 0.6" }
+          ]
+        }
+      ]
+    }
+  ]
+}

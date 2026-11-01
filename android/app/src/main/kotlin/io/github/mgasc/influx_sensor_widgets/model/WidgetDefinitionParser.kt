@@ -64,74 +64,13 @@ object WidgetDefinitionParser {
         val items =
             if (json.has("items") && !json.isNull("items")) {
                 val itemsArr = json.getJSONArray("items")
-                val itemsList = mutableListOf<SensorQueryItem>()
-                for (i in 0 until itemsArr.length()) {
-                    val itemObj = itemsArr.getJSONObject(i)
-                    itemsList.add(
-                        SensorQueryItem(
-                            field = itemObj.getString("field"),
-                            label = itemObj.optString("label").takeIf { it.isNotEmpty() },
-                            unit = itemObj.optString("unit").takeIf { it.isNotEmpty() },
-                            decimalPlaces =
-                                if (itemObj.has("decimalPlaces") && !itemObj.isNull("decimalPlaces")) {
-                                    itemObj.getInt("decimalPlaces")
-                                } else {
-                                    null
-                                },
-                        ),
-                    )
-                }
-                itemsList
+                (0 until itemsArr.length()).map { parseItem(itemsArr.getJSONObject(it)) }
             } else {
                 null
             }
 
-        val formulaVariables =
-            if (json.has("formulaVariables") && !json.isNull("formulaVariables")) {
-                val fvArr = json.getJSONArray("formulaVariables")
-                val fvList = mutableListOf<FormulaVariable>()
-                for (i in 0 until fvArr.length()) {
-                    val fvObj = fvArr.getJSONObject(i)
-                    val varTags =
-                        if (fvObj.has("tagFilters") && !fvObj.isNull("tagFilters")) {
-                            val tagsObj = fvObj.getJSONObject("tagFilters")
-                            val map = mutableMapOf<String, String>()
-                            tagsObj.keys().forEach { key ->
-                                map[key] = tagsObj.getString(key)
-                            }
-                            map
-                        } else {
-                            null
-                        }
-                    fvList.add(
-                        FormulaVariable(
-                            name = fvObj.getString("name"),
-                            field = fvObj.getString("field"),
-                            measurement = fvObj.optString("measurement").takeIf { it.isNotEmpty() },
-                            tagFilters = varTags,
-                            label = fvObj.optString("label").takeIf { it.isNotEmpty() },
-                        ),
-                    )
-                }
-                fvList
-            } else {
-                null
-            }
-
-        val formulaSteps =
-            if (json.has("formulaSteps") && !json.isNull("formulaSteps")) {
-                val arr = json.getJSONArray("formulaSteps")
-                (0 until arr.length()).map {
-                    val o = arr.getJSONObject(it)
-                    FormulaStep(
-                        name = o.getString("name"),
-                        expression = o.getString("expression"),
-                        label = o.optString("label").takeIf { l -> l.isNotEmpty() },
-                    )
-                }
-            } else {
-                null
-            }
+        val formulaVariables = parseFormulaVariables(json)
+        val formulaSteps = parseFormulaSteps(json)
 
         return WidgetDefinition(
             id = json.getString("id"),
@@ -162,6 +101,57 @@ object WidgetDefinitionParser {
             formulaSteps = formulaSteps,
             gapPolicy = json.optString("gapPolicy").takeIf { it.isNotEmpty() },
         )
+    }
+
+    private fun parseItem(itemObj: JSONObject): SensorQueryItem =
+        SensorQueryItem(
+            field = itemObj.getString("field"),
+            label = itemObj.optString("label").takeIf { it.isNotEmpty() },
+            unit = itemObj.optString("unit").takeIf { it.isNotEmpty() },
+            decimalPlaces =
+                if (itemObj.has("decimalPlaces") && !itemObj.isNull("decimalPlaces")) {
+                    itemObj.getInt("decimalPlaces")
+                } else {
+                    null
+                },
+            formula = itemObj.optString("formula").takeIf { it.isNotEmpty() },
+            formulaVariables = parseFormulaVariables(itemObj),
+            formulaSteps = parseFormulaSteps(itemObj),
+        )
+
+    private fun parseFormulaVariables(owner: JSONObject): List<FormulaVariable>? {
+        if (!owner.has("formulaVariables") || owner.isNull("formulaVariables")) return null
+        val arr = owner.getJSONArray("formulaVariables")
+        return (0 until arr.length()).map {
+            val obj = arr.getJSONObject(it)
+            val tags =
+                if (obj.has("tagFilters") && !obj.isNull("tagFilters")) {
+                    val tagsObj = obj.getJSONObject("tagFilters")
+                    tagsObj.keys().asSequence().associateWith { key -> tagsObj.getString(key) }
+                } else {
+                    null
+                }
+            FormulaVariable(
+                name = obj.getString("name"),
+                field = obj.getString("field"),
+                measurement = obj.optString("measurement").takeIf { v -> v.isNotEmpty() },
+                tagFilters = tags,
+                label = obj.optString("label").takeIf { v -> v.isNotEmpty() },
+            )
+        }
+    }
+
+    private fun parseFormulaSteps(owner: JSONObject): List<FormulaStep>? {
+        if (!owner.has("formulaSteps") || owner.isNull("formulaSteps")) return null
+        val arr = owner.getJSONArray("formulaSteps")
+        return (0 until arr.length()).map {
+            val obj = arr.getJSONObject(it)
+            FormulaStep(
+                name = obj.getString("name"),
+                expression = obj.getString("expression"),
+                label = obj.optString("label").takeIf { v -> v.isNotEmpty() },
+            )
+        }
     }
 
     private fun parseThreshold(obj: JSONObject): ThresholdRule =

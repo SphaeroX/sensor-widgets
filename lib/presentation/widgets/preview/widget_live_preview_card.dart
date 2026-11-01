@@ -373,7 +373,8 @@ class WidgetLivePreviewCard extends StatelessWidget {
 
       case WidgetType.multiValue:
         final multi = previewData?.multiValues ?? {};
-        if (multi.isEmpty) {
+        final rowErrors = previewData?.multiErrors ?? const <String, String>{};
+        if (multi.isEmpty && rowErrors.isEmpty) {
           return const Padding(
             padding: EdgeInsets.symmetric(vertical: 8),
             child: Text('Keine Multi-Value Datenpunkte geladen.'),
@@ -384,37 +385,68 @@ class WidgetLivePreviewCard extends StatelessWidget {
           child: Wrap(
             spacing: 12,
             runSpacing: 8,
-            children: multi.entries.map((e) {
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      e.key,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+            children:
+                multi.entries.map((e) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
                     ),
-                    Text(
-                      '${NumberFormatter.format(e.value.value, decimalPlaces: widgetDef.decimalPlaces)} $unit',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: 0.5,
                       ),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                  ],
-                ),
-              );
-            }).toList(),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          e.key,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '${NumberFormatter.format(e.value.value, decimalPlaces: widgetDef.decimalPlaces)} $unit',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList() +
+                rowErrors.entries.map((e) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.errorContainer,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          e.key,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                        ),
+                        Text(
+                          e.value,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onErrorContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
           ),
         );
     }

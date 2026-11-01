@@ -7,6 +7,7 @@ import io.github.mgasc.influx_sensor_widgets.influx.InfluxResponseParser
 import io.github.mgasc.influx_sensor_widgets.model.FormulaVariable
 import io.github.mgasc.influx_sensor_widgets.model.InfluxConnection
 import io.github.mgasc.influx_sensor_widgets.model.SensorDataPoint
+import io.github.mgasc.influx_sensor_widgets.model.SensorQueryItem
 import io.github.mgasc.influx_sensor_widgets.model.WidgetDefinition
 import kotlin.math.abs
 import kotlin.math.floor
@@ -99,6 +100,34 @@ object FormulaSeriesCalculator {
 
         if (points.isEmpty() && errors.isNotEmpty()) throw errors.first().exception
         return SeriesResult(points, errors)
+    }
+
+    /** Calculates the formula of one multi-value row from the latest values of its variables. */
+    fun calculateItemLatest(
+        widget: WidgetDefinition,
+        item: SensorQueryItem,
+        conn: InfluxConnection,
+        token: String,
+        httpClient: InfluxHttpClient,
+    ): Double {
+        val rowWidget =
+            widget.copy(
+                formula = item.formula,
+                formulaVariables = item.formulaVariables,
+                formulaSteps = item.formulaSteps,
+                decimalPlaces = item.decimalPlaces ?: widget.decimalPlaces,
+            )
+        val values = mutableMapOf<String, Double>()
+        for (group in groupVariables(rowWidget)) {
+            val fields = group.variables.map { it.field }.distinct()
+            val query = InfluxQlBuilder.buildMultiValueQuery(group.measurement, fields, group.tagFilters)
+            val latest = InfluxResponseParser.parseMultiValues(httpClient.query(conn, token, query), fields)
+            for (v in group.variables) {
+                values[v.name] = latest[v.field]?.value ?: throw MissingVariableException(v.name)
+            }
+        }
+        val raw = FormulaEvaluator.evaluate(item.formula.orEmpty(), values, item.formulaSteps ?: emptyList())
+        return round(raw, rowWidget)
     }
 
     fun aggregate(

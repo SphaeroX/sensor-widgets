@@ -226,19 +226,37 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
             return CachedSensorData(aggregate: agg, lastUpdated: Date())
 
         case .multiValue:
-            let fields = widget.items?.map { $0.field } ?? [widget.field ?? "value"]
-            let q = InfluxQlBuilder.buildMultiValueQuery(
-                measurement: widget.measurement,
-                fields: fields,
-                tagFilters: widget.tagFilters
-            )
-            let data = try await httpClient.query(connection: connection, token: token, influxQl: q)
-            let multiMap = try InfluxResponseParser.parseMultiValues(data: data, fields: fields)
+            let items = widget.items ?? []
+            var fields = items.filter { !$0.hasFormula }.map { $0.field }
+            if items.isEmpty { fields = [widget.field ?? "value"] }
             var values: [String: Double] = [:]
-            for (k, v) in multiMap {
-                values[k] = v.value
+            if !fields.isEmpty {
+                let q = InfluxQlBuilder.buildMultiValueQuery(
+                    measurement: widget.measurement,
+                    fields: fields,
+                    tagFilters: widget.tagFilters
+                )
+                let data = try await httpClient.query(connection: connection, token: token, influxQl: q)
+                let multiMap = try InfluxResponseParser.parseMultiValues(data: data, fields: fields)
+                for (k, v) in multiMap {
+                    values[k] = v.value
+                }
             }
-            return CachedSensorData(multiValues: values, lastUpdated: Date())
+            var rowErrors: [String: String] = [:]
+            for item in items where item.hasFormula {
+                do {
+                    values[item.field] = try await FormulaSeriesCalculator.calculateItemLatest(
+                        widget: widget, item: item, connection: connection, token: token, httpClient: httpClient
+                    )
+                } catch let error as FormulaError {
+                    rowErrors[item.field] = error.errorDescription ?? "Formelfehler"
+                }
+            }
+            return CachedSensorData(
+                multiValues: values,
+                lastUpdated: Date(),
+                multiErrors: rowErrors.isEmpty ? nil : rowErrors
+            )
         }
     }
 }

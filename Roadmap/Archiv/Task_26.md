@@ -46,10 +46,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Multi-Value-Zeile mit Formel zeigt das berechnete Ergebnis, andere Zeilen unverändert (Tests).
-- [ ] Fehler in einer Zeile blockiert die anderen nicht.
-- [ ] Alte Multi-Value-JSONs werden unverändert gelesen.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Multi-Value-Zeile mit Formel zeigt das berechnete Ergebnis, andere Zeilen unverändert (Tests).
+- [x] Fehler in einer Zeile blockiert die anderen nicht.
+- [x] Alte Multi-Value-JSONs werden unverändert gelesen.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -63,19 +63,15 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Kontrakt `SensorQueryItem.formula/formulaVariables/formulaSteps` in Dart, Kotlin, Swift; Dart-Service `calculateItemFormula`, Controller-Vorschau mit Zeilenfehlern (`multiErrors`) und Fehler-Chips in `WidgetLivePreviewCard`; Kotlin `FormulaSeriesCalculator.calculateItemLatest`, Worker/Mapper (`valueErrors`); Swift `calculateItemLatest`/`evaluateItem`, Provider und `MultiValueWidgetView`. Kotlin-Parser auf Helfer (`parseItem`, `parseFormulaVariables`, `parseFormulaSteps`) refaktoriert.
+- **Learnings & Stolpersteine:** Zeilen mit Formel brauchen weiterhin ein eindeutiges `field` (Zeilen-ID). Eine Zeile mit Formel erzeugt eine eigene Abfrage je Variablengruppe; Zeilen sind bewusst unabhaengig (keine Variablen anderer Zeilen).
+- **Wichtige Entscheidungen und ihre Gründe:** Nur der aktuellste Wert je Variable (kein Zeit-Bucket), wie in der Aufgabe gefordert.
+- **Auswirkungen auf Folge-Tasks:** Task_27 muss im Editor fuer jede Multi-Value-Zeile `formula`, `formulaVariables`, `formulaSteps` bearbeitbar machen und beim Speichern `field` als Zeilen-ID eindeutig setzen.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/domain/models/sensor_query_item_formula_test.dart test/presentation/controllers/widgets_controller_multi_formula_test.dart`; Android `WidgetRefreshWorkerMultiFormulaTest`; iOS `FormulaMultiRowTests` (CI).

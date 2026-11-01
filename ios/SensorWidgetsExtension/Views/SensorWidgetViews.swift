@@ -335,16 +335,24 @@ public struct MultiValueWidgetView: View {
 
             ForEach(items.prefix(3), id: \.field) { item in
                 let val = multi[item.field]
+                let rowError = data?.multiErrors?[item.field]
                 HStack {
                     Text(item.label ?? item.field)
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                     Spacer()
-                    Text(WidgetViewHelpers.formatValue(val, decimalPlaces: item.decimalPlaces ?? widget.decimalPlaces, unit: item.unit ?? widget.unit))
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .lineLimit(1)
+                    if let rowError = rowError {
+                        Text("Fehler: \(rowError)")
+                            .font(.caption2)
+                            .foregroundStyle(.red)
+                            .lineLimit(1)
+                    } else {
+                        Text(WidgetViewHelpers.formatValue(val, decimalPlaces: item.decimalPlaces ?? widget.decimalPlaces, unit: item.unit ?? widget.unit))
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .lineLimit(1)
+                    }
                 }
             }
 

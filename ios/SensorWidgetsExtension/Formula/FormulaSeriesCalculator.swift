@@ -104,6 +104,63 @@ public enum FormulaSeriesCalculator {
         return SeriesResult(points: points, errors: errors)
     }
 
+    /// Calculates the formula of one multi-value row from the latest values of its variables.
+    public static func calculateItemLatest(
+        widget: WidgetDefinition,
+        item: SensorQueryItem,
+        connection: InfluxConnection,
+        token: String,
+        httpClient: InfluxHttpClient
+    ) async throws -> Double {
+        let rowWidget = rowWidgetDefinition(widget: widget, item: item)
+        var latest: [String: Double] = [:]
+        for group in groupVariables(rowWidget) {
+            var fields: [String] = []
+            for variable in group.variables where !fields.contains(variable.field) {
+                fields.append(variable.field)
+            }
+            let query = InfluxQlBuilder.buildMultiValueQuery(
+                measurement: group.measurement,
+                fields: fields,
+                tagFilters: group.tagFilters
+            )
+            let data = try await httpClient.query(connection: connection, token: token, influxQl: query)
+            let points = try InfluxResponseParser.parseMultiValues(data: data, fields: fields)
+            for variable in group.variables {
+                guard let point = points[variable.field] else {
+                    throw FormulaError.missingVariable(variable.name)
+                }
+                latest[variable.name] = point.value
+            }
+        }
+        return try evaluateItem(widget: widget, item: item, latest: latest)
+    }
+
+    /// Evaluates a row formula from already resolved variable values.
+    public static func evaluateItem(
+        widget: WidgetDefinition,
+        item: SensorQueryItem,
+        latest: [String: Double]
+    ) throws -> Double {
+        let raw = try FormulaEvaluator.evaluate(item.formula ?? "", variables: latest, steps: item.formulaSteps ?? [])
+        return round(raw, widget: rowWidgetDefinition(widget: widget, item: item))
+    }
+
+    private static func rowWidgetDefinition(widget: WidgetDefinition, item: SensorQueryItem) -> WidgetDefinition {
+        WidgetDefinition(
+            id: widget.id,
+            type: widget.type,
+            title: widget.title,
+            connectionId: widget.connectionId,
+            measurement: widget.measurement,
+            tagFilters: widget.tagFilters,
+            decimalPlaces: item.decimalPlaces ?? widget.decimalPlaces,
+            formula: item.formula,
+            formulaVariables: item.formulaVariables,
+            formulaSteps: item.formulaSteps
+        )
+    }
+
     public static func aggregate(_ result: SeriesResult, widget: WidgetDefinition) -> [String: Double] {
         let values = result.points.map { $0.value }
         guard let minValue = values.min(), let maxValue = values.max() else { return [:] }

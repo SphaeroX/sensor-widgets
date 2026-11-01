@@ -5,4 +5,7 @@ data class SensorQueryItem(
     val label: String? = null,
     val unit: String? = null,
     val decimalPlaces: Int? = null,
+    val formula: String? = null,
+    val formulaVariables: List<FormulaVariable>? = null,
+    val formulaSteps: List<FormulaStep>? = null,
 )

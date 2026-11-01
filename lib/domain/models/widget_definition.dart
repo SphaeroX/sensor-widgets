@@ -86,6 +86,18 @@ class WidgetDefinition {
       }
     } else if (type == WidgetType.multiValue) {
       if (items == null || items!.isEmpty) return false;
+      for (final item in items!.where((i) => i.hasFormula)) {
+        final vars = item.formulaVariables;
+        if (vars == null || vars.isEmpty) return false;
+        if (FormulaEvaluator.validateSteps(
+              item.formulaSteps ?? const [],
+              item.formula!,
+              variableNames: vars.map((v) => v.name).toList(),
+            ) !=
+            null) {
+          return false;
+        }
+      }
     } else {
       if (field == null || field!.trim().isEmpty) return false;
     }

@@ -193,6 +193,8 @@ object WidgetUiStateMapper {
                         map[f] = ChartMathAndFormatter.formatValue(v, null)
                     }
                 }
+                val errObj = cacheObj.optJSONObject("valueErrors")
+                errObj?.keys()?.forEach { f -> map[f] = "Fehler: " + errObj.getString(f) }
                 WidgetUiState(
                     widgetId = widget.id,
                     title = widget.title,

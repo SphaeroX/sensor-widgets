@@ -8,6 +8,7 @@ import 'package:sensor_widgets/domain/formula/formula_exception.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/sensor_data_point.dart';
+import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 
 /// A time bucket whose formula could not be calculated.
@@ -92,6 +93,27 @@ class FormulaCalculationService {
       steps: widget.formulaSteps ?? const [],
     );
     return _round(rawResult, widget);
+  }
+
+  /// Calculates the formula of one multi-value row from its latest values.
+  ///
+  /// The row inherits measurement, tag filters and rounding from [widget].
+  Future<double> calculateItemFormula({
+    required WidgetDefinition widget,
+    required SensorQueryItem item,
+    required InfluxConnection connection,
+    required String token,
+  }) {
+    return calculateFormula(
+      widget: widget.copyWith(
+        formula: item.formula,
+        formulaVariables: item.formulaVariables,
+        formulaSteps: item.formulaSteps ?? const [],
+        decimalPlaces: item.decimalPlaces ?? widget.decimalPlaces,
+      ),
+      connection: connection,
+      token: token,
+    );
   }
 
   /// Evaluates the formula for every time bucket of the widget's time range.

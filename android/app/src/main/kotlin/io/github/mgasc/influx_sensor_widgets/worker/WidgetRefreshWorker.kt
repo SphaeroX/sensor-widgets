@@ -9,6 +9,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaEvaluator
+import io.github.mgasc.influx_sensor_widgets.formula.FormulaException
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaSeriesCalculator
 import io.github.mgasc.influx_sensor_widgets.formula.MissingVariableException
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxHttpClient
@@ -250,27 +251,37 @@ class WidgetRefreshWorker(
                 }
 
                 WidgetType.MULTI_VALUE -> {
-                    val fields =
-                        widget.items?.map { it.field }?.filter { it.isNotEmpty() }
-                            ?: listOfNotNull(widget.field)
-                    val query =
-                        InfluxQlBuilder.buildMultiValueQuery(
-                            measurement = widget.measurement,
-                            fields = fields,
-                            tagFilters = widget.tagFilters,
-                        )
-                    val json = httpClient.query(conn, token, query)
-                    val multiMap = InfluxResponseParser.parseMultiValues(json, fields)
+                    val items = widget.items.orEmpty()
+                    val plainFields =
+                        items.filter { it.formula.isNullOrBlank() }.map { it.field }.filter { it.isNotEmpty() } +
+                            if (items.isEmpty()) listOfNotNull(widget.field) else emptyList()
                     val multiObj = JSONObject()
-                    multiMap.forEach { (f, dp) ->
-                        val itemObj =
-                            JSONObject().apply {
-                                put("value", dp.value)
-                                put("timestamp", dp.timestamp)
-                            }
-                        multiObj.put(f, itemObj)
+                    if (plainFields.isNotEmpty()) {
+                        val query =
+                            InfluxQlBuilder.buildMultiValueQuery(
+                                measurement = widget.measurement,
+                                fields = plainFields,
+                                tagFilters = widget.tagFilters,
+                            )
+                        val json = httpClient.query(conn, token, query)
+                        InfluxResponseParser.parseMultiValues(json, plainFields).forEach { (f, dp) ->
+                            multiObj.put(f, JSONObject().apply { put("value", dp.value).put("timestamp", dp.timestamp) })
+                        }
+                    }
+                    val rowErrors = JSONObject()
+                    for (item in items.filter { !it.formula.isNullOrBlank() }) {
+                        try {
+                            val value = FormulaSeriesCalculator.calculateItemLatest(widget, item, conn, token, httpClient)
+                            multiObj.put(
+                                item.field,
+                                JSONObject().apply { put("value", value).put("timestamp", System.currentTimeMillis()) },
+                            )
+                        } catch (e: FormulaException) {
+                            rowErrors.put(item.field, e.message ?: "Formelfehler")
+                        }
                     }
                     cacheObj.put("values", multiObj)
+                    if (rowErrors.length() > 0) cacheObj.put("valueErrors", rowErrors)
                     cacheObj.put("timestamp", System.currentTimeMillis())
                 }
             }

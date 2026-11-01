@@ -11,6 +11,8 @@ import 'package:sensor_widgets/data/storage/shared_widget_store.dart';
 import 'package:sensor_widgets/domain/models/sensor_data_point.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
+import 'package:sensor_widgets/domain/formula/formula_exception.dart';
+import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/services/formula_calculation_service.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 
@@ -20,6 +22,9 @@ class WidgetPreviewData {
   final List<SensorDataPoint>? historyPoints;
   final Map<String, double>? aggregateValues;
   final Map<String, SensorDataPoint>? multiValues;
+
+  /// Per-row formula errors of a multi-value widget (field -> message).
+  final Map<String, String>? multiErrors;
   final String? errorMessage;
 
   /// Non-fatal per-bucket formula problems (e.g. division by zero in some buckets).
@@ -31,6 +36,7 @@ class WidgetPreviewData {
     this.historyPoints,
     this.aggregateValues,
     this.multiValues,
+    this.multiErrors,
     this.errorMessage,
     this.bucketErrors,
     DateTime? fetchedAt,
@@ -283,31 +289,59 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
           return WidgetPreviewData(aggregateValues: aggregates);
 
         case WidgetType.multiValue:
+          final items = widget.items ?? const <SensorQueryItem>[];
+          final formulaItems = items.where((i) => i.hasFormula).toList();
           final fields =
-              widget.items
-                  ?.map((i) => i.field)
+              items
+                  .where((i) => !i.hasFormula)
+                  .map((i) => i.field)
                   .where((f) => f.trim().isNotEmpty)
-                  .toList() ??
-              (widget.field != null && widget.field!.isNotEmpty
+                  .toList() +
+              (items.isEmpty && widget.field != null && widget.field!.isNotEmpty
                   ? [widget.field!]
                   : <String>[]);
-          if (fields.isEmpty) {
+          if (fields.isEmpty && formulaItems.isEmpty) {
             return WidgetPreviewData(
               errorMessage: 'Keine Sensor-Felder konfiguriert.',
             );
           }
-          final q = _queryBuilder.buildMultiValueQuery(
-            measurement: widget.measurement,
-            fields: fields,
-            tagFilters: widget.tagFilters,
+          final multi = <String, SensorDataPoint>{};
+          if (fields.isNotEmpty) {
+            final q = _queryBuilder.buildMultiValueQuery(
+              measurement: widget.measurement,
+              fields: fields,
+              tagFilters: widget.tagFilters,
+            );
+            final json = await _apiClient.query(
+              connection: connection,
+              token: token,
+              influxQl: q,
+            );
+            multi.addAll(_responseParser.parseMultiValues(json, fields));
+          }
+          final rowErrors = <String, String>{};
+          for (final item in formulaItems) {
+            try {
+              final value = await _formulaCalculationService
+                  .calculateItemFormula(
+                    widget: widget,
+                    item: item,
+                    connection: connection,
+                    token: token,
+                  );
+              multi[item.field] = SensorDataPoint(
+                timestamp: DateTime.now().toUtc(),
+                value: value,
+                field: item.field,
+              );
+            } on FormulaException catch (e) {
+              rowErrors[item.field] = e.message;
+            }
+          }
+          return WidgetPreviewData(
+            multiValues: multi,
+            multiErrors: rowErrors.isEmpty ? null : rowErrors,
           );
-          final json = await _apiClient.query(
-            connection: connection,
-            token: token,
-            influxQl: q,
-          );
-          final multi = _responseParser.parseMultiValues(json, fields);
-          return WidgetPreviewData(multiValues: multi);
       }
     } catch (e) {
       return WidgetPreviewData(errorMessage: 'Abfragefehler: $e');

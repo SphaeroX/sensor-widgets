@@ -61,17 +61,31 @@ public struct SensorQueryItem: Codable, Equatable {
     public let label: String?
     public let unit: String?
     public let decimalPlaces: Int?
+    public let formula: String?
+    public let formulaVariables: [FormulaVariable]?
+    public let formulaSteps: [FormulaStep]?
+
+    public var hasFormula: Bool {
+        guard let formula = formula else { return false }
+        return !formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
 
     public init(
         field: String,
         label: String? = nil,
         unit: String? = nil,
-        decimalPlaces: Int? = nil
+        decimalPlaces: Int? = nil,
+        formula: String? = nil,
+        formulaVariables: [FormulaVariable]? = nil,
+        formulaSteps: [FormulaStep]? = nil
     ) {
         self.field = field
         self.label = label
         self.unit = unit
         self.decimalPlaces = decimalPlaces
+        self.formula = formula
+        self.formulaVariables = formulaVariables
+        self.formulaSteps = formulaSteps
     }
 }
 
