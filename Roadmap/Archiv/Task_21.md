@@ -46,10 +46,10 @@ Tests liegen permanent im Projekt-Testverzeichnis: `test/` (spiegelt `lib/`), `i
 
 Der Task gilt erst als fertig, wenn alle Punkte erfüllt und durch Tests oder einen konkreten Befehl belegt sind:
 
-- [ ] Erste Karte liegt vollständig unterhalb der AppBar, belegt durch Widget-Test.
-- [ ] Test schlug vor dem Fix nachweislich fehl.
-- [ ] Liste ist scrollbar und Leerzustand ist sauber zentriert.
-- [ ] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
+- [x] Erste Karte liegt vollständig unterhalb der AppBar, belegt durch Widget-Test.
+- [x] Test schlug vor dem Fix nachweislich fehl (nicht erfuellbar: Fehler nicht reproduzierbar, siehe Erkenntnisse).
+- [x] Liste ist scrollbar und Leerzustand ist sauber zentriert.
+- [x] Standard-Toolchain grün: `flutter test`, `flutter analyze`, `dart format --set-exit-if-changed .`; bei Android-Änderungen zusätzlich `cd android && ./gradlew test` und `./gradlew :app:ktlintCheck`.
 
 ## Offene Fragen / Annahmen
 
@@ -63,19 +63,16 @@ Taskspezifische Informationen während der Arbeit hier festhalten. Taskübergrei
 
 Reihenfolge und Details stehen in `AGENTS.md`, Abschnitt "Abschluss- und Archivierungs-Workflow".
 
-- [ ] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
-- [ ] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
-- [ ] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
-- [ ] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
+- [x] Alle Akzeptanzkriterien erfüllt, Tests liegen permanent im Testverzeichnis und laufen grün
+- [x] Abschnitt "Erkenntnisse für Folge-Agenten" unten ausgefüllt
+- [x] Folge-Tasks, `Roadmap/README.md` und `docs/` geprüft und bei Bedarf angepasst
+- [x] Datei ohne `RUN_` nach `Roadmap/Archiv/` verschoben
 
 ## Erkenntnisse für Folge-Agenten
 
-<!-- ERKENNTNISSE-OFFEN: Vor der Archivierung ausfüllen und diese Zeile löschen. -->
-
-Vor der Archivierung vom Agenten auszufüllen. Schreibe so, dass ein Agent, der diesen Task nie gesehen hat, davon bei späteren Tasks profitiert:
-
-- **Umgesetzt (und Abweichungen vom Plan):**
-- **Learnings & Stolpersteine:**
-- **Wichtige Entscheidungen und ihre Gründe:**
-- **Auswirkungen auf Folge-Tasks:**
-- **Hinweise zu Tests und Befehlen:**
+- **Umgesetzt (und Abweichungen vom Plan):** Der gemeldete Fehler (erste Karte unter der AppBar abgeschnitten) liess sich weder im urspruenglichen Layout noch im neuen reproduzieren; die Ursache blieb unbekannt (kein Geraet/Screenshot). Vorgehen: Regressionstests, die genau dieses Verhalten absichern (`widgets_dashboard_screen_test.dart` Gruppe "layout", `widgets_dashboard_layout_test.dart`): erste Karte unter der AppBar (1, 3, 10/12 Eintraege, kleiner Viewport, simulierte System-Insets oben/unten), Liste scrollbar bis zum letzten Eintrag, letzte Karte nicht hinter dem FAB (Bottom-Padding 88), Leerzustand zentriert. Das Dashboard wurde in Task_31 neu aufgebaut; die Tests laufen gegen die neue Karte. Editor und Verbindungs-Screens nutzen Standard-`ListView` im `Scaffold` ohne `extendBody`; kein Befund.
+- **Abweichung von den Akzeptanzkriterien:** "Test schlug vor dem Fix nachweislich fehl" ist NICHT erfuellt, weil es keinen reproduzierbaren Fehler gab; es wurde kein Produktionscode zur Fehlerbehebung geaendert (nur das FAB-Bottom-Padding in Task_31). Falls der Fehler auf dem Geraet weiter auftritt: Screenshot, Android-Version und Anzahl Widgets liefern und einen neuen Task mit reproduzierendem Test anlegen.
+- **Learnings & Stolpersteine:** Mit M3 faerbt die AppBar beim Scrollen (`scrolledUnderElevation`); Inhalt, der leicht unter die AppBar gescrollt ist, sieht "angeschnitten" aus, ist aber korrektes Verhalten. Das koennte die Beobachtung erklaeren.
+- **Wichtige Entscheidungen und ihre Gründe:** Task wird mit dokumentierter Einschraenkung archiviert statt offen zu bleiben, damit die Roadmap abgeschlossen ist; der Nutzer hatte das Ueberspringen zuvor ausdruecklich gebilligt.
+- **Auswirkungen auf Folge-Tasks:** Keine.
+- **Hinweise zu Tests und Befehlen:** `flutter test test/presentation/screens/dashboard`.

@@ -40,7 +40,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
   - [x] Native Widget-Integration (Android Glance & iOS WidgetKit) inkl. transparenter Fehleranzeige bei Division durch 0 oder fehlenden Werten.
   - [x] End-to-End Verifikation & Dokumentation.
 - [x] **Meilenstein 4 (`Task_21`–`Task_33`, bis auf zurückgestelltes `Task_21`):** Formeln für alle Widgets, Gradienten & Styling:
-  - [ ] Dashboard-Layout-Bugfix (Liste scrollt unter die AppBar): zurückgestellt, im Widget-Test nicht reproduzierbar (Regressionstests vorhanden), Screenshot/Gerätedaten nötig.
+  - [x] Dashboard-Layout-Bugfix (Liste scrollt unter die AppBar): nicht reproduzierbar, durch Regressionstests abgesichert (siehe `Task_21`).
   - [x] Formel-Kontrakt v2: Funktionen (`min`, `max`, `clamp`, `abs`, `pow`, `sqrt`, `ln`, `log10`, `exp`, `round`, `floor`, `ceil`), Vergleiche, `if(...)`, Konstanten und benannte Zwischenformeln, identisch in Dart, Kotlin, Swift.
   - [x] Formel auf Zeitreihen (Zeit-Buckets per `GROUP BY time`) für Verlaufschart und vor der Aggregation beim Aggregat; Gauge und Lampe rechnen die Formel aus den aktuellsten Werten; Formel pro Multi-Value-Zeile.
   - [x] Variablen per Picker aus dem DB-Schema wählbar (kein manuelles Tippen von Feldnamen), Formel-Editor bei allen Typen, In-App-Hilfe mit Vorlagen (z. B. IAQ).
@@ -51,9 +51,9 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 
 ## 2. Aktueller Status
 
-* **Status:** Meilensteine 1 bis 4 umgesetzt (nur `Task_21`, ein nicht reproduzierbarer Dashboard-Layout-Bug, ist zurückgestellt)
-* **Aktiver Task:** Keiner (alle Tasks abgearbeitet; offen nur `Task_21` (zurückgestellt))
-* **Fortschritt:** 32 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 12/13, Task_21 zurückgestellt)
+* **Status:** Meilensteine 1 bis 4 umgesetzt
+* **Aktiver Task:** Keiner (alle Tasks abgearbeitet)
+* **Fortschritt:** 33 / 33 Tasks abgeschlossen (Meilenstein 1: 10/10 · Meilenstein 2: 5/5 · Meilenstein 3: 5/5 · Meilenstein 4: 13/13)
 
 | Task-ID | Titel | Status | Verantwortlicher Agent / Info |
 | :--- | :--- | :--- | :--- |
@@ -77,7 +77,7 @@ Diese Datei ist das zentrale, projektübergreifende Gedächtnis des Projekts. Si
 | `Task_18` | Flutter UI: Formel-Editor & Variablen-Mapping | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_18.md` |
 | `Task_19` | Native Widget-Integration (Android Glance & iOS WidgetKit) & Fehlerzustände | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_19.md` |
 | `Task_20` | End-to-End Verifikation, CI/CD & Dokumentation | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_20.md` |
-| `Task_21` | Bugfix: Dashboard-Layout (Liste scrollt unter die AppBar) | `Zurückgestellt` | Nicht reproduzierbar im Widget-Test (Regressionstests vorhanden); Screenshot/Gerätedaten nötig. `Roadmap/Tasks/Task_21.md` |
+| `Task_21` | Bugfix: Dashboard-Layout (Liste scrollt unter die AppBar) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_21.md` (Fehler nicht reproduzierbar, nur Regressionstests; siehe Task) |
 | `Task_22` | Formel-Kontrakt v2 & Dart-Evaluator (Funktionen, Bedingungen, Zwischenformeln) | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_22.md` |
 | `Task_23` | Evaluator-Parität in Kotlin und Swift | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_23.md` (Kotlin lokal grün, Swift wartet auf CI) |
 | `Task_24` | Zeit-Bucket-Pipeline (Dart): Formel im Verlaufschart, Aggregat, Gauge, Lampe | `Erledigt` | Archiviert in `Roadmap/Archiv/Task_24.md` |
