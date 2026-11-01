@@ -47,6 +47,12 @@ class ChartMathAndFormatterTest {
         assertEquals("--", ChartMathAndFormatter.formatValue(null, null))
         assertEquals("22.4", ChartMathAndFormatter.formatValue(22.44, 1))
         assertEquals("22", ChartMathAndFormatter.formatValue(22.44, 0))
+        // Max 2 decimal places and rounding floating point noise:
+        assertEquals("15.15", ChartMathAndFormatter.formatValue(15.150000000000002, null))
+        assertEquals("16.67", ChartMathAndFormatter.formatValue(16.666666666666668, null))
+        assertEquals("22", ChartMathAndFormatter.formatValue(22.0, null))
+        assertEquals("22.5", ChartMathAndFormatter.formatValue(22.5, null))
+        assertEquals("22.45", ChartMathAndFormatter.formatValue(22.446, 4))
     }
 
     @Test

@@ -6,6 +6,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:sensor_widgets/data/influx/influx_api_client.dart';
 import 'package:sensor_widgets/domain/errors/influx_exception.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 
 class MockHttpClient extends Mock implements http.Client {}
 
@@ -145,6 +146,74 @@ void main() {
         token: token,
       );
       expect(success, isTrue);
+    });
+
+    test('testConnection throws InfluxQueryException on HTTP 200 statement error (e.g. database not found)', () async {
+      when(() => mockClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer(
+            (_) async => http.Response(
+              json.encode({
+                'results': [
+                  {
+                    'statement_id': 0,
+                    'error': 'database not found: test_db with token my-secret-token-xyz',
+                  },
+                ],
+              }),
+              200,
+            ),
+          );
+
+      try {
+        await apiClient.testConnection(connection: connection, token: token);
+        fail('Should throw InfluxQueryException');
+      } on InfluxQueryException catch (e) {
+        expect(e.message.contains('database not found'), isTrue);
+        expect(e.message.contains(token), isFalse);
+      }
+    });
+
+    test('fetchFieldInfos requests SHOW FIELD KEYS and parses InfluxFieldInfo list', () async {
+      when(() => mockClient.get(any(), headers: any(named: 'headers')))
+          .thenAnswer(
+            (_) async => http.Response(
+              json.encode({
+                'results': [
+                  {
+                    'statement_id': 0,
+                    'series': [
+                      {
+                        'name': 'climate',
+                        'columns': ['fieldKey', 'fieldType'],
+                        'values': [
+                          ['co2', 'float'],
+                          ['active', 'boolean'],
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              }),
+              200,
+            ),
+          );
+
+      final infos = await apiClient.fetchFieldInfos(
+        connection: connection,
+        token: token,
+        measurement: 'climate',
+      );
+
+      expect(infos, [
+        const InfluxFieldInfo(key: 'co2', type: 'float'),
+        const InfluxFieldInfo(key: 'active', type: 'boolean'),
+      ]);
+
+      final captured = verify(
+        () => mockClient.get(captureAny(), headers: any(named: 'headers')),
+      ).captured;
+      final uri = captured.last as Uri;
+      expect(uri.queryParameters['q'], 'SHOW FIELD KEYS FROM "climate"');
     });
   });
 }

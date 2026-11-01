@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/formula_variable.dart';
+import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
@@ -9,6 +12,10 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/tag_filter_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
 
 /// Form screen for creating or editing a widget configuration with live preview and schema discovery.
@@ -41,9 +48,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   int _refreshInterval = 15;
   String _indicatorOperator = '>';
 
-  List<String> _measurementSuggestions = [];
-  List<String> _fieldSuggestions = [];
-  bool _isLoadingSchema = false;
+  Map<String, String> _tagFilters = {};
+  List<SensorQueryItem> _multiItems = [];
+
+  bool _isFormulaEnabled = false;
+  String _formula = '';
+  List<FormulaVariable> _formulaVariables = [];
 
   WidgetPreviewData? _previewData;
   bool _isLoadingPreview = false;
@@ -55,6 +65,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     _selectedType = edit?.type ?? WidgetType.singleValue;
     _selectedConnectionId = edit?.connectionId;
     _refreshInterval = edit?.refreshIntervalMinutes ?? 15;
+    _tagFilters = edit?.tagFilters != null
+        ? Map<String, String>.from(edit!.tagFilters!)
+        : {};
+    _multiItems = edit?.items != null
+        ? List<SensorQueryItem>.from(edit!.items!)
+        : [];
+    _isFormulaEnabled =
+        edit?.formula != null && edit!.formula!.trim().isNotEmpty;
+    _formula = edit?.formula ?? '';
+    _formulaVariables = edit?.formulaVariables != null
+        ? List<FormulaVariable>.from(edit!.formulaVariables!)
+        : [];
 
     _titleController = TextEditingController(text: edit?.title ?? '');
     _measurementController = TextEditingController(
@@ -91,8 +113,19 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
     if (_selectedConnectionId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _loadMeasurements();
+        _initSchema();
       });
+    }
+  }
+
+  void _initSchema() {
+    final connId = _selectedConnectionId;
+    if (connId != null) {
+      final schemaNotifier = ref.read(editorSchemaControllerProvider.notifier);
+      schemaNotifier.selectConnection(connId);
+      if (_measurementController.text.trim().isNotEmpty) {
+        schemaNotifier.selectMeasurement(_measurementController.text.trim());
+      }
     }
   }
 
@@ -110,34 +143,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     _gaugeMaxController.dispose();
     _multiFieldsController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadMeasurements() async {
-    if (_selectedConnectionId == null) return;
-    setState(() => _isLoadingSchema = true);
-    final discovery = ref.read(schemaDiscoveryControllerProvider);
-    final list = await discovery.getMeasurements(_selectedConnectionId!);
-    if (mounted) {
-      setState(() {
-        _measurementSuggestions = list;
-        _isLoadingSchema = false;
-      });
-    }
-  }
-
-  Future<void> _loadFields() async {
-    if (_selectedConnectionId == null ||
-        _measurementController.text.trim().isEmpty) {
-      return;
-    }
-    final discovery = ref.read(schemaDiscoveryControllerProvider);
-    final list = await discovery.getFieldKeys(
-      _selectedConnectionId!,
-      _measurementController.text.trim(),
-    );
-    if (mounted) {
-      setState(() => _fieldSuggestions = list);
-    }
   }
 
   WidgetDefinition _buildCurrentDefinition() {
@@ -158,14 +163,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
     List<SensorQueryItem>? items;
     if (_selectedType == WidgetType.multiValue) {
-      final rawFields = _multiFieldsController.text
-          .split(',')
-          .map((s) => s.trim())
-          .where((s) => s.isNotEmpty)
-          .toList();
-      items = rawFields
-          .map<SensorQueryItem>((f) => SensorQueryItem(field: f, label: f))
-          .toList();
+      if (_multiItems.isNotEmpty) {
+        items = _multiItems;
+      } else if (_multiFieldsController.text.trim().isNotEmpty) {
+        final rawFields = _multiFieldsController.text
+            .split(',')
+            .map((s) => s.trim())
+            .where((s) => s.isNotEmpty)
+            .toList();
+        items = rawFields
+            .map<SensorQueryItem>((f) => SensorQueryItem(field: f, label: f))
+            .toList();
+      }
     }
 
     return WidgetDefinition(
@@ -180,7 +189,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       unit: _unitController.text.trim().isNotEmpty
           ? _unitController.text.trim()
           : null,
-      decimalPlaces: int.tryParse(_decimalPlacesController.text.trim()),
+      decimalPlaces: int.tryParse(_decimalPlacesController.text.trim())
+          ?.clamp(0, 2),
       refreshIntervalMinutes: _refreshInterval,
       timeRange:
           _selectedType == WidgetType.historyChart ||
@@ -198,6 +208,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ? double.tryParse(_gaugeMaxController.text.trim())
           : null,
       items: items,
+      tagFilters: _tagFilters.isNotEmpty ? _tagFilters : null,
+      formula: _isFormulaEnabled && _formula.trim().isNotEmpty
+          ? _formula.trim()
+          : null,
+      formulaVariables: _isFormulaEnabled && _formulaVariables.isNotEmpty
+          ? _formulaVariables
+          : null,
     );
   }
 
@@ -216,6 +233,31 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   }
 
   Future<void> _save() async {
+    if (_isFormulaEnabled) {
+      if (_formula.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bitte gib eine Berechnungsformel ein.'),
+          ),
+        );
+        return;
+      }
+      final err = FormulaEvaluator.validateSyntax(_formula);
+      if (err != null) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Ungültige Formel: $err')));
+        return;
+      }
+      if (_formulaVariables.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Bitte füge mindestens eine Variable hinzu.'),
+          ),
+        );
+        return;
+      }
+    }
+
     if (!_formKey.currentState!.validate()) return;
     final def = _buildCurrentDefinition();
     await ref.read(widgetsControllerProvider.notifier).saveWidget(def);
@@ -227,6 +269,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionsAsync = ref.watch(connectionsControllerProvider);
+    final schemaState = ref.watch(editorSchemaControllerProvider);
+    final schemaNotifier = ref.read(editorSchemaControllerProvider.notifier);
+
+    ref.listen<AsyncValue<List<InfluxConnection>>>(
+      connectionsControllerProvider,
+      (previous, next) {
+        if (_selectedConnectionId == null &&
+            next.hasValue &&
+            next.value!.isNotEmpty) {
+          final firstId = next.value!.first.id;
+          setState(() => _selectedConnectionId = firstId);
+          schemaNotifier.selectConnection(firstId);
+        }
+      },
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -274,7 +331,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
           if (_selectedConnectionId == null && connections.isNotEmpty) {
             _selectedConnectionId = connections.first.id;
-            _loadMeasurements();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                schemaNotifier.selectConnection(connections.first.id);
+              }
+            });
           }
 
           return SingleChildScrollView(
@@ -349,10 +410,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                               if (val != null) {
                                 setState(() {
                                   _selectedConnectionId = val;
-                                  _measurementSuggestions.clear();
-                                  _fieldSuggestions.clear();
                                 });
-                                _loadMeasurements();
+                                schemaNotifier.selectConnection(val);
                               }
                             },
                           ),
@@ -389,135 +448,118 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Datenquelle (InfluxQL)',
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                              if (_isLoadingSchema)
-                                const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                            ],
+                          Text(
+                            'Datenquelle (InfluxQL)',
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 12),
 
-                          // Measurement Autocomplete / Text
-                          Autocomplete<String>(
-                            initialValue: TextEditingValue(
-                              text: _measurementController.text,
-                            ),
-                            optionsBuilder: (textVal) {
-                              if (_measurementSuggestions.isEmpty) {
-                                return const Iterable<String>.empty();
-                              }
-                              return _measurementSuggestions.where(
-                                (s) => s.toLowerCase().contains(
-                                  textVal.text.toLowerCase(),
-                                ),
-                              );
-                            },
+                          // Measurement Searchable Picker
+                          SearchableSchemaPicker(
+                            fieldKey: const Key('widget_measurement_field'),
+                            label: 'Measurement',
+                            hintText: 'z. B. climate, home_sensors',
+                            selectedValue: _measurementController.text,
+                            options: schemaState.measurements.items
+                                .map(SchemaPickerOption.fromString)
+                                .toList(),
+                            status: schemaState.measurements.status,
+                            errorMessage: schemaState.measurements.errorMessage,
                             onSelected: (val) {
                               _measurementController.text = val;
-                              _loadFields();
+                              schemaNotifier.selectMeasurement(val);
                               setState(() {});
                             },
-                            fieldViewBuilder:
-                                (
-                                  context,
-                                  textEditingController,
-                                  focusNode,
-                                  onFieldSubmitted,
-                                ) {
-                                  return TextFormField(
-                                    key: const Key('widget_measurement_field'),
-                                    controller: textEditingController,
-                                    focusNode: focusNode,
-                                    decoration: const InputDecoration(
-                                      labelText: 'Measurement',
-                                      hintText: 'z. B. climate, home_sensors',
-                                      border: OutlineInputBorder(),
-                                    ),
-                                    validator: (v) =>
-                                        (v == null || v.trim().isEmpty)
-                                        ? 'Bitte Measurement eingeben'
-                                        : null,
-                                    onChanged: (v) {
-                                      _measurementController.text = v;
-                                      _loadFields();
-                                    },
-                                  );
-                                },
+                            onReload: () => schemaNotifier.reloadMeasurements(),
+                            validator: (v) => (v == null || v.trim().isEmpty)
+                                ? 'Bitte Measurement eingeben'
+                                : null,
                           ),
                           const SizedBox(height: 12),
 
                           // Field or Multi-fields
                           if (_selectedType == WidgetType.multiValue) ...[
-                            TextFormField(
-                              key: const Key('widget_field_field'),
-                              controller: _multiFieldsController,
-                              decoration: const InputDecoration(
-                                labelText: 'Felder (kommagetrennt)',
-                                hintText: 'z. B. temp, humidity, co2',
-                                border: OutlineInputBorder(),
-                              ),
-                              validator: (v) => (v == null || v.trim().isEmpty)
-                                  ? 'Mindestens 1 Feld angeben'
+                            MultiFieldSelector(
+                              items: _multiItems,
+                              fieldsState: schemaState.fields,
+                              onItemsChanged: (items) {
+                                setState(() {
+                                  _multiItems = items;
+                                  _multiFieldsController.text = items
+                                      .map((i) => i.field)
+                                      .join(', ');
+                                });
+                              },
+                              onReload: () =>
+                                  schemaNotifier.reloadFieldsAndTags(),
+                              validator: (items) =>
+                                  (items == null || items.isEmpty)
+                                  ? 'Mindestens 1 Feld auswählen'
                                   : null,
                             ),
                           ] else ...[
-                            Autocomplete<String>(
-                              initialValue: TextEditingValue(
-                                text: _fieldController.text,
-                              ),
-                              optionsBuilder: (textVal) {
-                                if (_fieldSuggestions.isEmpty) {
-                                  return const Iterable<String>.empty();
-                                }
-                                return _fieldSuggestions.where(
-                                  (s) => s.toLowerCase().contains(
-                                    textVal.text.toLowerCase(),
-                                  ),
-                                );
-                              },
+                            SearchableSchemaPicker(
+                              fieldKey: const Key('widget_field_field'),
+                              label: 'Feld',
+                              hintText: 'z. B. temperature, power',
+                              selectedValue: _fieldController.text,
+                              options: schemaState.fields.items
+                                  .map(SchemaPickerOption.fromFieldInfo)
+                                  .toList(),
+                              status: schemaState.fields.status,
+                              errorMessage: schemaState.fields.errorMessage,
+                              requireNumericHint:
+                                  _selectedType == WidgetType.historyChart ||
+                                  _selectedType == WidgetType.indicatorLamp ||
+                                  _selectedType == WidgetType.aggregate ||
+                                  _selectedType == WidgetType.gaugeBar,
                               onSelected: (val) {
                                 _fieldController.text = val;
                                 setState(() {});
                               },
-                              fieldViewBuilder:
-                                  (
-                                    context,
-                                    textEditingController,
-                                    focusNode,
-                                    onFieldSubmitted,
-                                  ) {
-                                    return TextFormField(
-                                      key: const Key('widget_field_field'),
-                                      controller: textEditingController,
-                                      focusNode: focusNode,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Feld',
-                                        hintText: 'z. B. temperature, power',
-                                        border: OutlineInputBorder(),
-                                      ),
-                                      validator: (v) =>
-                                          (v == null || v.trim().isEmpty)
-                                          ? 'Bitte Feld angeben'
-                                          : null,
-                                      onChanged: (v) {
-                                        _fieldController.text = v;
-                                      },
-                                    );
-                                  },
+                              onReload: () =>
+                                  schemaNotifier.reloadFieldsAndTags(),
+                              validator: (v) =>
+                                  (!_isFormulaEnabled &&
+                                      (v == null || v.trim().isEmpty))
+                                  ? 'Bitte Feld angeben'
+                                  : null,
                             ),
                           ],
                           const SizedBox(height: 12),
+
+                          // Tag Filter Editor
+                          TagFilterEditor(
+                            tagFilters: _tagFilters,
+                            tagKeysState: schemaState.tagKeys,
+                            tagValuesByKey: schemaState.tagValuesByKey,
+                            onTagFiltersChanged: (map) =>
+                                setState(() => _tagFilters = map),
+                            onLoadTagValues: (key) =>
+                                schemaNotifier.loadTagValues(key),
+                            onReloadTagKeys: () =>
+                                schemaNotifier.reloadFieldsAndTags(),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Formula & Calculation Section
+                          if (_selectedType != WidgetType.multiValue) ...[
+                            FormulaEditorSection(
+                              isEnabled: _isFormulaEnabled,
+                              onEnabledChanged: (val) =>
+                                  setState(() => _isFormulaEnabled = val),
+                              formula: _formula,
+                              onFormulaChanged: (val) =>
+                                  setState(() => _formula = val),
+                              variables: _formulaVariables,
+                              onVariablesChanged: (vars) =>
+                                  setState(() => _formulaVariables = vars),
+                              availableFields: schemaState.fields.items,
+                              availableMeasurements:
+                                  schemaState.measurements.items,
+                            ),
+                            const SizedBox(height: 12),
+                          ],
 
                           // Unit and Decimals
                           Row(
@@ -541,7 +583,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
                                     labelText: 'Nachkommastellen',
-                                    hintText: 'z. B. 1',
+                                    hintText: 'Max. 2 (z. B. 1 oder 2)',
                                     border: OutlineInputBorder(),
                                   ),
                                 ),

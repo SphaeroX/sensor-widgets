@@ -13,21 +13,27 @@ class WidgetStorageReader(
 ) {
     constructor(context: Context) : this(
         prefsGetter = { key ->
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.getString(key, null)
+            val homeWidgetPrefs = context.getSharedPreferences(HOME_WIDGET_PREFS_NAME, Context.MODE_PRIVATE)
+            homeWidgetPrefs.getString(key, null)
+                ?: context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(key, null)
         },
         prefsSetter = { key, value ->
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            prefs.edit().putString(key, value).apply()
+            val homeWidgetPrefs = context.getSharedPreferences(HOME_WIDGET_PREFS_NAME, Context.MODE_PRIVATE)
+            homeWidgetPrefs.edit().putString(key, value).apply()
+            val legacyPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            legacyPrefs.edit().putString(key, value).apply()
         },
         securePrefsGetter = { key ->
-            // Try FlutterSecureStorage prefs first, then standard prefs
-            val securePrefs = context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
-            var token = securePrefs.getString(key, null)
+            val homeWidgetPrefs = context.getSharedPreferences(HOME_WIDGET_PREFS_NAME, Context.MODE_PRIVATE)
+            var token = homeWidgetPrefs.getString(key, null)
             if (token == null) {
-                // Check prefixed key or standard prefs fallback
-                val standardPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                token = standardPrefs.getString(key, null)
+                val legacyPrefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                token = legacyPrefs.getString(key, null)
+            }
+            if (token == null) {
+                val securePrefs = context.getSharedPreferences(SECURE_PREFS_NAME, Context.MODE_PRIVATE)
+                token = securePrefs.getString(key, null)
+                    ?: securePrefs.getString("VGhpcyBpcyB0aGUgcHJlZml4IGZvciBhIHNlY3VyZSBzdG9yYWdlCg_$key", null)
             }
             token
         },
@@ -66,7 +72,7 @@ class WidgetStorageReader(
 
     fun getToken(connectionId: String): String? {
         val key = "$KEY_TOKEN_PREFIX$connectionId"
-        return securePrefsGetter(key)
+        return securePrefsGetter(key) ?: prefsGetter(key)
     }
 
     fun saveWidgetCache(
@@ -83,6 +89,7 @@ class WidgetStorageReader(
     }
 
     companion object {
+        const val HOME_WIDGET_PREFS_NAME = "HomeWidgetPreferences"
         const val PREFS_NAME = "sensor_widgets_prefs"
         const val SECURE_PREFS_NAME = "FlutterSecureStorage"
         const val KEY_WIDGET_DEFINITIONS = "widget_definitions_v1"

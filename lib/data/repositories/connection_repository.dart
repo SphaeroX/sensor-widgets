@@ -27,11 +27,34 @@ class ConnectionRepository {
 
     try {
       final list = json.decode(jsonStr) as List<dynamic>;
-      return list
+      final connections = list
           .map(
             (item) => InfluxConnection.fromJson(item as Map<String, dynamic>),
           )
           .toList();
+
+      var migratedAny = false;
+      for (final c in connections) {
+        final existingShared = await _sharedStore.getString(
+          StorageKeys.tokenKey(c.id),
+        );
+        if (existingShared == null || existingShared.isEmpty) {
+          final secureToken = await _tokenStore.getToken(c.id);
+          if (secureToken != null && secureToken.isNotEmpty) {
+            await _sharedStore.saveString(
+              StorageKeys.tokenKey(c.id),
+              secureToken,
+            );
+            migratedAny = true;
+          }
+        }
+      }
+
+      if (migratedAny) {
+        await _sharedStore.notifyWidgetsUpdated();
+      }
+
+      return connections;
     } catch (_) {
       return [];
     }
@@ -67,6 +90,15 @@ class ConnectionRepository {
 
     if (token != null && token.isNotEmpty) {
       await _tokenStore.saveToken(connection.id, token);
+      await _sharedStore.saveString(StorageKeys.tokenKey(connection.id), token);
+    } else {
+      final existing = await _tokenStore.getToken(connection.id);
+      if (existing != null && existing.isNotEmpty) {
+        await _sharedStore.saveString(
+          StorageKeys.tokenKey(connection.id),
+          existing,
+        );
+      }
     }
   }
 
@@ -78,6 +110,7 @@ class ConnectionRepository {
     final jsonStr = json.encode(updatedList.map((c) => c.toJson()).toList());
     await _sharedStore.saveString(StorageKeys.connectionsMetadataKey, jsonStr);
     await _tokenStore.deleteToken(id);
+    await _sharedStore.saveString(StorageKeys.tokenKey(id), '');
   }
 
   /// Retrieves the secure token for the connection.

@@ -6,6 +6,7 @@ import 'package:sensor_widgets/data/influx/influx_response_parser.dart';
 import 'package:sensor_widgets/data/influx/influxql_query_builder.dart';
 import 'package:sensor_widgets/domain/errors/influx_exception.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 
 /// HTTP Client that executes InfluxQL queries against the InfluxDB v1-compatible HTTP API.
 class InfluxApiClient {
@@ -99,8 +100,12 @@ class InfluxApiClient {
   }) async {
     final q = _queryBuilder.buildShowMeasurementsQuery();
     final json = await query(connection: connection, token: token, influxQl: q);
-    // If it didn't throw and returned a valid response, connection is good
-    return json.containsKey('results');
+    try {
+      _responseParser.parseMeasurements(json);
+      return json.containsKey('results');
+    } on InfluxQueryException catch (e) {
+      throw InfluxQueryException(maskToken(e.message, token));
+    }
   }
 
   /// Fetches available measurement names for schema discovery.
@@ -122,6 +127,17 @@ class InfluxApiClient {
     final q = _queryBuilder.buildShowFieldKeysQuery(measurement);
     final json = await query(connection: connection, token: token, influxQl: q);
     return _responseParser.parseFieldKeys(json);
+  }
+
+  /// Fetches strongly-typed field infos for a given measurement.
+  Future<List<InfluxFieldInfo>> fetchFieldInfos({
+    required InfluxConnection connection,
+    required String token,
+    required String measurement,
+  }) async {
+    final q = _queryBuilder.buildShowFieldKeysQuery(measurement);
+    final json = await query(connection: connection, token: token, influxQl: q);
+    return _responseParser.parseFieldInfos(json);
   }
 
   /// Fetches available tag keys for a given measurement.

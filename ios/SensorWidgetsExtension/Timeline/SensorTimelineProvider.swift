@@ -115,15 +115,57 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
     ) async throws -> CachedSensorData {
         switch widget.type {
         case .singleValue, .indicatorLamp, .gaugeBar:
-            let field = widget.field ?? "value"
-            let q = InfluxQlBuilder.buildSingleValueQuery(
-                measurement: widget.measurement,
-                field: field,
-                tagFilters: widget.tagFilters
-            )
-            let data = try await httpClient.query(connection: connection, token: token, influxQl: q)
-            let pt = try InfluxResponseParser.parseSingleValue(data: data, fieldName: field)
-            return CachedSensorData(singleValue: pt?.value, lastUpdated: pt?.timestamp ?? Date())
+            if let formula = widget.formula,
+               !formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let variables = widget.formulaVariables,
+               !variables.isEmpty {
+                var varValues: [String: Double] = [:]
+                let grouped = Dictionary(grouping: variables) { v -> String in
+                    let m = v.measurement ?? widget.measurement
+                    let tagsKey = v.tagFilters?.sorted(by: { $0.key < $1.key }).map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+                        ?? widget.tagFilters?.sorted(by: { $0.key < $1.key }).map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+                        ?? ""
+                    return "\(m)||\(tagsKey)"
+                }
+
+                for (_, groupVars) in grouped {
+                    guard let first = groupVars.first else { continue }
+                    let m = first.measurement ?? widget.measurement
+                    let tags = first.tagFilters ?? widget.tagFilters
+                    let fields = Array(Set(groupVars.map { $0.field }))
+
+                    let q = InfluxQlBuilder.buildMultiValueQuery(
+                        measurement: m,
+                        fields: fields,
+                        tagFilters: tags
+                    )
+                    let data = try await httpClient.query(connection: connection, token: token, influxQl: q)
+                    let multiMap = try InfluxResponseParser.parseMultiValues(data: data, fields: fields)
+
+                    for v in groupVars {
+                        guard let pt = multiMap[v.field] else {
+                            throw FormulaError.missingVariable(v.name)
+                        }
+                        varValues[v.name] = pt.value
+                    }
+                }
+
+                let calculated = try FormulaEvaluator.evaluate(formula, variables: varValues)
+                let decimals = Double(min(max(widget.decimalPlaces ?? 2, 0), 2))
+                let multiplier = pow(10.0, decimals)
+                let rounded = (calculated * multiplier).rounded() / multiplier
+                return CachedSensorData(singleValue: rounded, lastUpdated: Date())
+            } else {
+                let field = widget.field ?? "value"
+                let q = InfluxQlBuilder.buildSingleValueQuery(
+                    measurement: widget.measurement,
+                    field: field,
+                    tagFilters: widget.tagFilters
+                )
+                let data = try await httpClient.query(connection: connection, token: token, influxQl: q)
+                let pt = try InfluxResponseParser.parseSingleValue(data: data, fieldName: field)
+                return CachedSensorData(singleValue: pt?.value, lastUpdated: pt?.timestamp ?? Date())
+            }
 
         case .historyChart:
             let field = widget.field ?? "value"

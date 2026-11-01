@@ -59,17 +59,25 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         val storage = WidgetStorageReader(context)
 
-        // Read bound widget ID
+        // Read bound widget ID from HomeWidgetPreferences or legacy prefs
         val boundKey = "app_widget_${appWidgetId}_bound_id"
-        val prefs = context.getSharedPreferences(WidgetStorageReader.PREFS_NAME, Context.MODE_PRIVATE)
-        val boundWidgetId = prefs.getString(boundKey, null)
+        val homePrefs = context.getSharedPreferences(WidgetStorageReader.HOME_WIDGET_PREFS_NAME, Context.MODE_PRIVATE)
+        val boundWidgetId =
+            homePrefs.getString(boundKey, null)
+                ?: context.getSharedPreferences(WidgetStorageReader.PREFS_NAME, Context.MODE_PRIVATE).getString(boundKey, null)
 
+        val allWidgets = storage.getWidgetDefinitions()
         val widgetDef =
             if (boundWidgetId != null) {
-                storage.getWidgetDefinitions().find { it.id == boundWidgetId }
+                allWidgets.find { it.id == boundWidgetId }
             } else {
-                storage.getWidgetDefinitions().firstOrNull()
+                allWidgets.firstOrNull()
             }
+
+        // Trigger background refresh if cache is missing
+        if (widgetDef != null && storage.getWidgetCache(widgetDef.id) == null) {
+            WidgetRefreshWorker.enqueueOneTimeWork(context, widgetDef.id)
+        }
 
         val cacheJson = if (widgetDef != null) storage.getWidgetCache(widgetDef.id) else null
         val uiState =

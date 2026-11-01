@@ -133,4 +133,289 @@ class WidgetRefreshWorkerTest {
         assertNotNull(cache)
         assertTrue(cache!!.contains("error"))
     }
+
+    @Test
+    fun testRefreshWidgetWithFormulaCalculatesCorrectly() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(
+                    """
+                    {
+                      "results": [
+                        {
+                          "statement_id": 0,
+                          "series": [
+                            {
+                              "name": "climate",
+                              "columns": ["time", "temp_in", "temp_out"],
+                              "values": [[1730370000000, 20.0, 30.0]]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                ),
+        )
+
+        val serverUrl = server.url("/").toString().removeSuffix("/")
+        inMemoryPrefs[WidgetStorageReader.KEY_CONNECTIONS_METADATA] =
+            """
+            [
+              {
+                "id": "c1",
+                "name": "Server",
+                "url": "$serverUrl",
+                "database": "sensors"
+              }
+            ]
+            """.trimIndent()
+        inMemorySecurePrefs["${WidgetStorageReader.KEY_TOKEN_PREFIX}c1"] = "token123"
+
+        inMemoryPrefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] =
+            """
+            [
+              {
+                "id": "w-calc",
+                "type": "single_value",
+                "title": "Avg",
+                "connectionId": "c1",
+                "measurement": "climate",
+                "formula": "(A + B) / 2",
+                "formulaVariables": [
+                  { "name": "A", "field": "temp_in" },
+                  { "name": "B", "field": "temp_out" }
+                ],
+                "unit": "°C"
+              }
+            ]
+            """.trimIndent()
+
+        val httpClient = InfluxHttpClient()
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+
+        assertEquals(1, count)
+        val cache = storageReader.getWidgetCache("w-calc")
+        assertNotNull(cache)
+
+        val cacheJson = JSONObject(cache!!)
+        assertEquals(25.0, cacheJson.getDouble("value"), 0.001)
+        assertEquals("°C", cacheJson.getString("unit"))
+    }
+
+    @Test
+    fun testRefreshWidgetWithFormulaDivisionByZeroSavesErrorInCache() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(
+                    """
+                    {
+                      "results": [
+                        {
+                          "statement_id": 0,
+                          "series": [
+                            {
+                              "name": "climate",
+                              "columns": ["time", "valA", "valB"],
+                              "values": [[1730370000000, 10.0, 0.0]]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                ),
+        )
+
+        val serverUrl = server.url("/").toString().removeSuffix("/")
+        inMemoryPrefs[WidgetStorageReader.KEY_CONNECTIONS_METADATA] =
+            """
+            [
+              {
+                "id": "c1",
+                "name": "Server",
+                "url": "$serverUrl",
+                "database": "sensors"
+              }
+            ]
+            """.trimIndent()
+        inMemorySecurePrefs["${WidgetStorageReader.KEY_TOKEN_PREFIX}c1"] = "token123"
+
+        inMemoryPrefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] =
+            """
+            [
+              {
+                "id": "w-divzero",
+                "type": "single_value",
+                "title": "Div",
+                "connectionId": "c1",
+                "measurement": "climate",
+                "formula": "A / B",
+                "formulaVariables": [
+                  { "name": "A", "field": "valA" },
+                  { "name": "B", "field": "valB" }
+                ]
+              }
+            ]
+            """.trimIndent()
+
+        val httpClient = InfluxHttpClient()
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+
+        assertEquals(1, count)
+        val cache = storageReader.getWidgetCache("w-divzero")
+        assertNotNull(cache)
+
+        val cacheJson = JSONObject(cache!!)
+        assertTrue(cacheJson.has("error"))
+        assertTrue(cacheJson.getString("error").contains("Division durch Null"))
+    }
+
+    @Test
+    fun testRefreshWidgetWithMissingFormulaVariableSavesErrorInCache() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(
+                    """
+                    {
+                      "results": [
+                        {
+                          "statement_id": 0,
+                          "series": [
+                            {
+                              "name": "climate",
+                              "columns": ["time", "valA"],
+                              "values": [[1730370000000, 10.0]]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                ),
+        )
+
+        val serverUrl = server.url("/").toString().removeSuffix("/")
+        inMemoryPrefs[WidgetStorageReader.KEY_CONNECTIONS_METADATA] =
+            """
+            [
+              {
+                "id": "c1",
+                "name": "Server",
+                "url": "$serverUrl",
+                "database": "sensors"
+              }
+            ]
+            """.trimIndent()
+        inMemorySecurePrefs["${WidgetStorageReader.KEY_TOKEN_PREFIX}c1"] = "token123"
+
+        inMemoryPrefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] =
+            """
+            [
+              {
+                "id": "w-missing",
+                "type": "single_value",
+                "title": "MissingVar",
+                "connectionId": "c1",
+                "measurement": "climate",
+                "formula": "A + B",
+                "formulaVariables": [
+                  { "name": "A", "field": "valA" },
+                  { "name": "B", "field": "valB" }
+                ]
+              }
+            ]
+            """.trimIndent()
+
+        val httpClient = InfluxHttpClient()
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+
+        assertEquals(1, count)
+        val cache = storageReader.getWidgetCache("w-missing")
+        assertNotNull(cache)
+
+        val cacheJson = JSONObject(cache!!)
+        assertTrue(cacheJson.has("error"))
+        assertTrue(cacheJson.getString("error").contains("Fehlende Variable: B"))
+    }
+
+    @Test
+    fun testRefreshWidgetIndicatorLampWithFormulaCalculatesActiveState() {
+        server.enqueue(
+            MockResponse()
+                .setResponseCode(200)
+                .setHeader("Content-Type", "application/json")
+                .setBody(
+                    """
+                    {
+                      "results": [
+                        {
+                          "statement_id": 0,
+                          "series": [
+                            {
+                              "name": "climate",
+                              "columns": ["time", "valA", "valB"],
+                              "values": [[1730370000000, 15.0, 20.0]]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                    """.trimIndent(),
+                ),
+        )
+
+        val serverUrl = server.url("/").toString().removeSuffix("/")
+        inMemoryPrefs[WidgetStorageReader.KEY_CONNECTIONS_METADATA] =
+            """
+            [
+              {
+                "id": "c1",
+                "name": "Server",
+                "url": "$serverUrl",
+                "database": "sensors"
+              }
+            ]
+            """.trimIndent()
+        inMemorySecurePrefs["${WidgetStorageReader.KEY_TOKEN_PREFIX}c1"] = "token123"
+
+        inMemoryPrefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] =
+            """
+            [
+              {
+                "id": "w-lamp",
+                "type": "indicator_lamp",
+                "title": "Lamp",
+                "connectionId": "c1",
+                "measurement": "climate",
+                "formula": "A + B",
+                "formulaVariables": [
+                  { "name": "A", "field": "valA" },
+                  { "name": "B", "field": "valB" }
+                ],
+                "threshold": {
+                  "operator": "greaterThan",
+                  "value": 30.0
+                }
+              }
+            ]
+            """.trimIndent()
+
+        val httpClient = InfluxHttpClient()
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+
+        assertEquals(1, count)
+        val cache = storageReader.getWidgetCache("w-lamp")
+        assertNotNull(cache)
+
+        val cacheJson = JSONObject(cache!!)
+        assertEquals(35.0, cacheJson.getDouble("value"), 0.001)
+        assertTrue(cacheJson.getBoolean("isActive"))
+    }
 }

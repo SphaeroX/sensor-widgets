@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
@@ -109,6 +110,54 @@ void main() {
         measurement: 'temp',
       );
       expect(missingFieldSingle.isValid, isFalse);
+
+      // Valid if formula and formulaVariables are present even without single field
+      const validFormulaWidget = WidgetDefinition(
+        id: 'w-4',
+        type: WidgetType.singleValue,
+        title: 'Average Temp',
+        connectionId: 'c-1',
+        measurement: 'temp',
+        formula: '(A + B) / 2',
+        formulaVariables: [
+          FormulaVariable(name: 'A', field: 'temp_1'),
+          FormulaVariable(name: 'B', field: 'temp_2'),
+        ],
+      );
+      expect(validFormulaWidget.isValid, isTrue);
+    });
+
+    test('serializes and deserializes formula and formulaVariables', () {
+      const widget = WidgetDefinition(
+        id: 'w-calc',
+        type: WidgetType.singleValue,
+        title: 'Calc Widget',
+        connectionId: 'conn-1',
+        measurement: 'sensors',
+        formula: 'A - B',
+        formulaVariables: [
+          FormulaVariable(name: 'A', field: 'in'),
+          FormulaVariable(
+            name: 'B',
+            field: 'out',
+            measurement: 'outside',
+            tagFilters: {'loc': 'garden'},
+          ),
+        ],
+      );
+
+      final jsonMap = widget.toJson();
+      expect(jsonMap['formula'], 'A - B');
+      final vars = jsonMap['formulaVariables'] as List<dynamic>;
+      expect(vars.length, 2);
+      expect(vars[0]['name'], 'A');
+      expect(vars[1]['measurement'], 'outside');
+
+      final deserialized = WidgetDefinition.fromJson(jsonMap);
+      expect(deserialized.formula, 'A - B');
+      expect(deserialized.formulaVariables?.length, 2);
+      expect(deserialized.formulaVariables?[0].name, 'A');
+      expect(deserialized.formulaVariables?[1].tagFilters?['loc'], 'garden');
     });
   });
 }

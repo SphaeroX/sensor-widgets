@@ -36,12 +36,19 @@ object ChartMathAndFormatter {
     ): String {
         if (value == null) return "--"
         return if (decimalPlaces != null) {
-            String.format(Locale.US, "%.${decimalPlaces}f", value)
+            val places = decimalPlaces.coerceIn(0, 2)
+            String.format(Locale.US, "%.${places}f", value)
         } else {
-            if (value == value.toLong().toDouble()) {
-                value.toLong().toString()
+            val rounded = Math.round(value * 100.0) / 100.0
+            if (rounded == rounded.toLong().toDouble()) {
+                rounded.toLong().toString()
             } else {
-                String.format(Locale.US, "%.1f", value)
+                val formatted = String.format(Locale.US, "%.2f", rounded)
+                if (formatted.endsWith("0")) {
+                    formatted.removeSuffix("0")
+                } else {
+                    formatted
+                }
             }
         }
     }

@@ -75,6 +75,28 @@ public struct SensorQueryItem: Codable, Equatable {
     }
 }
 
+public struct FormulaVariable: Codable, Equatable {
+    public let name: String
+    public let field: String
+    public let measurement: String?
+    public let tagFilters: [String: String]?
+    public let label: String?
+
+    public init(
+        name: String,
+        field: String,
+        measurement: String? = nil,
+        tagFilters: [String: String]? = nil,
+        label: String? = nil
+    ) {
+        self.name = name
+        self.field = field
+        self.measurement = measurement
+        self.tagFilters = tagFilters
+        self.label = label
+    }
+}
+
 public struct SensorDataPoint: Codable, Equatable {
     public let timestamp: Date
     public let value: Double
@@ -120,6 +142,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
     public let max: Double?
     public let thresholds: [ThresholdRule]?
     public let items: [SensorQueryItem]?
+    public let formula: String?
+    public let formulaVariables: [FormulaVariable]?
 
     public init(
         id: String,
@@ -139,7 +163,9 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         min: Double? = nil,
         max: Double? = nil,
         thresholds: [ThresholdRule]? = nil,
-        items: [SensorQueryItem]? = nil
+        items: [SensorQueryItem]? = nil,
+        formula: String? = nil,
+        formulaVariables: [FormulaVariable]? = nil
     ) {
         self.id = id
         self.type = type
@@ -159,6 +185,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         self.max = max
         self.thresholds = thresholds
         self.items = items
+        self.formula = formula
+        self.formulaVariables = formulaVariables
     }
 }
 

@@ -1,3 +1,4 @@
+import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
@@ -31,6 +32,10 @@ class WidgetDefinition {
   // Multi-Value specific
   final List<SensorQueryItem>? items;
 
+  // Formula specific
+  final String? formula;
+  final List<FormulaVariable>? formulaVariables;
+
   const WidgetDefinition({
     required this.id,
     required this.type,
@@ -50,13 +55,17 @@ class WidgetDefinition {
     this.max,
     this.thresholds,
     this.items,
+    this.formula,
+    this.formulaVariables,
   });
 
   bool get isValid {
     if (id.trim().isEmpty || title.trim().isEmpty) return false;
     if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
 
-    if (type == WidgetType.multiValue) {
+    if (formula != null && formula!.trim().isNotEmpty) {
+      if (formulaVariables == null || formulaVariables!.isEmpty) return false;
+    } else if (type == WidgetType.multiValue) {
       if (items == null || items!.isEmpty) return false;
     } else {
       if (field == null || field!.trim().isEmpty) return false;
@@ -96,6 +105,12 @@ class WidgetDefinition {
                 .map((e) => SensorQueryItem.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
+      formula: json['formula'] as String?,
+      formulaVariables: json['formulaVariables'] != null
+          ? (json['formulaVariables'] as List<dynamic>)
+                .map((e) => FormulaVariable.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : null,
     );
   }
 
@@ -128,6 +143,12 @@ class WidgetDefinition {
     if (items != null) {
       map['items'] = items!.map((e) => e.toJson()).toList();
     }
+    if (formula != null) map['formula'] = formula;
+    if (formulaVariables != null) {
+      map['formulaVariables'] = formulaVariables!
+          .map((e) => e.toJson())
+          .toList();
+    }
     return map;
   }
 
@@ -150,6 +171,8 @@ class WidgetDefinition {
     double? max,
     List<ThresholdRule>? thresholds,
     List<SensorQueryItem>? items,
+    String? formula,
+    List<FormulaVariable>? formulaVariables,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -171,6 +194,8 @@ class WidgetDefinition {
       max: max ?? this.max,
       thresholds: thresholds ?? this.thresholds,
       items: items ?? this.items,
+      formula: formula ?? this.formula,
+      formulaVariables: formulaVariables ?? this.formulaVariables,
     );
   }
 }

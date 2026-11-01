@@ -7,7 +7,8 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 
 ## Core features
 - Widget types: single value (with unit and timestamp), history chart (selectable time range), indicator lamp that switches at a threshold (greater or less than), multi-value overview (e.g. a room with several sensors), aggregate over a time range (min, max, average), gauge or bar.
-- Per-widget configuration: connection, measurement, field, filter, time range, unit, colors, thresholds.
+- Local formula calculation: arithmetic expressions combining multiple InfluxDB fields/measurements (`+`, `-`, `*`, `/`, `()`, constants) evaluated locally before widget display.
+- Per-widget configuration: connection, measurement, field, formula, filter, time range, unit, colors, thresholds.
 - Widgets fetch their data themselves in the background and refresh on the platform schedule (about every 15-30 minutes).
 - Many widgets can be created and managed from the app.
 
@@ -27,7 +28,7 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 ## Decisions & status
 - Display title: `Sensor Widgets`, package/bundle ID: `io.github.mgasc.influx_sensor_widgets`.
 - Technical decisions: see `docs/architecture.md`.
-- Implementation roadmap: see `Roadmap/README.md` (`Task_01` – `Task_10`).
+- Implementation roadmap: see `Roadmap/README.md` (`Task_01` – `Task_10` archived, `Task_11` – `Task_15` active for guided schema selection UX).
 - Store release remains optional and may be done later.
 
 ---

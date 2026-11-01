@@ -113,4 +113,51 @@ class WidgetUiStateMapperTest {
         assertEquals("21.1", state.aggregates?.get("mean"))
         assertEquals("23.9", state.aggregates?.get("max"))
     }
+
+    @Test
+    fun testFormulaDivisionByZeroErrorState() {
+        val cacheJson = """{"error": "Division durch Null", "timestamp": 1730370000000}"""
+        val state =
+            WidgetUiStateMapper.mapToUiState(
+                appWidgetId = 101,
+                boundWidgetId = "w1",
+                widget = testWidget,
+                cacheJson = cacheJson,
+            )
+        assertTrue(state.isConfigured)
+        assertFalse(state.isLoading)
+        assertEquals("Division durch Null", state.errorMessage)
+    }
+
+    @Test
+    fun testFormulaMissingVariableErrorState() {
+        val cacheJson = """{"error": "Fehlende Variable: B", "timestamp": 1730370000000}"""
+        val state =
+            WidgetUiStateMapper.mapToUiState(
+                appWidgetId = 101,
+                boundWidgetId = "w1",
+                widget = testWidget,
+                cacheJson = cacheJson,
+            )
+        assertTrue(state.isConfigured)
+        assertFalse(state.isLoading)
+        assertEquals("Fehlende Variable: B", state.errorMessage)
+    }
+
+    @Test
+    fun testFormulaIndicatorLampActiveState() {
+        val lampWidget = testWidget.copy(type = WidgetType.INDICATOR_LAMP)
+        val cacheJson = """{"value": 35.0, "isActive": true, "timestamp": 1730370000000}"""
+        val state =
+            WidgetUiStateMapper.mapToUiState(
+                appWidgetId = 101,
+                boundWidgetId = "w1",
+                widget = lampWidget,
+                cacheJson = cacheJson,
+            )
+        assertTrue(state.isConfigured)
+        assertNull(state.errorMessage)
+        assertEquals("35.0", state.singleValue)
+        assertEquals(true, state.isIndicatorActive)
+    }
 }

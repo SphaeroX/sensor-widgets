@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/data/influx/influx_response_parser.dart';
 import 'package:sensor_widgets/domain/errors/influx_exception.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 
 void main() {
   group('InfluxResponseParser', () {
@@ -69,6 +70,16 @@ void main() {
       );
       expect(fieldKeys, ['co2', 'humidity', 'pressure', 'temperature']);
 
+      final fieldInfos = parser.parseFieldInfos(
+        loadFixture('show_field_keys_response.json'),
+      );
+      expect(fieldInfos, [
+        const InfluxFieldInfo(key: 'co2', type: 'float'),
+        const InfluxFieldInfo(key: 'humidity', type: 'float'),
+        const InfluxFieldInfo(key: 'pressure', type: 'float'),
+        const InfluxFieldInfo(key: 'temperature', type: 'float'),
+      ]);
+
       final tagKeys = parser.parseTagKeys(
         loadFixture('show_tag_keys_response.json'),
       );
@@ -87,6 +98,55 @@ void main() {
       expect(parser.parseMultiValues(json, ['temp']), isEmpty);
       expect(parser.parseAggregate(json), isEmpty);
       expect(parser.parseMeasurements(json), isEmpty);
+      expect(parser.parseFieldInfos(json), isEmpty);
+    });
+
+    test('parses mixed field types and missing type column safely', () {
+      final responseWithMixed = {
+        'results': [
+          {
+            'statement_id': 0,
+            'series': [
+              {
+                'name': 'device_data',
+                'columns': ['fieldKey', 'fieldType'],
+                'values': [
+                  ['temp', 'float'],
+                  ['count', 'integer'],
+                  ['mode', 'string'],
+                  ['active', 'boolean'],
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(parser.parseFieldInfos(responseWithMixed), [
+        const InfluxFieldInfo(key: 'temp', type: 'float'),
+        const InfluxFieldInfo(key: 'count', type: 'integer'),
+        const InfluxFieldInfo(key: 'mode', type: 'string'),
+        const InfluxFieldInfo(key: 'active', type: 'boolean'),
+      ]);
+
+      final responseWithoutTypeCol = {
+        'results': [
+          {
+            'statement_id': 0,
+            'series': [
+              {
+                'name': 'device_data',
+                'columns': ['fieldKey'],
+                'values': [
+                  ['temp'],
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      expect(parser.parseFieldInfos(responseWithoutTypeCol), [
+        const InfluxFieldInfo(key: 'temp', type: 'unknown'),
+      ]);
     });
 
     test('throws InfluxQueryException on error_query_response.json', () {

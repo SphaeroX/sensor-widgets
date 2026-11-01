@@ -19,4 +19,6 @@ data class WidgetDefinition(
     val max: Double? = null,
     val thresholds: List<ThresholdRule>? = null,
     val items: List<SensorQueryItem>? = null,
+    val formula: String? = null,
+    val formulaVariables: List<FormulaVariable>? = null,
 )

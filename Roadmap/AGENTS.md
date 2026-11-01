@@ -32,7 +32,7 @@ Das Projekt besitzt eine feste Verzeichnisstruktur für das Aufgaben-, Fixture- 
 
 ## 2. Strikte Reihenfolge der Aufgaben
 
-* Alle Aufgaben im Ordner `Roadmap/Tasks/` sind numerisch geordnet (`Task_01.md` bis `Task_10.md`).
+* Alle Aufgaben im Ordner `Roadmap/Tasks/` sind numerisch fortlaufend geordnet (z. B. `Task_01.md` bis `Task_15.md`).
 * Die Aufgaben **MÜSSEN streng sequenziell in dieser Reihenfolge** abgearbeitet werden.
 * Es ist verboten, Tasks zu überspringen oder an späteren Tasks zu arbeiten, solange der vorherige Task nicht vollständig abgeschlossen und ins Archiv verschoben wurde.
 

@@ -43,23 +43,30 @@ Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` ac
 
 ## Architectural decisions
 - **State management & DI:** `flutter_riverpod` (`mocktail` for unit and widget tests).
-- **Schema configuration:** Combined approach in the widget editor — schema discovery via InfluxQL (`SHOW MEASUREMENTS`, `SHOW FIELD KEYS`, `SHOW TAG KEYS`, `SHOW TAG VALUES`) with a seamless fallback to free-text input.
+- **Schema configuration:** Guided schema selection in the widget editor — automatic discovery via InfluxQL (`SHOW MEASUREMENTS`, `SHOW FIELD KEYS` including `fieldType`, `SHOW TAG KEYS`, `SHOW TAG VALUES`) presented via searchable bottom-sheet pickers, tag-filter chips, multi-field selection, explicit loading/error/reload feedback, and a manual free-text toggle fallback.
 - **API token storage:** Tokens are stored in `EncryptedSharedPreferences` (Android) and the App Group Keychain (iOS `group.io.github.mgasc.influx_sensor_widgets`) via `flutter_secure_storage`; connection metadata and widget definitions (`schemaVersion: 1`) are stored as JSON in `home_widget` shared storage.
   - **Android Secure Storage:** `encryptedSharedPreferences: true` (accessed in native Kotlin via AndroidX Security `EncryptedSharedPreferences`).
   - **iOS Secure Storage:** App Group `group.io.github.mgasc.influx_sensor_widgets`, `kSecAttrAccessibleAfterFirstUnlock`.
   - **Token Key Format:** `influx_token_<connectionId>`.
 - **Shared Storage Keys (`lib/core/constants/storage_keys.dart`):**
   - App Group: `group.io.github.mgasc.influx_sensor_widgets`
-  - Android Prefs: `sensor_widgets_prefs`
+  - Android Prefs: `HomeWidgetPreferences` (primary, backed by `home_widget`) and `sensor_widgets_prefs` (fallback)
   - Widget Definitions Key: `widget_definitions_v1`
   - Connections Key: `connections_metadata_v1`
   - Token Prefix: `influx_token_<connectionId>`
   - Cache Prefix: `widget_cache_<widgetId>`
 - **Widget Definitions Contract (`schemaVersion: 1`):**
   - Stored under `fixtures/widget_definitions/widget_definitions_v1.json` with 6 widget types: `single_value`, `history_chart`, `indicator_lamp`, `multi_value`, `aggregate`, `gauge_bar`.
-  - Immutable models: `InfluxConnection`, `WidgetDefinition`, `ThresholdRule`, `SensorQueryItem`, `SensorDataPoint`.
-- **iOS widget extension target:** Implemented in `ios/SensorWidgetsExtension/` using Swift 5.9+, SwiftUI, Swift Charts (`Charts`), and AppIntents (`SelectWidgetIntent`, `SensorTimelineProvider`, `SensorWidgetViews`). Configured with `ios/Package.swift` and verified in GitHub Actions (`macos-latest`) via `swift test --package-path ios` (`Roadmap/Tasks/Task_09.md`).
-- **Roadmap & task tracking:** Sequentially managed in `Roadmap/README.md` and `Roadmap/Tasks/Task_01.md` – `Task_10.md`.
+  - Immutable models: `InfluxConnection`, `WidgetDefinition`, `ThresholdRule`, `SensorQueryItem`, `SensorDataPoint`, `FormulaVariable`.
+  - Optional formula engine: `formula` (String arithmetic expression with operators `+`, `-`, `*`, `/`, unary minus, parentheses) and `formulaVariables` (mapping `A`, `B`, ... to InfluxDB fields, optional distinct measurements and tag filters).
+- **Formula Engine & Cross-Platform Evaluator (Milestone 3):**
+  - Evaluates formulas consistently across Dart (`FormulaEvaluator`), Android Kotlin (`FormulaEvaluator.kt`), and iOS Swift (`FormulaEvaluator.swift`).
+  - Validated by shared fixtures in `fixtures/formula/evaluator_cases.json`.
+  - Floating-point & average rounding: Arithmetic calculations and averages are consistently rounded to avoid IEEE-754 precision artifacts (e.g. `15.150000000000002` -> `15.15`). Decimal places are capped at a maximum of 2 digits across all platforms (`NumberFormatter` in Dart, `ChartMathAndFormatter` in Android, `WidgetViewHelpers` in iOS).
+  - Query optimization: Variables sharing the same measurement and tags are fetched via a single InfluxQL query; distinct measurements/tags are fetched via parallel/sequential queries and joined locally.
+  - Transparent error propagation: Division by zero, syntax errors, and missing measurement values produce explicit, user-visible error badges/messages rather than silent zero values.
+- **iOS widget extension target:** Implemented in `ios/SensorWidgetsExtension/` using Swift 5.9+, SwiftUI, Swift Charts (`Charts`), and AppIntents (`SelectWidgetIntent`, `SensorTimelineProvider`, `SensorWidgetViews`). Configured with `ios/Package.swift` and verified in GitHub Actions (`macos-latest`) via `swift test --package-path ios` (`Roadmap/Archiv/Task_09.md`).
+- **Roadmap & task tracking:** Sequentially managed in `Roadmap/README.md`, `Roadmap/Archiv/Task_01.md` – `Task_10.md` (Milestone 1), `Roadmap/Archiv/Task_11.md` – `Task_15.md` (Milestone 2: Guided Schema Selection UX), and `Roadmap/Archiv/Task_16.md` – `Task_20.md` (Milestone 3: Local Formula Calculation).
 
 ---
 Maintenance: update this file immediately when the stack or architecture changes.

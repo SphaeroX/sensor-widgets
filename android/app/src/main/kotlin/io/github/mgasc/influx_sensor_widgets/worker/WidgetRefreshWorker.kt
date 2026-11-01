@@ -8,6 +8,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import io.github.mgasc.influx_sensor_widgets.formula.FormulaEvaluator
+import io.github.mgasc.influx_sensor_widgets.formula.MissingVariableException
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxHttpClient
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxQlBuilder
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxResponseParser
@@ -109,24 +111,78 @@ class WidgetRefreshWorker(
 
             when (widget.type) {
                 WidgetType.SINGLE_VALUE, WidgetType.INDICATOR_LAMP, WidgetType.GAUGE_BAR -> {
-                    val field = widget.field ?: ""
-                    val query =
-                        InfluxQlBuilder.buildSingleValueQuery(
-                            measurement = widget.measurement,
-                            field = field,
-                            tagFilters = widget.tagFilters,
-                        )
-                    val json = httpClient.query(conn, token, query)
-                    val point = InfluxResponseParser.parseSingleValue(json, field)
-                    if (point != null) {
-                        cacheObj.put("value", point.value)
-                        cacheObj.put("timestamp", point.timestamp)
+                    if (!widget.formula.isNullOrBlank() && !widget.formulaVariables.isNullOrEmpty()) {
+                        val varValues = mutableMapOf<String, Double>()
+                        val groups =
+                            widget.formulaVariables.groupBy { v ->
+                                val m = v.measurement ?: widget.measurement
+                                val tagsKey =
+                                    v.tagFilters
+                                        ?.entries
+                                        ?.sortedBy { it.key }
+                                        ?.joinToString("&") { "${it.key}=${it.value}" }
+                                        ?: (
+                                            widget.tagFilters
+                                                ?.entries
+                                                ?.sortedBy { it.key }
+                                                ?.joinToString("&") { "${it.key}=${it.value}" }
+                                                ?: ""
+                                        )
+                                "$m||$tagsKey"
+                            }
+
+                        for ((_, groupVars) in groups) {
+                            val first = groupVars.first()
+                            val m = first.measurement ?: widget.measurement
+                            val tags = first.tagFilters ?: widget.tagFilters
+                            val fields = groupVars.map { it.field }.distinct()
+
+                            val query = InfluxQlBuilder.buildMultiValueQuery(m, fields, tags)
+                            val json = httpClient.query(conn, token, query)
+                            val multiValues = InfluxResponseParser.parseMultiValues(json, fields)
+
+                            for (v in groupVars) {
+                                val point =
+                                    multiValues[v.field]
+                                        ?: throw MissingVariableException(v.name)
+                                varValues[v.name] = point.value
+                            }
+                        }
+
+                        val calculatedValue = FormulaEvaluator.evaluate(widget.formula, varValues)
+                        val decimals = (widget.decimalPlaces ?: 2).coerceIn(0, 2)
+                        val multiplier =
+                            when (decimals) {
+                                0 -> 1.0
+                                1 -> 10.0
+                                else -> 100.0
+                            }
+                        val roundedValue = Math.round(calculatedValue * multiplier) / multiplier
+                        cacheObj.put("value", roundedValue)
+                        cacheObj.put("timestamp", System.currentTimeMillis())
                         if (widget.type == WidgetType.INDICATOR_LAMP && widget.threshold != null) {
-                            cacheObj.put("isActive", widget.threshold.matches(point.value))
+                            cacheObj.put("isActive", widget.threshold.matches(roundedValue))
                         }
                     } else {
-                        cacheObj.put("error", "Keine Messdaten gefunden")
-                        cacheObj.put("timestamp", System.currentTimeMillis())
+                        val field = widget.field ?: ""
+                        val query =
+                            InfluxQlBuilder.buildSingleValueQuery(
+                                measurement = widget.measurement,
+                                field = field,
+                                tagFilters = widget.tagFilters,
+                            )
+                        val json = httpClient.query(conn, token, query)
+                        val point = InfluxResponseParser.parseSingleValue(json, field)
+                        if (point != null) {
+                            cacheObj.put("value", point.value)
+                            cacheObj.put("timestamp", point.timestamp)
+                            if (widget.type == WidgetType.INDICATOR_LAMP && widget.threshold != null) {
+                                cacheObj.put("isActive", widget.threshold.matches(point.value))
+                            }
+                        } else {
+                            cacheObj.put("error", "Keine Messdaten gefunden")
+                            cacheObj.put("timestamp", System.currentTimeMillis())
+                        }
                     }
                 }
 

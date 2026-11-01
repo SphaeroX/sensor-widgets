@@ -86,6 +86,38 @@ object WidgetDefinitionParser {
                 null
             }
 
+        val formulaVariables =
+            if (json.has("formulaVariables") && !json.isNull("formulaVariables")) {
+                val fvArr = json.getJSONArray("formulaVariables")
+                val fvList = mutableListOf<FormulaVariable>()
+                for (i in 0 until fvArr.length()) {
+                    val fvObj = fvArr.getJSONObject(i)
+                    val varTags =
+                        if (fvObj.has("tagFilters") && !fvObj.isNull("tagFilters")) {
+                            val tagsObj = fvObj.getJSONObject("tagFilters")
+                            val map = mutableMapOf<String, String>()
+                            tagsObj.keys().forEach { key ->
+                                map[key] = tagsObj.getString(key)
+                            }
+                            map
+                        } else {
+                            null
+                        }
+                    fvList.add(
+                        FormulaVariable(
+                            name = fvObj.getString("name"),
+                            field = fvObj.getString("field"),
+                            measurement = fvObj.optString("measurement").takeIf { it.isNotEmpty() },
+                            tagFilters = varTags,
+                            label = fvObj.optString("label").takeIf { it.isNotEmpty() },
+                        ),
+                    )
+                }
+                fvList
+            } else {
+                null
+            }
+
         return WidgetDefinition(
             id = json.getString("id"),
             type = WidgetType.fromWireName(json.getString("type")),
@@ -110,6 +142,8 @@ object WidgetDefinitionParser {
             max = if (json.has("max") && !json.isNull("max")) json.getDouble("max") else null,
             thresholds = thresholds,
             items = items,
+            formula = json.optString("formula").takeIf { it.isNotEmpty() },
+            formulaVariables = formulaVariables,
         )
     }
 

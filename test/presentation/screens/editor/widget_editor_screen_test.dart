@@ -7,6 +7,7 @@ import 'package:sensor_widgets/data/repositories/connection_repository.dart';
 import 'package:sensor_widgets/data/repositories/widget_definition_repository.dart';
 import 'package:sensor_widgets/data/storage/shared_widget_store.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
@@ -158,5 +159,325 @@ void main() {
 
       verify(() => mockWidgetRepo.saveWidget(any())).called(1);
     });
+
+    testWidgets(
+      'supports guided schema selection via bottom sheets and tag filter editor',
+      (tester) async {
+        when(
+          () => mockApiClient.fetchMeasurements(
+            connection: testConn,
+            token: 'token-123',
+          ),
+        ).thenAnswer((_) async => ['climate', 'power']);
+
+        when(
+          () => mockApiClient.fetchFieldInfos(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer(
+          (_) async => [
+            const InfluxFieldInfo(key: 'temperature', type: 'float'),
+            const InfluxFieldInfo(key: 'humidity', type: 'float'),
+          ],
+        );
+
+        when(
+          () => mockApiClient.fetchTagKeys(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer((_) async => ['room']);
+
+        when(
+          () => mockApiClient.fetchTagValues(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+            tagKey: 'room',
+          ),
+        ).thenAnswer((_) async => ['living_room', 'office']);
+
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('widget_title_field')),
+          'Auto Picked Widget',
+        );
+
+        // Open measurement picker bottom sheet
+        await tester.ensureVisible(
+          find.byKey(const Key('widget_measurement_field')),
+        );
+        await tester.tap(find.byKey(const Key('widget_measurement_field')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Measurement auswählen'), findsOneWidget);
+        expect(find.text('climate'), findsOneWidget);
+        await tester.tap(find.text('climate'));
+        await tester.pumpAndSettle();
+
+        // Open field picker bottom sheet
+        await tester.ensureVisible(find.byKey(const Key('widget_field_field')));
+        await tester.tap(find.byKey(const Key('widget_field_field')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Feld auswählen'), findsOneWidget);
+        expect(find.text('temperature'), findsOneWidget);
+        await tester.tap(find.text('temperature'));
+        await tester.pumpAndSettle();
+
+        // Add a tag filter
+        await tester.ensureVisible(
+          find.byKey(const Key('add_tag_filter_button')),
+        );
+        await tester.tap(find.byKey(const Key('add_tag_filter_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('room'), findsOneWidget);
+        await tester.tap(find.text('room'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('living_room'), findsOneWidget);
+        await tester.tap(find.text('living_room'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('room = living_room'), findsOneWidget);
+
+        // Save widget
+        await tester.tap(find.byKey(const Key('save_widget_button')));
+        await tester.pumpAndSettle();
+
+        final captured = verify(() => mockWidgetRepo.saveWidget(captureAny()))
+            .captured;
+        final savedDef = captured.last as WidgetDefinition;
+
+        expect(savedDef.title, 'Auto Picked Widget');
+        expect(savedDef.measurement, 'climate');
+        expect(savedDef.field, 'temperature');
+        expect(savedDef.tagFilters, {'room': 'living_room'});
+      },
+    );
+
+    testWidgets(
+      'multiValue widget type displays MultiFieldSelector and saves items',
+      (tester) async {
+        when(
+          () => mockApiClient.fetchMeasurements(
+            connection: testConn,
+            token: 'token-123',
+          ),
+        ).thenAnswer((_) async => ['climate']);
+
+        when(
+          () => mockApiClient.fetchFieldInfos(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer(
+          (_) async => [
+            const InfluxFieldInfo(key: 'temperature', type: 'float'),
+            const InfluxFieldInfo(key: 'humidity', type: 'float'),
+          ],
+        );
+
+        when(
+          () => mockApiClient.fetchTagKeys(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer((_) async => []);
+
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('widget_title_field')),
+          'Room Multi Sensors',
+        );
+
+        // Switch to Multi-Value
+        await tester.tap(find.byKey(const Key('widget_type_dropdown')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Multi Value').last);
+        await tester.pumpAndSettle();
+
+        // Set measurement
+        await tester.ensureVisible(
+          find.byKey(const Key('widget_measurement_field')),
+        );
+        await tester.enterText(
+          find.byKey(const Key('widget_measurement_field')),
+          'climate',
+        );
+        await tester.pumpAndSettle();
+
+        // Open MultiFieldSelector sheet
+        await tester.ensureVisible(
+          find.byKey(const Key('select_multi_fields_button')),
+        );
+        expect(
+          find.byKey(const Key('select_multi_fields_button')),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const Key('select_multi_fields_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('temperature'), findsOneWidget);
+        await tester.tap(find.text('temperature'));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('confirm_multi_fields_button')));
+        await tester.pumpAndSettle();
+
+        // Save widget
+        await tester.tap(find.byKey(const Key('save_widget_button')));
+        await tester.pumpAndSettle();
+
+        final captured = verify(() => mockWidgetRepo.saveWidget(captureAny()))
+            .captured;
+        final savedDef = captured.last as WidgetDefinition;
+
+        expect(savedDef.type, WidgetType.multiValue);
+        expect(savedDef.items, isNotNull);
+        expect(savedDef.items!.length, 1);
+        expect(savedDef.items!.first.field, 'temperature');
+      },
+    );
+
+    testWidgets(
+      'edit mode pre-populates existing measurement, field, tags, and items',
+      (tester) async {
+        when(
+          () => mockApiClient.fetchMeasurements(
+            connection: testConn,
+            token: 'token-123',
+          ),
+        ).thenAnswer((_) async => ['climate']);
+
+        when(
+          () => mockApiClient.fetchFieldInfos(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer(
+          (_) async => [
+            const InfluxFieldInfo(key: 'temperature', type: 'float'),
+          ],
+        );
+
+        when(
+          () => mockApiClient.fetchTagKeys(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'climate',
+          ),
+        ).thenAnswer((_) async => ['room']);
+
+        const editDef = WidgetDefinition(
+          id: 'existing-1',
+          type: WidgetType.singleValue,
+          title: 'Existing Widget',
+          connectionId: 'conn-1',
+          measurement: 'climate',
+          field: 'temperature',
+          tagFilters: {'room': 'office'},
+        );
+
+        await tester.pumpWidget(createTestWidget(widgetToEdit: editDef));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Widget bearbeiten'), findsOneWidget);
+        expect(find.text('Existing Widget'), findsWidgets);
+        expect(find.text('climate'), findsWidgets);
+        expect(find.text('temperature'), findsWidgets);
+        expect(find.text('room = office'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'WidgetEditorScreen supports configuring formula and saves formula widget',
+      (tester) async {
+        when(
+          () => mockApiClient.fetchMeasurements(
+            connection: testConn,
+            token: 'token-123',
+          ),
+        ).thenAnswer((_) async => ['sensors']);
+
+        when(
+          () => mockApiClient.fetchFieldInfos(
+            connection: testConn,
+            token: 'token-123',
+            measurement: 'sensors',
+          ),
+        ).thenAnswer(
+          (_) async => [
+            const InfluxFieldInfo(key: 't1', type: 'float'),
+            const InfluxFieldInfo(key: 't2', type: 'float'),
+          ],
+        );
+
+        when(() => mockWidgetRepo.saveWidget(any())).thenAnswer((_) async {});
+
+        await tester.pumpWidget(createTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('widget_title_field')),
+          'Formula Widget',
+        );
+
+        await tester.ensureVisible(
+          find.byKey(const Key('widget_measurement_field')),
+        );
+        await tester.enterText(
+          find.byKey(const Key('widget_measurement_field')),
+          'sensors',
+        );
+        await tester.pumpAndSettle();
+
+        // Enable formula switch
+        await tester.ensureVisible(find.byType(Switch));
+        await tester.tap(find.byType(Switch));
+        await tester.pumpAndSettle();
+
+        expect(find.byKey(const Key('formula_input_field')), findsOneWidget);
+
+        // Enter formula
+        await tester.enterText(
+          find.byKey(const Key('formula_input_field')),
+          '(A + B) / 2',
+        );
+        await tester.pumpAndSettle();
+
+        // Add variable B
+        await tester.ensureVisible(
+          find.byKey(const Key('add_formula_variable_button')),
+        );
+        await tester.tap(find.byKey(const Key('add_formula_variable_button')));
+        await tester.pumpAndSettle();
+
+        // Save
+        await tester.tap(find.byKey(const Key('save_widget_button')));
+        await tester.pumpAndSettle();
+
+        final captured = verify(() => mockWidgetRepo.saveWidget(captureAny()))
+            .captured;
+        expect(captured.isNotEmpty, isTrue);
+        final saved = captured.last as WidgetDefinition;
+        expect(saved.title, 'Formula Widget');
+        expect(saved.formula, '(A + B) / 2');
+        expect(saved.formulaVariables?.length, 2);
+        expect(saved.formulaVariables?[0].name, 'A');
+        expect(saved.formulaVariables?[1].name, 'B');
+      },
+    );
   });
 }

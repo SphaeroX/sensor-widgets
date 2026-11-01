@@ -40,7 +40,7 @@ extension Color {
 public enum WidgetViewHelpers {
     public static func formatValue(_ value: Double?, decimalPlaces: Int?, unit: String?) -> String {
         guard let val = value else { return "--" }
-        let decimals = decimalPlaces ?? 1
+        let decimals = min(max(decimalPlaces ?? 2, 0), 2)
         let formatted = String(format: "%.\(decimals)f", val)
         if let u = unit, !u.isEmpty {
             return "\(formatted) \(u)"
@@ -188,14 +188,21 @@ public struct IndicatorLampWidgetView: View {
                 .lineLimit(1)
 
             Circle()
-                .fill(indicatorColor)
+                .fill(data?.errorMessage != nil ? Color.gray : indicatorColor)
                 .frame(width: 32, height: 32)
-                .shadow(color: indicatorColor.opacity(0.6), radius: 6, x: 0, y: 0)
+                .shadow(color: (data?.errorMessage != nil ? Color.gray : indicatorColor).opacity(0.6), radius: 6, x: 0, y: 0)
 
-            Text(WidgetViewHelpers.formatValue(value, decimalPlaces: widget.decimalPlaces, unit: widget.unit))
-                .font(.footnote)
-                .fontWeight(.semibold)
-                .lineLimit(1)
+            if let error = data?.errorMessage {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .lineLimit(1)
+            } else {
+                Text(WidgetViewHelpers.formatValue(value, decimalPlaces: widget.decimalPlaces, unit: widget.unit))
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                    .lineLimit(1)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -232,19 +239,26 @@ public struct GaugeBarWidgetView: View {
                         .frame(height: 8)
 
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(barColor)
+                        .fill(data?.errorMessage != nil ? Color.gray : barColor)
                         .frame(width: geo.size.width * CGFloat(fraction), height: 8)
                 }
             }
             .frame(height: 8)
 
-            HStack {
-                Text(String(format: "%.0f", minVal))
-                Spacer()
-                Text(String(format: "%.0f", maxVal))
+            if let error = data?.errorMessage {
+                Text(error)
+                    .font(.caption2)
+                    .foregroundStyle(.red)
+                    .lineLimit(1)
+            } else {
+                HStack {
+                    Text(String(format: "%.0f", minVal))
+                    Spacer()
+                    Text(String(format: "%.0f", maxVal))
+                }
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
             }
-            .font(.system(size: 9))
-            .foregroundStyle(.secondary)
 
             Spacer()
         }
@@ -261,7 +275,7 @@ public struct AggregateWidgetView: View {
         let minVal = agg["min"]
         let meanVal = agg["mean"]
         let maxVal = agg["max"]
-        let dec = widget.decimalPlaces ?? 1
+        let dec = min(max(widget.decimalPlaces ?? 2, 0), 2)
 
         VStack(alignment: .leading, spacing: 4) {
             Text(widget.title)

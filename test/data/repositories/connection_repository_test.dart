@@ -42,6 +42,32 @@ void main() {
       expect(list, isEmpty);
     });
 
+    test('getConnections automatically migrates and syncs missing tokens to sharedStore', () async {
+      final jsonList = json.encode([testConn.toJson()]);
+      when(() => mockSharedStore.getString(StorageKeys.connectionsMetadataKey))
+          .thenAnswer((_) async => jsonList);
+      when(() => mockSharedStore.getString(StorageKeys.tokenKey('conn-1')))
+          .thenAnswer((_) async => null); // token not yet in shared store!
+      when(() => mockTokenStore.getToken('conn-1'))
+          .thenAnswer((_) async => 'migrated-secret-token');
+      when(() => mockSharedStore.saveString(any(), any()))
+          .thenAnswer((_) async => true);
+      when(() => mockSharedStore.notifyWidgetsUpdated())
+          .thenAnswer((_) async => true);
+
+      final list = await repository.getConnections();
+      expect(list.length, 1);
+
+      // Verify token was automatically mirrored to sharedStore for native widgets
+      verify(
+        () => mockSharedStore.saveString(
+          StorageKeys.tokenKey('conn-1'),
+          'migrated-secret-token',
+        ),
+      ).called(1);
+      verify(() => mockSharedStore.notifyWidgetsUpdated()).called(1);
+    });
+
     test(
       'saves connection metadata to shared store and token to secure store',
       () async {

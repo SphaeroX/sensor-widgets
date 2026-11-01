@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sensor_widgets/core/utils/number_formatter.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
@@ -133,22 +134,24 @@ class WidgetLivePreviewCard extends StatelessWidget {
     switch (widgetDef.type) {
       case WidgetType.singleValue:
         final val = previewData?.singleValue?.value;
-        final formatted = val != null
-            ? (widgetDef.decimalPlaces != null
-                  ? val.toStringAsFixed(widgetDef.decimalPlaces!)
-                  : val.toString())
-            : '--';
+        final formatted = NumberFormatter.format(
+          val,
+          decimalPlaces: widgetDef.decimalPlaces,
+        );
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                formatted,
-                style: theme.textTheme.displayMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
+              Flexible(
+                child: Text(
+                  formatted,
+                  style: theme.textTheme.displayMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               if (unit.isNotEmpty) ...[
@@ -180,11 +183,24 @@ class WidgetLivePreviewCard extends StatelessWidget {
             .reduce((a, b) => a > b ? a : b);
         final latest = points.last.value;
 
+        final minStr = NumberFormatter.format(
+          minVal,
+          decimalPlaces: widgetDef.decimalPlaces,
+        );
+        final maxStr = NumberFormatter.format(
+          maxVal,
+          decimalPlaces: widgetDef.decimalPlaces,
+        );
+        final latestStr = NumberFormatter.format(
+          latest,
+          decimalPlaces: widgetDef.decimalPlaces,
+        );
+
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Aktuell: $latest $unit  (Min: $minVal, Max: $maxVal)',
+              'Aktuell: $latestStr $unit  (Min: $minStr, Max: $maxStr)',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -253,7 +269,9 @@ class WidgetLivePreviewCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    val != null ? '$val $unit' : '--',
+                    val != null
+                        ? '${NumberFormatter.format(val, decimalPlaces: widgetDef.decimalPlaces)} $unit'
+                        : '--',
                     style: theme.textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -300,15 +318,21 @@ class WidgetLivePreviewCard extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('$minVal $unit', style: theme.textTheme.bodySmall),
                   Text(
-                    '$val $unit',
+                    '${NumberFormatter.format(minVal, decimalPlaces: 0)} $unit',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  Text(
+                    '${NumberFormatter.format(val, decimalPlaces: widgetDef.decimalPlaces)} $unit',
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
                   ),
-                  Text('$maxVal $unit', style: theme.textTheme.bodySmall),
+                  Text(
+                    '${NumberFormatter.format(maxVal, decimalPlaces: 0)} $unit',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -359,7 +383,7 @@ class WidgetLivePreviewCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      '${e.value.value} $unit',
+                      '${NumberFormatter.format(e.value.value, decimalPlaces: widgetDef.decimalPlaces)} $unit',
                       style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -380,7 +404,10 @@ class WidgetLivePreviewCard extends StatelessWidget {
     String unit,
   ) {
     final theme = Theme.of(context);
-    final formatted = val != null ? val.toStringAsFixed(1) : '--';
+    final formatted = NumberFormatter.format(
+      val,
+      decimalPlaces: widgetDef.decimalPlaces,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(

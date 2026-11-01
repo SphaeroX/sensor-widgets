@@ -4,11 +4,18 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Bundle
-import android.widget.ArrayAdapter
+import android.view.View
+import android.view.ViewGroup
+import android.widget.BaseAdapter
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import io.github.mgasc.influx_sensor_widgets.MainActivity
 import io.github.mgasc.influx_sensor_widgets.model.WidgetDefinition
 import io.github.mgasc.influx_sensor_widgets.storage.WidgetStorageReader
 import io.github.mgasc.influx_sensor_widgets.worker.WidgetRefreshWorker
@@ -36,32 +43,143 @@ class SensorWidgetConfigActivity : Activity() {
         val storage = WidgetStorageReader(this)
         val widgets = storage.getWidgetDefinitions()
 
+        val rootLayout =
+            LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                setBackgroundColor(Color.parseColor("#1E1E2E"))
+                val pad = (16 * resources.displayMetrics.density).toInt()
+                setPadding(pad, pad, pad, pad)
+            }
+
+        val titleView =
+            TextView(this).apply {
+                text = "Sensor Widgets"
+                setTextColor(Color.WHITE)
+                textSize = 20f
+                typeface = Typeface.DEFAULT_BOLD
+                setPadding(0, 0, 0, (8 * resources.displayMetrics.density).toInt())
+            }
+        rootLayout.addView(titleView)
+
         if (widgets.isEmpty()) {
-            val emptyView =
+            val emptyMsg =
                 TextView(this).apply {
-                    text = "Noch keine Widgets in der App konfiguriert.\nBitte erstelle zuerst ein Widget in der Sensor Widgets App."
-                    setPadding(48, 48, 48, 48)
-                    textSize = 16f
+                    text =
+                        "Noch keine Widgets konfiguriert.\n\nBitte erstelle zuerst in der App ein Widget und platziere es anschließend auf dem Homescreen."
+                    setTextColor(Color.parseColor("#A6ADC8"))
+                    textSize = 15f
+                    setPadding(0, (16 * resources.displayMetrics.density).toInt(), 0, (24 * resources.displayMetrics.density).toInt())
                 }
-            setContentView(emptyView)
+            rootLayout.addView(emptyMsg)
+
+            val openAppBtn =
+                Button(this).apply {
+                    text = "Sensor Widgets App öffnen"
+                    setBackgroundColor(Color.parseColor("#89B4FA"))
+                    setTextColor(Color.parseColor("#11111B"))
+                    setOnClickListener {
+                        startActivity(Intent(this@SensorWidgetConfigActivity, MainActivity::class.java))
+                        finish()
+                    }
+                }
+            rootLayout.addView(openAppBtn)
+            setContentView(rootLayout)
             return
         }
 
-        val listView = ListView(this)
-        val titles = widgets.map { "${it.title} (${it.type.wireName})" }
-        listView.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, titles)
+        val subtitleView =
+            TextView(this).apply {
+                text = "Wähle das Widget für diesen Homescreen-Platzhalter:"
+                setTextColor(Color.parseColor("#A6ADC8"))
+                textSize = 14f
+                setPadding(0, 0, 0, (12 * resources.displayMetrics.density).toInt())
+            }
+        rootLayout.addView(subtitleView)
+
+        val listView =
+            ListView(this).apply {
+                divider = null
+                dividerHeight = 0
+            }
+
+        listView.adapter =
+            object : BaseAdapter() {
+                override fun getCount(): Int = widgets.size
+
+                override fun getItem(position: Int): Any = widgets[position]
+
+                override fun getItemId(position: Int): Long = position.toLong()
+
+                override fun getView(
+                    position: Int,
+                    convertView: View?,
+                    parent: ViewGroup?,
+                ): View {
+                    val item = widgets[position]
+                    val itemLayout =
+                        (convertView as? LinearLayout) ?: LinearLayout(this@SensorWidgetConfigActivity).apply {
+                            orientation = LinearLayout.VERTICAL
+                            val p = (12 * resources.displayMetrics.density).toInt()
+                            setPadding(p, p, p, p)
+                            setBackgroundColor(Color.parseColor("#313244"))
+                            val params =
+                                LinearLayout
+                                    .LayoutParams(
+                                        LinearLayout.LayoutParams.MATCH_PARENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    ).apply {
+                                        bottomMargin = (8 * resources.displayMetrics.density).toInt()
+                                    }
+                            layoutParams = params
+                        }
+
+                    itemLayout.removeAllViews()
+
+                    val itemTitle =
+                        TextView(this@SensorWidgetConfigActivity).apply {
+                            text = item.title
+                            setTextColor(Color.WHITE)
+                            textSize = 16f
+                            typeface = Typeface.DEFAULT_BOLD
+                        }
+                    itemLayout.addView(itemTitle)
+
+                    val detailsText = "${item.type.wireName.uppercase()} • ${item.measurement} [${item.field ?: "Multi"}]"
+                    val itemDetails =
+                        TextView(this@SensorWidgetConfigActivity).apply {
+                            text = detailsText
+                            setTextColor(Color.parseColor("#89B4FA"))
+                            textSize = 12f
+                            setPadding(0, (4 * resources.displayMetrics.density).toInt(), 0, 0)
+                        }
+                    itemLayout.addView(itemDetails)
+
+                    return itemLayout
+                }
+            }
 
         listView.setOnItemClickListener { _, _, position, _ ->
             val selectedWidget = widgets[position]
             bindAndFinish(selectedWidget)
         }
 
-        setContentView(listView)
+        rootLayout.addView(
+            listView,
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT),
+        )
+        setContentView(rootLayout)
     }
 
     private fun bindAndFinish(widget: WidgetDefinition) {
-        val prefs = getSharedPreferences(WidgetStorageReader.PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString("app_widget_${appWidgetId}_bound_id", widget.id).apply()
+        val boundKey = "app_widget_${appWidgetId}_bound_id"
+        getSharedPreferences(WidgetStorageReader.HOME_WIDGET_PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(boundKey, widget.id)
+            .apply()
+        getSharedPreferences(WidgetStorageReader.PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(boundKey, widget.id)
+            .apply()
 
         WidgetRefreshWorker.enqueueOneTimeWork(this, widget.id)
 

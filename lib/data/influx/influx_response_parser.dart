@@ -1,4 +1,5 @@
 import 'package:sensor_widgets/domain/errors/influx_exception.dart';
+import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_data_point.dart';
 
 /// Parses InfluxDB v1 HTTP API query JSON responses into strongly-typed domain models.
@@ -187,7 +188,7 @@ class InfluxResponseParser {
         .toList();
   }
 
-  /// Parses SHOW FIELD KEYS.
+  /// Parses SHOW FIELD KEYS into key names only.
   List<String> parseFieldKeys(Map<String, dynamic> json) {
     final seriesList = _extractSeries(json);
     if (seriesList.isEmpty) return const [];
@@ -198,6 +199,30 @@ class InfluxResponseParser {
     return valuesList
         .map((row) => (row as List<dynamic>).first.toString())
         .toList();
+  }
+
+  /// Parses SHOW FIELD KEYS into strongly-typed [InfluxFieldInfo] objects.
+  List<InfluxFieldInfo> parseFieldInfos(Map<String, dynamic> json) {
+    final seriesList = _extractSeries(json);
+    if (seriesList.isEmpty) return const [];
+    final series = seriesList.first;
+    final columns =
+        (series['columns'] as List<dynamic>?)?.cast<String>() ?? const [];
+    final keyIdx = columns.indexOf('fieldKey');
+    final typeIdx = columns.indexOf('fieldType');
+    final valuesList = series['values'] as List<dynamic>?;
+    if (valuesList == null) return const [];
+
+    return valuesList.map((row) {
+      final rowList = row as List<dynamic>;
+      final key = keyIdx != -1 && keyIdx < rowList.length
+          ? rowList[keyIdx].toString()
+          : (rowList.isNotEmpty ? rowList.first.toString() : '');
+      final type = typeIdx != -1 && typeIdx < rowList.length
+          ? rowList[typeIdx].toString()
+          : 'unknown';
+      return InfluxFieldInfo(key: key, type: type);
+    }).toList();
   }
 
   /// Parses SHOW TAG KEYS.
