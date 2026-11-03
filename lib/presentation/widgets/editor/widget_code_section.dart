@@ -183,15 +183,16 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
               ),
             ],
             const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 8,
+              runSpacing: 4,
               children: [
                 TextButton(
                   key: const Key('widget_code_reset_button'),
                   onPressed: _reset,
                   child: const Text('Aus Formular neu erzeugen'),
                 ),
-                const SizedBox(width: 8),
                 FilledButton.icon(
                   key: const Key('widget_code_apply_button'),
                   icon: const Icon(Icons.check, size: 18),

@@ -300,6 +300,7 @@ class WidgetLivePreviewCard extends StatelessWidget {
                     lineColor: theme.colorScheme.primary,
                     labelColor: theme.colorScheme.onSurfaceVariant,
                     gridColor: theme.colorScheme.outlineVariant,
+                    labelFontFamily: theme.textTheme.labelSmall?.fontFamily,
                   ),
                 ),
               )

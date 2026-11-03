@@ -46,6 +46,12 @@ Agents cannot run iOS tests locally. Push and read the GitHub Actions result.
 - Windows tip: if `./gradlew test` fails with "Unable to delete directory" or "AccessDeniedException" (directories under `build/` can carry the ReadOnly attribute; clearing it with PowerShell `Attributes -band -bnot ReadOnly` also works), remove `build/app/intermediates/assets/debug` and `build/app/test-results` and run again; `./gradlew :app:ktlintFormat` fixes ktlint findings.
 - Not automatable here (documented manual checks): gradient and appearance in a real Android widget (Glance bitmap/background, corner radius below Android 12) and in WidgetKit (needs a device or Mac).
 
+## README screenshots
+- `screenshot_test/` (outside `test/`, so plain `flutter test` skips it) renders the README images into `docs/screenshots/*.png`: one image per widget type (`WidgetLivePreviewCard` with fixed demo data) and app screens (dashboard, add connection, widget editor with live preview, formula templates, formula editor, formula preview) driven by taps like the e2e tests.
+- Run: `flutter test screenshot_test`. CI: `.github/workflows/screenshots.yml` (manual `workflow_dispatch`) runs the same command on Ubuntu and commits changed PNGs.
+- `support/screenshot_harness.dart`: loads Roboto and the Material icons from the Flutter SDK (`bin/cache/artifacts/material_fonts`, found via `FLUTTER_ROOT` or the `flutter_tester` path; Roboto also stands in for `monospace`), fakes storage, token store and `InfluxApiClient` (deterministic SEN66-like data), and installs `WriteOnlyGoldenComparator`, which only writes images and never compares them (font rendering differs between machines). These are not regression tests.
+- The SDK Roboto lacks subscript digits (e.g. `₂`), which render as boxes in screenshots only; demo titles use `CO2`.
+
 ## Which tests to run when
 - Changes in `lib/`: the Dart tests of that area.
 - Changes in `android/`: the Android unit tests.

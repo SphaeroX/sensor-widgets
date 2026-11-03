@@ -1,0 +1,42 @@
+name: Screenshots
+
+# Regenerates the README screenshots (docs/screenshots/*.png) from
+# screenshot_test/ and commits them when they changed. Start it from the
+# Actions tab ("Run workflow").
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  screenshots:
+    name: Generate README screenshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.9'
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate screenshots
+        run: flutter test screenshot_test
+
+      - name: Commit changed screenshots
+        run: |
+          git add docs/screenshots
+          if git diff --cached --quiet; then
+            echo "Screenshots unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs: regenerate README screenshots"
+          git push

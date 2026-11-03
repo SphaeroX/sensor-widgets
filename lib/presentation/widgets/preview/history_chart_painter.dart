@@ -14,12 +14,16 @@ class HistoryChartPainter extends CustomPainter {
   final Color labelColor;
   final Color gridColor;
 
+  /// Font family of the axis labels; canvas text does not inherit the theme.
+  final String? labelFontFamily;
+
   const HistoryChartPainter({
     required this.values,
     required this.style,
     required this.lineColor,
     required this.labelColor,
     required this.gridColor,
+    this.labelFontFamily,
   });
 
   @override
@@ -126,7 +130,11 @@ class HistoryChartPainter extends CustomPainter {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(color: labelColor, fontSize: 9),
+        style: TextStyle(
+          color: labelColor,
+          fontSize: 9,
+          fontFamily: labelFontFamily,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout(maxWidth: 32);
@@ -139,5 +147,6 @@ class HistoryChartPainter extends CustomPainter {
       style != oldDelegate.style ||
       lineColor != oldDelegate.lineColor ||
       labelColor != oldDelegate.labelColor ||
-      gridColor != oldDelegate.gridColor;
+      gridColor != oldDelegate.gridColor ||
+      labelFontFamily != oldDelegate.labelFontFamily;
 }

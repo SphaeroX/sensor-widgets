@@ -226,4 +226,23 @@ void main() {
     expect(copied, contains('Antworte jetzt nur mit "OK"'));
     expect(copied, contains('"type": "single_value"'));
   });
+
+  testWidgets('formula mode fits a phone-width screen without overflow', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await enableFormula(tester);
+    for (final key in [
+      'add_formula_variable_button',
+      'widget_code_apply_button',
+    ]) {
+      await tester.ensureVisible(find.byKey(Key(key)));
+      await tester.pumpAndSettle();
+    }
+
+    expect(tester.takeException(), isNull);
+  });
 }

@@ -374,11 +374,12 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
             if (widget.isEnabled) ...[
               if (widget.showEnableSwitch) const Divider(height: 24),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Mathematische Formel',
-                    style: Theme.of(context).textTheme.titleSmall,
+                  Expanded(
+                    child: Text(
+                      'Mathematische Formel',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
                   ),
                   IconButton(
                     key: const Key('formula_help_button'),
@@ -435,8 +436,10 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 _buildStepsSection(),
               ],
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              // Wrap: on narrow phones the button moves below the title.
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
                     'Variablen-Zuweisung',
@@ -517,8 +520,9 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text('Zwischenschritte', style: theme.textTheme.titleSmall),
             TextButton.icon(

@@ -18,13 +18,45 @@ Unlike generic widget frameworks that require the main app to run in the backgro
 3. **Indicator Lamp:** A clear status indicator lamp evaluating numeric thresholds (`>` or `<`) with glowing active/inactive colors.
 4. **Gauge Bar:** A horizontal bar / gauge meter showing values relative to defined minimum and maximum bounds.
 5. **Aggregate:** Displays summary metrics (`MIN`, `AVG` / `MEAN`, `MAX`) calculated over a given period.
-6. **Multi Value:** Combines up to 3 different fields from the same measurement into a compact table.
+6. **Multi Value:** Combines several fields from the same measurement into a compact table (as many rows as the widget size allows).
+
+| Single Value | History Chart |
+| :---: | :---: |
+| ![Single Value widget](docs/screenshots/widget_single_value.png) | ![History Chart widget with value gradient](docs/screenshots/widget_history_chart.png) |
+| **Indicator Lamp** | **Gauge Bar** |
+| ![Indicator Lamp widget](docs/screenshots/widget_indicator_lamp.png) | ![Gauge Bar widget](docs/screenshots/widget_gauge_bar.png) |
+| **Aggregate** | **Multi Value** |
+| ![Aggregate widget](docs/screenshots/widget_aggregate.png) | ![Multi Value widget](docs/screenshots/widget_multi_value.png) |
 
 ### Configuration Dashboard
 - **Connection Management:** Manage multiple InfluxDB instances (Cloud TSM, Cloud Serverless, self-hosted v1/v2/v3). Includes live connection testing.
 - **Schema Discovery:** Automatically queries `SHOW MEASUREMENTS`, `SHOW FIELD KEYS`, `SHOW TAG KEYS`, and `SHOW TAG VALUES` for auto-complete assistance, with seamless manual free-text override.
 - **Live Preview:** See real-time data previews in the widget editor before adding the widget to your home screen.
 - **Home-Screen Binding:** Native selection activity (Android) and AppIntents `WidgetConfigurationIntent` with `EntityQuery` (iOS 17+) allowing direct widget assignment.
+
+---
+
+## Getting Started
+
+### 1. Add your InfluxDB
+Open the connections screen (top right icon), tap **+** and enter name, host URL, database / bucket and API token. **Test Connection** checks the credentials before you save. The token is stored only in the device's secure storage.
+
+<img src="docs/screenshots/app_add_connection.png" alt="Add an InfluxDB connection" width="300">
+
+### 2. Create a widget
+Tap **+** on the dashboard, give the widget a title, pick the connection and one of the six widget types. Measurement and field come from schema discovery (or type them in). **Vorschau laden** shows live data exactly as the home-screen widget will.
+
+<img src="docs/screenshots/app_new_widget.png" alt="Widget editor with live preview" width="300"> <img src="docs/screenshots/app_dashboard.png" alt="Dashboard with all widget types" width="300">
+
+### 3. Calculate values with formulas
+Switch on **Berechnungsformel verwenden** to combine several fields before they are shown: `+ - * /`, comparisons, `min`, `max`, `clamp`, `abs`, `round`, constants and named intermediate steps. The help screen (**?**) explains every function and offers ready-made templates, such as an air-quality index for the Sensirion SEN66. Map each template variable to one of your fields and the preview shows the calculated curve.
+
+<img src="docs/screenshots/app_formula_templates.png" alt="Formula help with templates" width="260"> <img src="docs/screenshots/app_formula_editor.png" alt="Formula editor with steps and variables" width="260"> <img src="docs/screenshots/app_formula_preview.png" alt="Live preview of a calculated IAQ chart" width="260">
+
+### 4. Place it on the home screen
+Long-press the home screen, add the **Sensor Widgets** widget and pick your widget in the selection list (Android) or the widget settings (iOS). Resize it freely; the content scales with the widget.
+
+> The screenshots show the app's own previews with demo data. They are generated automatically from `screenshot_test/` (see [Regenerating the screenshots](#regenerating-the-screenshots)).
 
 ---
 
@@ -99,6 +131,16 @@ flutter build apk --release
 ### GitHub Actions CI/CD
 - **`ci.yml`:** Automatically tests Dart, runs Ktlint and Android JUnit tests, builds release APK check, and executes SwiftLint and Swift unit tests against shared fixtures on `macos-latest`.
 - **`release.yml`:** Triggers when pushing a git tag (e.g. `git tag v1.0.0 && git push origin v1.0.0`) or manually via GitHub Actions workflow dispatch. Builds the production APK, calculates SHA-256 checksums, and attaches the APK directly to the GitHub Release.
+- **`screenshots.yml`:** Manual (**Actions → Screenshots → Run workflow**). Regenerates all README screenshots and commits them when they changed.
+
+### Regenerating the screenshots
+The images in `docs/screenshots/` are rendered headlessly by Flutter widget tests in `screenshot_test/` (demo data, no device or emulator needed). Locally:
+
+```bash
+flutter test screenshot_test
+```
+
+Or run the **Screenshots** workflow on GitHub. To add a screen, add a test to `screenshot_test/readme_screenshots_test.dart` and reference the new PNG here.
 
 ---
 
