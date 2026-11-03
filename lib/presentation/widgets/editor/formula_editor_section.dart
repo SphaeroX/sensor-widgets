@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
@@ -6,6 +8,7 @@ import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
+import 'package:sensor_widgets/presentation/help/formula_llm_prompt.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
 
 /// Loads the field keys (with type) of a measurement.
@@ -63,6 +66,12 @@ class FormulaEditorSection extends StatefulWidget {
   /// Hides the enable switch (used for multi-value rows that always have a formula).
   final bool showEnableSwitch;
 
+  /// Shares the LLM prompt; defaults to the system share sheet.
+  final Future<void> Function(String text)? onSharePrompt;
+
+  /// Shows the copy and share buttons for the formula-only LLM prompt.
+  final bool showPromptButtons;
+
   const FormulaEditorSection({
     super.key,
     required this.isEnabled,
@@ -80,6 +89,8 @@ class FormulaEditorSection extends StatefulWidget {
     this.tagKeyLoader,
     this.tagValueLoader,
     this.showEnableSwitch = true,
+    this.onSharePrompt,
+    this.showPromptButtons = true,
   });
 
   @override
@@ -254,6 +265,37 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     );
   }
 
+  String _llmPrompt() => buildFormulaLlmPrompt(
+    measurement: widget.defaultMeasurement,
+    availableMeasurements: widget.availableMeasurements,
+    availableFields: widget.availableFields,
+    supportsSteps: widget.onStepsChanged != null,
+  );
+
+  Future<void> _shareLlmPrompt() async {
+    final share = widget.onSharePrompt ?? _shareViaSystem;
+    await share(_llmPrompt());
+  }
+
+  static Future<void> _shareViaSystem(String text) async {
+    await SharePlus.instance.share(
+      ShareParams(text: text, subject: 'Formel-Prompt für KI'),
+    );
+  }
+
+  Future<void> _copyLlmPrompt() async {
+    final prompt = _llmPrompt();
+    await Clipboard.setData(ClipboardData(text: prompt));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Prompt kopiert. In eine KI einfügen, dann die Aufgabe beschreiben.',
+        ),
+      ),
+    );
+  }
+
   void _addStep() {
     final taken = widget.steps.map((s) => s.name).toSet();
     var n = 1;
@@ -347,6 +389,26 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                   ),
                 ],
               ),
+              if (widget.showPromptButtons)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    children: [
+                      TextButton.icon(
+                        key: const Key('copy_llm_prompt_button'),
+                        icon: const Icon(Icons.copy_all_outlined, size: 18),
+                        label: const Text('Prompt für KI kopieren'),
+                        onPressed: _copyLlmPrompt,
+                      ),
+                      TextButton.icon(
+                        key: const Key('share_llm_prompt_button'),
+                        icon: const Icon(Icons.share_outlined, size: 18),
+                        label: const Text('Teilen'),
+                        onPressed: _shareLlmPrompt,
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 4),
               TextFormField(
                 key: const Key('formula_input_field'),

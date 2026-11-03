@@ -9,6 +9,7 @@
   - `home_widget`: ^0.7.0 (installed 0.7.0+1)
   - `flutter_secure_storage`: ^9.2.2 (installed 9.2.4)
   - `http`: ^1.2.2 (installed 1.6.0)
+  - `share_plus`: ^12.0.2 (system share sheet for the formula LLM prompt)
   - `mocktail`: ^1.0.4 (installed 1.0.5)
   - `flutter_lints`: ^6.0.0
 - **Android Target:** `minSdk 26`, `compileSdk 36`, target JVM 17. Application ID: `io.github.mgasc.influx_sensor_widgets`.
@@ -94,3 +95,7 @@ Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` ac
 
 ---
 Maintenance: update this file immediately when the stack or architecture changes.
+
+- **Formula LLM prompt:** `buildFormulaLlmPrompt` (`lib/presentation/help/formula_llm_prompt.dart`, pure) builds a German prompt from `formulaHelpEntries` (so it follows the evaluator), the selected measurement(s) and schema fields with types. It tells the LLM to answer "OK" first and then return only the formula (plus optional steps) and the variable-to-field mapping. `FormulaEditorSection` offers a copy button (`copy_llm_prompt_button`, clipboard) and a share button (`share_llm_prompt_button`, `share_plus`; injectable via `onSharePrompt` for tests). The share sheet itself is not covered by automated tests.
+
+- **Widget as code (formula mode):** when the calculation formula is enabled (or a multi-value widget has formula rows), the editor shows `WidgetCodeSection` (`lib/presentation/widgets/editor/widget_code_section.dart`): a large monospace text area (`widget_code_field`) holding the whole widget as JSON. `WidgetCodeCodec` (`lib/domain/widget_code/widget_code_codec.dart`, pure) encodes a `WidgetDefinition` without `id`/`connectionId` and decodes pasted code (optionally in a markdown fence) on top of the current editor widget: `id` and `connectionId` always come from the editor, `title` and `measurement` fall back to it. Decoding validates type, formulas (syntax, undefined variables, variables without field, also for multi-value rows), `gapPolicy`, `chartStyle`, `appearance` and completeness, and returns readable errors instead of throwing. "Code übernehmen" (`widget_code_apply_button`) moves the result into the editor state (`_applyWidgetCode`); the area follows the form until the user edits it ("Aus Formular neu erzeugen" resets). The JSON format is the widget-definition format, so it must stay in sync with `WidgetDefinition` (no separate format). The copy/share buttons of this card (`copy_widget_prompt_button`, `share_widget_prompt_button`) use `buildWidgetCodePrompt`, which describes the formula language, all widget types and JSON keys with an example (a test decodes that example with the codec), the selected schema, and the current code. The formula-only prompt (`buildFormulaLlmPrompt`) remains on multi-value formula rows; the main formula section hides its prompt buttons (`showPromptButtons: false`) because the code card replaces them.

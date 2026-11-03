@@ -91,7 +91,13 @@ class _SearchableSchemaPickerState extends State<SearchableSchemaPicker> {
     super.didUpdateWidget(oldWidget);
     if (widget.selectedValue != oldWidget.selectedValue &&
         widget.selectedValue != _textController.text) {
-      _textController.text = widget.selectedValue ?? '';
+      // The text field listens to the controller, so it must not change while
+      // the framework is building.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.selectedValue != _textController.text) {
+          _textController.text = widget.selectedValue ?? '';
+        }
+      });
     }
   }
 

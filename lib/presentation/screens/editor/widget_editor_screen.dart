@@ -13,6 +13,7 @@ import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
+import 'package:sensor_widgets/domain/widget_code/widget_code_codec.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
@@ -22,6 +23,7 @@ import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_sectio
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/tag_filter_editor.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/widget_code_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/widget_type_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
 
@@ -257,6 +259,58 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           ? _gapPolicy
           : null,
     );
+  }
+
+  /// The "widget as code" area belongs to the calculation formula feature.
+  bool get _showCodeSection => _isFormulaEnabled || _formulaRows.isNotEmpty;
+
+  /// Parses [code] and, if valid, moves the whole widget into the editor state.
+  List<String> _applyWidgetCode(String code) {
+    final result = WidgetCodeCodec.decode(
+      code,
+      base: _buildCurrentDefinition(),
+    );
+    final def = result.definition;
+    if (def == null) return result.errors;
+
+    final measurementChanged =
+        def.measurement != _measurementController.text.trim();
+    setState(() {
+      _selectedType = def.type;
+      _titleController.text = def.title;
+      _measurementController.text = def.measurement;
+      _fieldController.text = def.field ?? '';
+      _unitController.text = def.unit ?? '';
+      _decimalPlacesController.text = def.decimalPlaces?.toString() ?? '';
+      _refreshInterval = def.refreshIntervalMinutes;
+      _tagFilters = Map.of(def.tagFilters ?? const {});
+      _historyTimeRangeController.text = def.timeRange ?? '24h';
+      _historyIntervalController.text = def.aggregationInterval ?? '1h';
+      _indicatorOperator = def.threshold?.operator == ThresholdOperator.lessThan
+          ? '<'
+          : '>';
+      _indicatorThresholdController.text = (def.threshold?.value ?? 25.0)
+          .toString();
+      _gaugeMinController.text = (def.min ?? 0.0).toString();
+      _gaugeMaxController.text = (def.max ?? 100.0).toString();
+      final items = def.items ?? const <SensorQueryItem>[];
+      _multiItems = items.where((i) => !i.hasFormula).toList();
+      _formulaRows = items.where((i) => i.hasFormula).toList();
+      _multiFieldsController.text = _multiItems.map((i) => i.field).join(', ');
+      _isFormulaEnabled = def.formula != null && def.formula!.trim().isNotEmpty;
+      _formula = def.formula ?? '';
+      _formulaSteps = List.of(def.formulaSteps ?? const []);
+      _formulaVariables = List.of(def.formulaVariables ?? const []);
+      _chartStyle = def.chartStyle;
+      _appearance = def.appearance;
+      _gapPolicy = def.gapPolicy == 'previous' ? 'previous' : null;
+    });
+    if (measurementChanged && def.measurement.isNotEmpty) {
+      ref
+          .read(editorSchemaControllerProvider.notifier)
+          .selectMeasurement(def.measurement);
+    }
+    return const [];
   }
 
   /// History charts and aggregates with a formula are calculated per time bucket.
@@ -833,6 +887,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           // Formula & Calculation Section
                           if (_selectedType != WidgetType.multiValue) ...[
                             FormulaEditorSection(
+                              showPromptButtons: false,
                               steps: _formulaSteps,
                               onStepsChanged: (steps) =>
                                   setState(() => _formulaSteps = steps),
@@ -891,6 +946,19 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
+
+                  if (_showCodeSection) ...[
+                    WidgetCodeSection(
+                      generatedCode: WidgetCodeCodec.encode(
+                        _buildCurrentDefinition(),
+                      ),
+                      onApply: _applyWidgetCode,
+                      measurement: _measurementController.text.trim(),
+                      availableMeasurements: schemaState.measurements.items,
+                      availableFields: schemaState.fields.items,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Type-Specific Configuration
                   _buildTypeSpecificSettings(context),
