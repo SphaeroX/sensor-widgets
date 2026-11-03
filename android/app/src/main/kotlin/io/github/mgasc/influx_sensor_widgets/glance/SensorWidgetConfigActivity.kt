@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.LinearLayout
@@ -49,7 +51,13 @@ class SensorWidgetConfigActivity : Activity() {
                 setBackgroundColor(Color.parseColor("#1E1E2E"))
                 val pad = (16 * resources.displayMetrics.density).toInt()
                 setPadding(pad, pad, pad, pad)
+                setOnApplyWindowInsetsListener { view, insets ->
+                    val p = systemBarPadding(pad, insets)
+                    view.setPadding(p[0], p[1], p[2], p[3])
+                    insets
+                }
             }
+        drawEdgeToEdge()
 
         val titleView =
             TextView(this).apply {
@@ -169,6 +177,40 @@ class SensorWidgetConfigActivity : Activity() {
         )
         setContentView(rootLayout)
     }
+
+    /**
+     * Android 15 enforces edge-to-edge, so the picker would be drawn below the status bar.
+     * Opting in on every version keeps one code path: the root pads itself by the insets.
+     */
+    @Suppress("DEPRECATION")
+    private fun drawEdgeToEdge() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun systemBarPadding(
+        basePx: Int,
+        insets: WindowInsets,
+    ): IntArray =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            ConfigScreenInsets.padding(basePx, bars.left, bars.top, bars.right, bars.bottom)
+        } else {
+            ConfigScreenInsets.padding(
+                basePx,
+                insets.systemWindowInsetLeft,
+                insets.systemWindowInsetTop,
+                insets.systemWindowInsetRight,
+                insets.systemWindowInsetBottom,
+            )
+        }
 
     private fun bindAndFinish(widget: WidgetDefinition) {
         val boundKey = "app_widget_${appWidgetId}_bound_id"

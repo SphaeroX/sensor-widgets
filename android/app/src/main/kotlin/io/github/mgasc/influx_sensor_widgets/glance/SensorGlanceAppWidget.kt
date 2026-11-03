@@ -3,28 +3,36 @@ package io.github.mgasc.influx_sensor_widgets.glance
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
+import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
+import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.RowScope
 import androidx.glance.layout.Spacer
@@ -65,11 +73,27 @@ private val ColorDotActive = ColorProvider(Color(0xFFA6E3A1))
 private val ColorDotInactive = ColorProvider(Color(0xFF585B70))
 
 class SensorGlanceAppWidget : GlanceAppWidget() {
+    override val sizeMode = SizeMode.Exact
+
     override suspend fun provideGlance(
         context: Context,
         id: GlanceId,
     ) {
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
+
+        provideContent {
+            // Reading the version subscribes this session to refreshAll(): every stored refresh
+            // reloads definition and cache instead of keeping the state of the first render.
+            val refreshVersion = currentState(REFRESH_VERSION_KEY) ?: 0L
+            val uiState = remember(refreshVersion) { loadUiState(context, appWidgetId) }
+            WidgetRootContent(uiState)
+        }
+    }
+
+    private fun loadUiState(
+        context: Context,
+        appWidgetId: Int,
+    ): WidgetUiState {
         val storage = WidgetStorageReader(context)
 
         // Read bound widget ID from HomeWidgetPreferences or legacy prefs
@@ -93,17 +117,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         }
 
         val cacheJson = if (widgetDef != null) storage.getWidgetCache(widgetDef.id) else null
-        val uiState =
-            WidgetUiStateMapper.mapToUiState(
-                appWidgetId = appWidgetId,
-                boundWidgetId = widgetDef?.id ?: boundWidgetId,
-                widget = widgetDef,
-                cacheJson = cacheJson,
-            )
-
-        provideContent {
-            WidgetRootContent(uiState)
-        }
+        return WidgetUiStateMapper.mapToUiState(
+            appWidgetId = appWidgetId,
+            boundWidgetId = widgetDef?.id ?: boundWidgetId,
+            widget = widgetDef,
+            cacheJson = cacheJson,
+        )
     }
 
     @Composable
@@ -266,6 +285,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
 
     @Composable
     private fun SingleValueView(state: WidgetUiState) {
+        val scale = WidgetSizing.primaryValueScale(LocalSize.current.height.value)
         Row(
             modifier = GlanceModifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically,
@@ -276,14 +296,14 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     TextStyle(
                         color = LocalPalette.current.accent,
                         fontWeight = FontWeight.Bold,
-                        fontSize = LocalPalette.current.sp(28f),
+                        fontSize = LocalPalette.current.sp(28f * scale),
                     ),
             )
             if (!state.unit.isNullOrEmpty()) {
                 Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = state.unit,
-                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(14f)),
+                    style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(14f * scale)),
                 )
             }
         }
@@ -315,13 +335,24 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             val points = state.chartNormalizedPoints ?: emptyList()
             val style = state.chartStyle
             val values = state.chartValues
+            val size = LocalSize.current
+            val (chartWidthDp, chartHeightDp) =
+                WidgetSizing.chartAreaDp(size.width.value, size.height.value, LocalPalette.current.palette.fontScale)
+            val (bitmapWidth, bitmapHeight) =
+                WidgetSizing.chartBitmapSize(chartWidthDp, chartHeightDp, LocalContext.current.resources.displayMetrics.density)
             val bitmap =
-                (if (style != null && values != null) NativeChartBitmapRenderer.renderChart(values, style) else null)
-                    ?: NativeChartBitmapRenderer.renderSparkline(points)
+                (
+                    if (style != null && values != null) {
+                        NativeChartBitmapRenderer.renderChart(values, style, bitmapWidth, bitmapHeight)
+                    } else {
+                        null
+                    }
+                ) ?: NativeChartBitmapRenderer.renderSparkline(points, bitmapWidth, bitmapHeight)
             Image(
                 provider = ImageProvider(bitmap),
                 contentDescription = "Chart",
-                modifier = GlanceModifier.fillMaxWidth().height(48.dp),
+                contentScale = ContentScale.FillBounds,
+                modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
             )
         }
     }
@@ -350,7 +381,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                         TextStyle(
                             color = LocalPalette.current.text,
                             fontWeight = FontWeight.Bold,
-                            fontSize = LocalPalette.current.sp(20f),
+                            fontSize = LocalPalette.current.sp(20f * WidgetSizing.primaryValueScale(LocalSize.current.height.value)),
                         ),
                 )
                 Text(
@@ -460,8 +491,9 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
     @Composable
     private fun MultiValueView(state: WidgetUiState) {
         val vals = state.multiValues ?: emptyMap()
+        val rowCount = WidgetSizing.multiValueRowCount(LocalSize.current.height.value, LocalPalette.current.palette.fontScale)
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            for ((key, value) in vals.entries.take(3)) {
+            for ((key, value) in vals.entries.take(rowCount)) {
                 Row(
                     modifier = GlanceModifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -482,6 +514,19 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     )
                 }
                 Spacer(modifier = GlanceModifier.height(2.dp))
+            }
+        }
+    }
+
+    companion object {
+        val REFRESH_VERSION_KEY = longPreferencesKey("refresh_version")
+
+        /** Re-renders every placed widget with the data currently stored (called after each refresh). */
+        suspend fun refreshAll(context: Context) {
+            val widget = SensorGlanceAppWidget()
+            GlanceAppWidgetManager(context).getGlanceIds(SensorGlanceAppWidget::class.java).forEach { glanceId ->
+                updateAppWidgetState(context, glanceId) { prefs -> prefs[REFRESH_VERSION_KEY] = System.currentTimeMillis() }
+                widget.update(context, glanceId)
             }
         }
     }

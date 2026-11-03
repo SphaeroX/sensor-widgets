@@ -12,6 +12,7 @@ import io.github.mgasc.influx_sensor_widgets.formula.FormulaEvaluator
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaException
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaSeriesCalculator
 import io.github.mgasc.influx_sensor_widgets.formula.MissingVariableException
+import io.github.mgasc.influx_sensor_widgets.glance.SensorGlanceAppWidget
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxHttpClient
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxQlBuilder
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxResponseParser
@@ -31,12 +32,12 @@ class WidgetRefreshWorker(
         val storageReader = WidgetStorageReader(applicationContext)
         val httpClient = InfluxHttpClient()
 
-        return try {
-            refreshWidgets(storageReader, httpClient, targetId)
-            Result.success()
-        } catch (e: Exception) {
-            Result.retry()
-        }
+        val outcome =
+            WidgetRefreshRunner.run(
+                refresh = { refreshWidgets(storageReader, httpClient, targetId) },
+                notifyWidgets = { SensorGlanceAppWidget.refreshAll(applicationContext) },
+            )
+        return if (outcome == WidgetRefreshRunner.Outcome.SUCCESS) Result.success() else Result.retry()
     }
 
     companion object {
@@ -304,6 +305,10 @@ class WidgetRefreshWorker(
                 ExistingPeriodicWorkPolicy.KEEP,
                 periodicRequest,
             )
+        }
+
+        fun cancelPeriodicWork(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME_PERIODIC)
         }
 
         fun enqueueOneTimeWork(

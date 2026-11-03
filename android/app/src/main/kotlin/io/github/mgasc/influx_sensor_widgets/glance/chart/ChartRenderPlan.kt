@@ -24,9 +24,9 @@ data class ChartRenderPlan(
     val axisLabels: Pair<String, String>?,
 ) {
     companion object {
-        /** Bitmap budget: 600x240 ARGB_8888 is about 576 KB, well below RemoteViews limits. */
-        const val MAX_WIDTH = 600
-        const val MAX_HEIGHT = 240
+        /** Dimension caps; the pixel budget itself is enforced by WidgetSizing.chartBitmapSize. */
+        const val MAX_WIDTH = 800
+        const val MAX_HEIGHT = 600
 
         private const val PADDING = 6f
         private const val AXIS_LEFT = 34f
