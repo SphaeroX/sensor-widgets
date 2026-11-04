@@ -1,4 +1,5 @@
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
+import 'package:sensor_widgets/domain/models/alert_rule.dart';
 import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
@@ -50,6 +51,9 @@ class WidgetDefinition {
   /// Optional per-widget look (colors, font scale, corner radius).
   final WidgetAppearance? appearance;
 
+  /// Optional threshold push notifications.
+  final List<AlertRule>? alerts;
+
   const WidgetDefinition({
     required this.id,
     required this.type,
@@ -75,6 +79,7 @@ class WidgetDefinition {
     this.gapPolicy,
     this.chartStyle,
     this.appearance,
+    this.alerts,
   });
 
   bool get isValid {
@@ -84,6 +89,7 @@ class WidgetDefinition {
     }
     if (chartStyle != null && !chartStyle!.isValid) return false;
     if (appearance != null && !appearance!.isValid) return false;
+    if (alerts != null && alerts!.any((a) => !a.isValid)) return false;
     if (connectionId.trim().isEmpty || measurement.trim().isEmpty) return false;
 
     if (formula != null && formula!.trim().isNotEmpty) {
@@ -168,6 +174,11 @@ class WidgetDefinition {
               json['appearance'] as Map<String, dynamic>,
             )
           : null,
+      alerts: json['alerts'] != null
+          ? (json['alerts'] as List<dynamic>)
+                .map((e) => AlertRule.fromJson(e as Map<String, dynamic>))
+                .toList()
+          : null,
     );
   }
 
@@ -212,6 +223,7 @@ class WidgetDefinition {
     if (gapPolicy != null) map['gapPolicy'] = gapPolicy;
     if (chartStyle != null) map['chartStyle'] = chartStyle!.toJson();
     if (appearance != null) map['appearance'] = appearance!.toJson();
+    if (alerts != null) map['alerts'] = alerts!.map((e) => e.toJson()).toList();
     return map;
   }
 
@@ -240,6 +252,7 @@ class WidgetDefinition {
     String? gapPolicy,
     ChartStyle? chartStyle,
     WidgetAppearance? appearance,
+    List<AlertRule>? alerts,
   }) {
     return WidgetDefinition(
       id: id ?? this.id,
@@ -267,6 +280,7 @@ class WidgetDefinition {
       gapPolicy: gapPolicy ?? this.gapPolicy,
       chartStyle: chartStyle ?? this.chartStyle,
       appearance: appearance ?? this.appearance,
+      alerts: alerts ?? this.alerts,
     );
   }
 }

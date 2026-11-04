@@ -15,7 +15,7 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 ## Non-goals
 - Writing data to InfluxDB (the app is read-only).
 - Managing InfluxDB (buckets, tokens, organizations).
-- Own server and push notifications in v1.
+- Own server and server push (APNs/FCM). Local threshold notifications from the widget refresh are in scope (`alerts`, see `docs/architecture.md`).
 - Web or desktop version.
 
 ## Constraints

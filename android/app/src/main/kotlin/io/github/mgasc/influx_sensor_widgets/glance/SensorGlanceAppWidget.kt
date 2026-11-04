@@ -140,28 +140,69 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     .fillMaxSize()
                     .background(LocalPalette.current.background)
                     .cornerRadius(LocalPalette.current.palette.cornerRadiusDp.dp)
-                    .padding(12.dp)
                     .clickable(actionStartActivity<MainActivity>()),
         ) {
-            if (!state.isConfigured) {
-                UnconfiguredView()
-            } else if (state.isLoading) {
-                LoadingView(state.title)
-            } else if (state.errorMessage != null) {
-                ErrorView(state.title, state.errorMessage)
-            } else {
-                ConfiguredWidgetContent(state)
-                if (state.warningMessage != null) {
-                    Column(
-                        modifier = GlanceModifier.fillMaxSize(),
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        Text(
-                            text = state.warningMessage,
-                            style = TextStyle(color = ColorError, fontSize = LocalPalette.current.sp(10f)),
-                            maxLines = 2,
-                        )
-                    }
+            Box(modifier = GlanceModifier.fillMaxSize().padding(12.dp)) {
+                WidgetStateContent(state)
+            }
+            if (state.isConfigured && !state.isLoading && state.widgetId.isNotEmpty()) {
+                RefreshTapTarget(state.widgetId)
+            }
+        }
+    }
+
+    /**
+     * Drawn above the content so its larger tap area wins over the root "open app" click;
+     * the glyph sits where the header keeps [WidgetSizing.REFRESH_GLYPH_SLOT_DP] free.
+     */
+    @Composable
+    private fun RefreshTapTarget(widgetId: String) {
+        Box(modifier = GlanceModifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
+            Box(
+                modifier =
+                    GlanceModifier
+                        .size(WidgetSizing.REFRESH_TOUCH_TARGET_DP.dp)
+                        .clickable(
+                            actionRunCallback<RefreshActionCallback>(
+                                actionParametersOf(ActionParameters.Key<String>("widget_id") to widgetId),
+                            ),
+                        ),
+                contentAlignment = Alignment.TopEnd,
+            ) {
+                Text(
+                    text = "↻",
+                    style =
+                        TextStyle(
+                            color = LocalPalette.current.accent,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = LocalPalette.current.sp(14f),
+                        ),
+                    modifier = GlanceModifier.padding(top = 12.dp, end = 12.dp),
+                )
+            }
+        }
+    }
+
+    @Composable
+    private fun WidgetStateContent(state: WidgetUiState) {
+        if (!state.isConfigured) {
+            UnconfiguredView()
+        } else if (state.isLoading) {
+            LoadingView(state.title)
+        } else if (state.errorMessage != null) {
+            ErrorView(state.title, state.errorMessage)
+        } else {
+            ConfiguredWidgetContent(state)
+            if (state.warningMessage != null) {
+                Column(
+                    modifier = GlanceModifier.fillMaxSize(),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    Text(
+                        text = state.warningMessage,
+                        style = TextStyle(color = ColorError, fontSize = LocalPalette.current.sp(10f)),
+                        maxLines = 2,
+                    )
                 }
             }
         }
@@ -189,7 +230,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
     @Composable
     private fun LoadingView(title: String) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            WidgetHeader(title = title, timestamp = "Lade...", widgetId = null)
+            WidgetHeader(title = title, timestamp = "Lade...", showRefresh = false)
             Spacer(modifier = GlanceModifier.height(12.dp))
             Text(
                 text = "Daten werden abgerufen...",
@@ -204,7 +245,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         error: String,
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            WidgetHeader(title = title, timestamp = "Fehler", widgetId = null)
+            WidgetHeader(title = title, timestamp = "Fehler", showRefresh = true)
             Spacer(modifier = GlanceModifier.height(8.dp))
             Text(
                 text = error,
@@ -220,7 +261,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             WidgetHeader(
                 title = state.title,
                 timestamp = state.timestampStr ?: "",
-                widgetId = state.widgetId,
+                showRefresh = true,
             )
             Spacer(modifier = GlanceModifier.height(6.dp))
 
@@ -239,7 +280,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
     private fun WidgetHeader(
         title: String,
         timestamp: String,
-        widgetId: String?,
+        showRefresh: Boolean,
     ) {
         Row(
             modifier = GlanceModifier.fillMaxWidth(),
@@ -262,23 +303,9 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                     style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }
-            if (widgetId != null) {
-                Spacer(modifier = GlanceModifier.width(6.dp))
-                Text(
-                    text = "↻",
-                    style =
-                        TextStyle(
-                            color = LocalPalette.current.accent,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = LocalPalette.current.sp(14f),
-                        ),
-                    modifier =
-                        GlanceModifier.clickable(
-                            actionRunCallback<RefreshActionCallback>(
-                                actionParametersOf(ActionParameters.Key<String>("widget_id") to widgetId),
-                            ),
-                        ),
-                )
+            if (showRefresh) {
+                // The ↻ glyph itself is drawn by RefreshTapTarget on top of this slot.
+                Spacer(modifier = GlanceModifier.width(WidgetSizing.REFRESH_GLYPH_SLOT_DP.dp))
             }
         }
     }

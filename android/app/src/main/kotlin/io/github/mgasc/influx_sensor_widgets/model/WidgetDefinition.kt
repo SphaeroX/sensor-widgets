@@ -25,4 +25,5 @@ data class WidgetDefinition(
     val gapPolicy: String? = null,
     val chartStyle: ChartStyle? = null,
     val appearance: WidgetAppearance? = null,
+    val alerts: List<AlertRule>? = null,
 )

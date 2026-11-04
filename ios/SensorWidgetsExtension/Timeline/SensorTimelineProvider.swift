@@ -93,18 +93,41 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
         do {
             let refreshed = try await fetchSensorData(widget: widget, connection: connection, token: token)
             storage.saveCachedData(widgetId: widget.id, data: refreshed)
+            storage.saveNetworkFailureSince(widgetId: widget.id, date: nil)
+            checkAlerts(widget: widget, data: refreshed)
             return (widget, refreshed)
         } catch {
             let errorMsg = InfluxHttpClient.maskToken(error.localizedDescription, token: token)
-            let fallback = CachedSensorData(
-                singleValue: cached?.singleValue,
-                series: cached?.series,
-                multiValues: cached?.multiValues,
-                aggregate: cached?.aggregate,
-                lastUpdated: cached?.lastUpdated ?? Date(),
-                errorMessage: errorMsg
+            let now = Date()
+            let isNetworkError = Self.isNetworkError(error)
+            let failureSince = storage.loadNetworkFailureSince(widgetId: widget.id) ?? now
+            if isNetworkError {
+                storage.saveNetworkFailureSince(widgetId: widget.id, date: failureSince)
+            }
+            let fallback = NetworkErrorGrace.fallback(
+                cached: cached,
+                errorMessage: errorMsg,
+                isNetworkError: isNetworkError,
+                failureSince: failureSince,
+                now: now
             )
             return (widget, fallback)
+        }
+    }
+
+    private static func isNetworkError(_ error: Error) -> Bool {
+        if let influxError = error as? InfluxError, case .networkError = influxError { return true }
+        return error is URLError
+    }
+
+    private func checkAlerts(widget: WidgetDefinition, data: CachedSensorData) {
+        let rules = widget.alerts ?? []
+        let previous = storage.loadAlertState(widgetId: widget.id)
+        if rules.isEmpty && previous.isEmpty { return }
+        let result = AlertEvaluator.evaluate(rules: rules, data: data, previouslyActive: previous)
+        storage.saveAlertState(widgetId: widget.id, active: result.active)
+        for hit in result.triggered {
+            AlertNotifier.post(widget: widget, hit: hit)
         }
     }
 

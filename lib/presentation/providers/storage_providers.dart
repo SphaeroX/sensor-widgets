@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/data/influx/influx_api_client.dart';
+import 'package:sensor_widgets/data/platform/notification_permission.dart';
 import 'package:sensor_widgets/data/repositories/connection_repository.dart';
 import 'package:sensor_widgets/data/repositories/widget_definition_repository.dart';
 import 'package:sensor_widgets/data/storage/secure_token_store.dart';
@@ -20,6 +21,11 @@ final sharedWidgetStoreProvider = Provider<SharedWidgetStore>((ref) {
 /// Provider for the InfluxQL API Client.
 final influxApiClientProvider = Provider<InfluxApiClient>((ref) {
   return InfluxApiClient();
+});
+
+/// Provider for the notification permission request (platform channel).
+final notificationPermissionProvider = Provider<NotificationPermission>((ref) {
+  return NotificationPermission();
 });
 
 /// Provider for the ConnectionRepository.

@@ -10,7 +10,7 @@
 - Single repository with the Flutter project in the repo root. No backend, no monorepo split.
 - Native widget code stays in `android/` and `ios/`. Dart code in `lib/` never imports native widget code.
 - The only coupling between app and widgets is the widget-definition format and the shared storage keys. A change to either updates the Dart, Swift, and Kotlin sides and the fixtures in the same change.
-- Shared InfluxDB response fixtures live in `fixtures/influx/` at the repo root and are loaded by all three test suites.
+- Shared InfluxDB response fixtures live in `fixtures/influx/` at the repo root and are loaded by all three test suites. Other shared contract fixtures: `fixtures/widget_definitions/`, `fixtures/formula/`, `fixtures/chart/`, `fixtures/alerts/`.
 
 ## Best practices (project-specific)
 - Fixtures and docs contain only fake tokens and fake hostnames.

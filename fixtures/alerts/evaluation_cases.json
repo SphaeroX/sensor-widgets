@@ -1,0 +1,101 @@
+{
+  "description": "Threshold alert evaluation shared by the Kotlin and Swift widget code. 'previouslyActive' lists the rules that were already above/below their threshold on the last refresh; 'expectTriggered' and 'expectActive' are indices into 'alerts'.",
+  "cases": [
+    {
+      "name": "single value crosses the threshold",
+      "cache": { "value": 160.0 },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "previouslyActive": [],
+      "expectTriggered": [0],
+      "expectActive": [0]
+    },
+    {
+      "name": "value stays above: no repeated notification",
+      "cache": { "value": 170.0 },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "previouslyActive": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "expectTriggered": [],
+      "expectActive": [0]
+    },
+    {
+      "name": "value falls back and re-arms the rule",
+      "cache": { "value": 140.0 },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "previouslyActive": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "expectTriggered": [],
+      "expectActive": []
+    },
+    {
+      "name": "value equal to the threshold is not above it",
+      "cache": { "value": 150.0 },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "previouslyActive": [],
+      "expectTriggered": [],
+      "expectActive": []
+    },
+    {
+      "name": "multi value rows are checked one by one",
+      "cache": {
+        "values": {
+          "co2": { "value": 1200.0, "timestamp": 1 },
+          "temp": { "value": 20.0, "timestamp": 1 }
+        }
+      },
+      "alerts": [
+        { "target": "co2", "operator": "greaterThan", "value": 1000 },
+        { "target": "temp", "operator": "lessThan", "value": 18.5 }
+      ],
+      "previouslyActive": [],
+      "expectTriggered": [0],
+      "expectActive": [0]
+    },
+    {
+      "name": "below threshold rule",
+      "cache": { "values": { "temp": { "value": 17.0, "timestamp": 1 } } },
+      "alerts": [{ "target": "temp", "operator": "lessThan", "value": 18.5 }],
+      "previouslyActive": [],
+      "expectTriggered": [0],
+      "expectActive": [0]
+    },
+    {
+      "name": "history chart uses the latest point",
+      "cache": { "points": [{ "t": 1, "v": 40.0 }, { "t": 2, "v": 10.0 }] },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 25 }],
+      "previouslyActive": [],
+      "expectTriggered": [],
+      "expectActive": []
+    },
+    {
+      "name": "aggregate rules address a statistic",
+      "cache": { "aggregates": { "mean": 12.0, "min": 3.0, "max": 40.0 } },
+      "alerts": [{ "target": "max", "operator": "greaterThan", "value": 35 }],
+      "previouslyActive": [],
+      "expectTriggered": [0],
+      "expectActive": [0]
+    },
+    {
+      "name": "error cache keeps the previous state",
+      "cache": { "error": "Network error" },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "previouslyActive": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "expectTriggered": [],
+      "expectActive": [0]
+    },
+    {
+      "name": "missing row value keeps the previous state of that rule",
+      "cache": { "values": { "temp": { "value": 20.0, "timestamp": 1 } } },
+      "alerts": [{ "target": "co2", "operator": "greaterThan", "value": 1000 }],
+      "previouslyActive": [{ "target": "co2", "operator": "greaterThan", "value": 1000 }],
+      "expectTriggered": [],
+      "expectActive": [0]
+    },
+    {
+      "name": "a changed threshold is a new rule",
+      "cache": { "value": 160.0 },
+      "alerts": [{ "target": "value", "operator": "greaterThan", "value": 155 }],
+      "previouslyActive": [{ "target": "value", "operator": "greaterThan", "value": 150 }],
+      "expectTriggered": [0],
+      "expectActive": [0]
+    }
+  ]
+}

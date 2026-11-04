@@ -102,7 +102,20 @@ object WidgetDefinitionParser {
             gapPolicy = json.optString("gapPolicy").takeIf { it.isNotEmpty() },
             chartStyle = parseChartStyle(json),
             appearance = parseAppearance(json),
+            alerts = parseAlerts(json),
         )
+    }
+
+    private fun parseAlerts(owner: JSONObject): List<AlertRule>? {
+        val arr = owner.optJSONArray("alerts") ?: return null
+        return (0 until arr.length()).map {
+            val o = arr.getJSONObject(it)
+            AlertRule(
+                target = o.getString("target"),
+                operator = ThresholdOperator.fromWireName(o.getString("operator")),
+                value = o.getDouble("value"),
+            )
+        }
     }
 
     private fun parseAppearance(owner: JSONObject): WidgetAppearance? {

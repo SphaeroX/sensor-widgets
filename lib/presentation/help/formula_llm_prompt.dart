@@ -76,6 +76,7 @@ Allgemein (alle Typen):
 - "tagFilters": Objekt {"tag": "wert"}, schränkt die Abfrage ein.
 - "formula": Hauptformel (String). "formulaSteps": Liste von {"name", "expression"}. "formulaVariables": Liste von {"name", "field", optional "measurement", "tagFilters", "label"}. Mit Formel entfällt "field" am Widget; jede in der Formel oder den Schritten benutzte Variable braucht einen Eintrag in "formulaVariables" mit einem Feld aus der Liste der verfügbaren Daten.
 - "appearance" (optional): {"backgroundColor", "textColor", "accentColor" als "#RRGGBB", "backgroundOpacity" 0 bis 1, "fontScale" 0.8 bis 1.4, "cornerRadius" 0 bis 32}.
+- "alerts" (optional): Push-Benachrichtigungen [{"target", "operator" ("greaterThan" oder "lessThan"), "value": Zahl}]. "target" ist "value" für den (berechneten) Hauptwert, bei multi_value das "field" einer Zeile, bei aggregate "min", "max" oder "mean".
 
 Je nach Typ:
 - single_value: ohne Formel "field" angeben.

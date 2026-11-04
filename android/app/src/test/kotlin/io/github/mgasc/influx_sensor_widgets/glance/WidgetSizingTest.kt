@@ -16,6 +16,17 @@ class WidgetSizingTest {
     }
 
     @Test
+    fun refreshTouchTargetIsAtLeastTheMaterialMinimum() {
+        assertTrue(WidgetSizing.REFRESH_TOUCH_TARGET_DP >= 48f)
+    }
+
+    @Test
+    fun refreshTouchTargetReachesIntoTheRootPaddingCorner() {
+        // The glyph keeps its place in the header, the tap area extends to the widget corner.
+        assertTrue(WidgetSizing.REFRESH_TOUCH_TARGET_DP > WidgetSizing.ROOT_PADDING_DP / 2 + WidgetSizing.REFRESH_GLYPH_SLOT_DP)
+    }
+
+    @Test
     fun chartAreaGrowsWithWidgetWidth() {
         val narrow = WidgetSizing.chartAreaDp(widthDp = 150f, heightDp = 200f, fontScale = 1f)
         val wide = WidgetSizing.chartAreaDp(widthDp = 350f, heightDp = 200f, fontScale = 1f)

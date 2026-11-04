@@ -10,6 +10,7 @@ import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
+import 'package:sensor_widgets/domain/models/alert_rule.dart';
 import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
@@ -17,6 +18,8 @@ import 'package:sensor_widgets/domain/widget_code/widget_code_codec.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
+import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/alert_rules_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/appearance_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/chart_style_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
@@ -66,6 +69,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   List<FormulaStep> _formulaSteps = [];
   ChartStyle? _chartStyle;
   WidgetAppearance? _appearance;
+  List<AlertRule> _alerts = [];
 
   /// Gap handling of time buckets: null = skip (default) or 'previous'.
   String? _gapPolicy;
@@ -100,6 +104,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         : [];
     _chartStyle = edit?.chartStyle;
     _appearance = edit?.appearance;
+    _alerts = List.of(edit?.alerts ?? const <AlertRule>[]);
     _gapPolicy = edit?.gapPolicy == 'previous' ? 'previous' : null;
     _formulaSteps = edit?.formulaSteps != null
         ? List<FormulaStep>.from(edit!.formulaSteps!)
@@ -255,6 +260,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           : null,
       chartStyle: _selectedType == WidgetType.historyChart ? _chartStyle : null,
       appearance: _appearance,
+      alerts: _alerts.isNotEmpty ? List.of(_alerts) : null,
       gapPolicy: _usesTimeBuckets && _gapPolicy == 'previous'
           ? _gapPolicy
           : null,
@@ -303,6 +309,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       _formulaVariables = List.of(def.formulaVariables ?? const []);
       _chartStyle = def.chartStyle;
       _appearance = def.appearance;
+      _alerts = List.of(def.alerts ?? const <AlertRule>[]);
       _gapPolicy = def.gapPolicy == 'previous' ? 'previous' : null;
     });
     if (measurementChanged && def.measurement.isNotEmpty) {
@@ -311,6 +318,35 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           .selectMeasurement(def.measurement);
     }
     return const [];
+  }
+
+  /// Values of the current widget type a notification rule can watch.
+  List<AlertTarget> get _alertTargets {
+    switch (_selectedType) {
+      case WidgetType.multiValue:
+        final rows = _buildCurrentDefinition().items ?? const [];
+        return [
+          for (final item in rows)
+            AlertTarget(id: item.field, label: item.label ?? item.field),
+        ];
+      case WidgetType.aggregate:
+        return const [
+          AlertTarget(id: 'mean', label: 'Mittelwert'),
+          AlertTarget(id: 'min', label: 'Minimum'),
+          AlertTarget(id: 'max', label: 'Maximum'),
+        ];
+      case WidgetType.historyChart:
+        return const [
+          AlertTarget(id: AlertRule.targetValue, label: 'Letzter Wert'),
+        ];
+      default:
+        return [
+          AlertTarget(
+            id: AlertRule.targetValue,
+            label: _isFormulaEnabled ? 'Berechneter Wert' : 'Wert',
+          ),
+        ];
+    }
   }
 
   /// History charts and aggregates with a formula are calculated per time bucket.
@@ -977,6 +1013,14 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   AppearanceEditor(
                     appearance: _appearance,
                     onChanged: (a) => setState(() => _appearance = a),
+                  ),
+                  const SizedBox(height: 16),
+                  AlertRulesEditor(
+                    rules: _alerts,
+                    targets: _alertTargets,
+                    onChanged: (rules) => setState(() => _alerts = rules),
+                    onRuleAdded: () =>
+                        ref.read(notificationPermissionProvider).request(),
                   ),
                   const SizedBox(height: 24),
 

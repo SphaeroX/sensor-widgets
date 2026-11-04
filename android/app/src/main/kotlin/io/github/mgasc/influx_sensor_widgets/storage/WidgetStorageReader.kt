@@ -83,6 +83,13 @@ class WidgetStorageReader(
         prefsSetter(key, cacheJson)
     }
 
+    fun getAlertState(widgetId: String): String? = prefsGetter("$KEY_ALERT_STATE_PREFIX$widgetId")
+
+    fun saveAlertState(
+        widgetId: String,
+        stateJson: String,
+    ) = prefsSetter("$KEY_ALERT_STATE_PREFIX$widgetId", stateJson)
+
     fun getWidgetCache(widgetId: String): String? {
         val key = "$KEY_CACHE_PREFIX$widgetId"
         return prefsGetter(key)
@@ -96,5 +103,8 @@ class WidgetStorageReader(
         const val KEY_CONNECTIONS_METADATA = "connections_metadata_v1"
         const val KEY_TOKEN_PREFIX = "influx_token_"
         const val KEY_CACHE_PREFIX = "widget_cache_"
+
+        /** Native only: rules that matched on the last refresh (see AlertEvaluator). */
+        const val KEY_ALERT_STATE_PREFIX = "widget_alert_state_"
     }
 }

@@ -17,7 +17,14 @@ object WidgetSizing {
     /** Pixel budget of one chart bitmap (about 720 KB ARGB_8888), keeps RemoteViews updates small. */
     const val MAX_CHART_PIXELS = 180_000
 
-    private const val ROOT_PADDING_DP = 24f
+    /** Tap area of the ↻ button in the top-end corner; the glyph itself stays small. */
+    const val REFRESH_TOUCH_TARGET_DP = 56f
+
+    /** Width the header row keeps free for the ↻ glyph (gap plus glyph), drawn by the overlay. */
+    const val REFRESH_GLYPH_SLOT_DP = 20f
+
+    /** Root padding of both sides together (12 dp per side). */
+    const val ROOT_PADDING_DP = 24f
     private const val HEADER_DP = 20f
     private const val HEADER_GAP_DP = 6f
     private const val VALUE_ROW_DP = 22f

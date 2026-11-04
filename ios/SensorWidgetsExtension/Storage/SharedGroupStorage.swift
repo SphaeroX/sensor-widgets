@@ -127,4 +127,31 @@ public final class SharedGroupStorage {
             userDefaults?.set(encoded, forKey: "widget_cache_\(widgetId)")
         }
     }
+
+    // MARK: - Alerts and network failures (native only, not read by the app)
+
+    public func loadAlertState(widgetId: String) -> [AlertRule] {
+        guard let data = userDefaults?.data(forKey: "widget_alert_state_\(widgetId)") else { return [] }
+        return (try? JSONDecoder().decode([AlertRule].self, from: data)) ?? []
+    }
+
+    public func saveAlertState(widgetId: String, active: [AlertRule]) {
+        if let encoded = try? JSONEncoder().encode(active) {
+            userDefaults?.set(encoded, forKey: "widget_alert_state_\(widgetId)")
+        }
+    }
+
+    /// Start of the current streak of network failures, nil after a successful refresh.
+    public func loadNetworkFailureSince(widgetId: String) -> Date? {
+        userDefaults?.object(forKey: "widget_network_failure_since_\(widgetId)") as? Date
+    }
+
+    public func saveNetworkFailureSince(widgetId: String, date: Date?) {
+        let key = "widget_network_failure_since_\(widgetId)"
+        if let date = date {
+            userDefaults?.set(date, forKey: key)
+        } else {
+            userDefaults?.removeObject(forKey: key)
+        }
+    }
 }

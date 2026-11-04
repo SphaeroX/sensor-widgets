@@ -1,19 +1,25 @@
 package io.github.mgasc.influx_sensor_widgets.worker
 
 import android.content.Context
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import io.github.mgasc.influx_sensor_widgets.alerts.AlertEvaluator
+import io.github.mgasc.influx_sensor_widgets.alerts.AlertHit
+import io.github.mgasc.influx_sensor_widgets.alerts.AlertNotifier
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaEvaluator
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaException
 import io.github.mgasc.influx_sensor_widgets.formula.FormulaSeriesCalculator
 import io.github.mgasc.influx_sensor_widgets.formula.MissingVariableException
 import io.github.mgasc.influx_sensor_widgets.glance.SensorGlanceAppWidget
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.mgasc.influx_sensor_widgets.influx.InfluxNetworkException
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxQlBuilder
 import io.github.mgasc.influx_sensor_widgets.influx.InfluxResponseParser
 import io.github.mgasc.influx_sensor_widgets.model.WidgetDefinition
@@ -34,7 +40,14 @@ class WidgetRefreshWorker(
 
         val outcome =
             WidgetRefreshRunner.run(
-                refresh = { refreshWidgets(storageReader, httpClient, targetId) },
+                refresh = {
+                    refreshWidgetsOrThrowOnNetworkFailure(
+                        storageReader,
+                        httpClient,
+                        targetId,
+                        onAlert = { widget, hit -> AlertNotifier.notify(applicationContext, widget, hit) },
+                    )
+                },
                 notifyWidgets = { SensorGlanceAppWidget.refreshAll(applicationContext) },
             )
         return if (outcome == WidgetRefreshRunner.Outcome.SUCCESS) Result.success() else Result.retry()
@@ -45,10 +58,35 @@ class WidgetRefreshWorker(
         const val WORK_NAME_PERIODIC = "sensor_widgets_periodic_refresh"
         const val KEY_WIDGET_ID = "target_widget_id"
 
+        /** Like [refreshWidgets], but throws [TransientRefreshException] when a server was unreachable. */
+        fun refreshWidgetsOrThrowOnNetworkFailure(
+            storageReader: WidgetStorageReader,
+            httpClient: InfluxHttpClient,
+            targetWidgetId: String? = null,
+            nowMillis: () -> Long = System::currentTimeMillis,
+            onAlert: (WidgetDefinition, AlertHit) -> Unit = { _, _ -> },
+        ): Int {
+            var networkFailed = false
+            val count =
+                refreshWidgets(
+                    storageReader,
+                    httpClient,
+                    targetWidgetId,
+                    nowMillis,
+                    onNetworkFailure = { networkFailed = true },
+                    onAlert = onAlert,
+                )
+            if (networkFailed) throw TransientRefreshException()
+            return count
+        }
+
         fun refreshWidgets(
             storageReader: WidgetStorageReader,
             httpClient: InfluxHttpClient,
             targetWidgetId: String? = null,
+            nowMillis: () -> Long = System::currentTimeMillis,
+            onNetworkFailure: () -> Unit = {},
+            onAlert: (WidgetDefinition, AlertHit) -> Unit = { _, _ -> },
         ): Int {
             val allWidgets = storageReader.getWidgetDefinitions()
             val widgetsToRefresh =
@@ -88,6 +126,16 @@ class WidgetRefreshWorker(
                 try {
                     val cacheJson = executeQueryAndBuildCache(widget, conn, token, httpClient)
                     storageReader.saveWidgetCache(widget.id, cacheJson)
+                    checkAlerts(storageReader, widget, cacheJson, onAlert)
+                } catch (e: InfluxNetworkException) {
+                    onNetworkFailure()
+                    val graced =
+                        NetworkErrorGrace.cacheAfterNetworkError(
+                            previousCacheJson = storageReader.getWidgetCache(widget.id),
+                            errorMessage = e.message ?: "Netzwerkfehler",
+                            nowMillis = nowMillis(),
+                        )
+                    storageReader.saveWidgetCache(widget.id, graced)
                 } catch (e: Exception) {
                     val errJson =
                         JSONObject().apply {
@@ -290,15 +338,34 @@ class WidgetRefreshWorker(
             return cacheObj.toString()
         }
 
+        private fun checkAlerts(
+            storageReader: WidgetStorageReader,
+            widget: WidgetDefinition,
+            cacheJson: String,
+            onAlert: (WidgetDefinition, AlertHit) -> Unit,
+        ) {
+            val rules = widget.alerts.orEmpty()
+            val previous = AlertEvaluator.decodeState(storageReader.getAlertState(widget.id))
+            if (rules.isEmpty() && previous.isEmpty()) return
+            val result = AlertEvaluator.evaluate(rules, cacheJson, previous)
+            storageReader.saveAlertState(widget.id, AlertEvaluator.encodeState(result.active))
+            result.triggered.forEach { onAlert(widget, it) }
+        }
+
         private fun hasFormula(widget: WidgetDefinition): Boolean =
             !widget.formula.isNullOrBlank() && !widget.formulaVariables.isNullOrEmpty()
+
+        /** Refreshes wait for a connection instead of failing right after a Doze wake-up. */
+        fun refreshConstraints(): Constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
         fun enqueuePeriodicWork(context: Context) {
             val periodicRequest =
                 PeriodicWorkRequestBuilder<WidgetRefreshWorker>(
                     15,
                     TimeUnit.MINUTES,
-                ).addTag(TAG).build()
+                ).addTag(TAG)
+                    .setConstraints(refreshConstraints())
+                    .build()
 
             WorkManager.getInstance(context).enqueueUniquePeriodicWork(
                 WORK_NAME_PERIODIC,
@@ -315,7 +382,7 @@ class WidgetRefreshWorker(
             context: Context,
             targetWidgetId: String? = null,
         ) {
-            val builder = OneTimeWorkRequestBuilder<WidgetRefreshWorker>().addTag(TAG)
+            val builder = OneTimeWorkRequestBuilder<WidgetRefreshWorker>().addTag(TAG).setConstraints(refreshConstraints())
             if (targetWidgetId != null) {
                 builder.setInputData(Data.Builder().putString(KEY_WIDGET_ID, targetWidgetId).build())
             }

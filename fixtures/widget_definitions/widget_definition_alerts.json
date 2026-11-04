@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "widgets": [
+    {
+      "id": "w-iaq",
+      "type": "single_value",
+      "title": "IAQ Index",
+      "connectionId": "conn-1",
+      "measurement": "sen66",
+      "formula": "voc + nox",
+      "formulaVariables": [
+        { "name": "voc", "field": "voc_index" },
+        { "name": "nox", "field": "nox_index" }
+      ],
+      "alerts": [
+        { "target": "value", "operator": "greaterThan", "value": 150 }
+      ]
+    },
+    {
+      "id": "w-room",
+      "type": "multi_value",
+      "title": "sen66",
+      "connectionId": "conn-1",
+      "measurement": "sen66",
+      "items": [
+        { "field": "co2", "label": "CO2", "unit": "ppm" },
+        { "field": "temp", "label": "Temperatur", "unit": "°C" }
+      ],
+      "alerts": [
+        { "target": "co2", "operator": "greaterThan", "value": 1000 },
+        { "target": "temp", "operator": "lessThan", "value": 18.5 }
+      ]
+    },
+    {
+      "id": "w-plain",
+      "type": "single_value",
+      "title": "Ohne Benachrichtigung",
+      "connectionId": "conn-1",
+      "measurement": "climate",
+      "field": "temp"
+    }
+  ]
+}

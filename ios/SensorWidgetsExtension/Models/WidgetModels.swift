@@ -174,6 +174,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
     public let gapPolicy: String?
     public let chartStyle: ChartStyle?
     public let appearance: WidgetAppearance?
+    public let alerts: [AlertRule]?
 
     public init(
         id: String,
@@ -199,7 +200,8 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         formulaSteps: [FormulaStep]? = nil,
         gapPolicy: String? = nil,
         chartStyle: ChartStyle? = nil,
-        appearance: WidgetAppearance? = nil
+        appearance: WidgetAppearance? = nil,
+        alerts: [AlertRule]? = nil
     ) {
         self.id = id
         self.type = type
@@ -225,6 +227,7 @@ public struct WidgetDefinition: Codable, Equatable, Identifiable {
         self.gapPolicy = gapPolicy
         self.chartStyle = chartStyle
         self.appearance = appearance
+        self.alerts = alerts
     }
 }
 
