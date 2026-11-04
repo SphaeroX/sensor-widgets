@@ -7,6 +7,7 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   group('WidgetLivePreviewCard rounding & decimal formatting', () {
@@ -32,6 +33,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: WidgetLivePreviewCard(
                 widgetDef: widgetDef,
@@ -68,6 +71,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: WidgetLivePreviewCard(
                 widgetDef: widgetDef,
@@ -108,6 +113,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         theme: ThemeData(fontFamily: 'ThemeFont'),
         home: Scaffold(
           body: WidgetLivePreviewCard(

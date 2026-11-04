@@ -5,6 +5,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('shows a hint when some buckets could not be calculated', (
@@ -30,6 +31,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: WidgetLivePreviewCard(widgetDef: def, previewData: data),
         ),

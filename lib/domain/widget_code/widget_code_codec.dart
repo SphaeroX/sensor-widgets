@@ -6,6 +6,8 @@ import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
+import 'package:sensor_widgets/l10n/formula_error_text.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Outcome of [WidgetCodeCodec.decode]: either a [definition] or [errors].
 class WidgetCodeResult {
@@ -35,20 +37,20 @@ class WidgetCodeCodec {
 
   /// Parses [code] on top of [base]: `id` and `connectionId` always come from
   /// [base]; `measurement` and `title` fall back to it when the code omits them.
+  /// Error messages are in the language of [l10n].
   static WidgetCodeResult decode(
     String code, {
     required WidgetDefinition base,
+    required AppLocalizations l10n,
   }) {
     final Object? parsed;
     try {
       parsed = jsonDecode(_stripFence(code));
     } on FormatException catch (e) {
-      return WidgetCodeResult.failure(['Kein gültiges JSON: ${e.message}']);
+      return WidgetCodeResult.failure([l10n.codeErrorInvalidJson(e.message)]);
     }
     if (parsed is! Map<String, dynamic>) {
-      return const WidgetCodeResult.failure([
-        'Der Code muss ein JSON-Objekt sein.',
-      ]);
+      return WidgetCodeResult.failure([l10n.codeErrorNotObject]);
     }
 
     final json = <String, dynamic>{
@@ -68,13 +70,13 @@ class WidgetCodeCodec {
       def = WidgetDefinition.fromJson(json);
     } on ArgumentError catch (e) {
       return WidgetCodeResult.failure([
-        'Unbekannter Widget-Typ "${json['type']}" (${e.message}).',
+        l10n.codeErrorUnknownType('${json['type']}', '${e.message}'),
       ]);
     } on TypeError catch (e) {
-      return WidgetCodeResult.failure(['Ein Wert hat den falschen Typ: $e']);
+      return WidgetCodeResult.failure([l10n.codeErrorWrongType('$e')]);
     }
 
-    final errors = _validate(def);
+    final errors = _validate(def, l10n);
     return errors.isEmpty
         ? WidgetCodeResult.success(def)
         : WidgetCodeResult.failure(errors);
@@ -87,35 +89,32 @@ class WidgetCodeCodec {
     return match != null ? match.group(1)! : trimmed;
   }
 
-  static List<String> _validate(WidgetDefinition def) {
+  static List<String> _validate(WidgetDefinition def, AppLocalizations l10n) {
     final errors = <String>[];
     if (def.measurement.trim().isEmpty) {
-      errors.add('Measurement fehlt.');
+      errors.add(l10n.codeErrorMeasurementMissing);
     }
     if (def.gapPolicy != null &&
         def.gapPolicy != 'skip' &&
         def.gapPolicy != 'previous') {
-      errors.add('gapPolicy muss "skip" oder "previous" sein.');
+      errors.add(l10n.codeErrorGapPolicy);
     }
     if (def.chartStyle != null && !def.chartStyle!.isValid) {
-      errors.add(
-        'chartStyle ist ungültig (Farben als #RRGGBB, lineWidth > 0).',
-      );
+      errors.add(l10n.codeErrorChartStyle);
     }
     if (def.appearance != null && !def.appearance!.isValid) {
-      errors.add(
-        'appearance ist ungültig (Farben als #RRGGBB, Werte im Bereich).',
-      );
+      errors.add(l10n.codeErrorAppearance);
     }
 
     final hasFormula = def.formula != null && def.formula!.trim().isNotEmpty;
     if (hasFormula) {
       errors.addAll(
         _validateFormula(
-          'Formel',
+          l10n.codeFormulaMain,
           def.formula!,
           def.formulaSteps,
           def.formulaVariables,
+          l10n,
         ),
       );
     }
@@ -123,10 +122,11 @@ class WidgetCodeCodec {
       if (!item.hasFormula) continue;
       errors.addAll(
         _validateFormula(
-          'Formel der Zeile "${item.label ?? item.field}"',
+          l10n.codeFormulaRow(item.label ?? item.field),
           item.formula!,
           item.formulaSteps,
           item.formulaVariables,
+          l10n,
         ),
       );
     }
@@ -139,10 +139,7 @@ class WidgetCodeCodec {
         ? hasRows
         : hasField;
     if (errors.isEmpty && !complete) {
-      errors.add(
-        'Das Widget ist unvollständig: ohne Formel wird ein "field" '
-        '(bzw. "items" bei multi_value) benötigt.',
-      );
+      errors.add(l10n.codeErrorIncomplete);
     }
     return errors;
   }
@@ -152,21 +149,27 @@ class WidgetCodeCodec {
     String formula,
     List<FormulaStep>? steps,
     List<FormulaVariable>? variables,
+    AppLocalizations l10n,
   ) {
-    final syntax = FormulaEvaluator.validateSyntax(formula);
-    if (syntax != null) return ['$what: Syntaxfehler: $syntax'];
+    final syntax = FormulaEvaluator.syntaxError(formula);
+    if (syntax != null) {
+      final text = formulaErrorText(l10n, syntax, withPosition: true);
+      return [l10n.codeErrorFormulaSyntax(what, text)];
+    }
     final vars = variables ?? const <FormulaVariable>[];
-    if (vars.isEmpty) return ['$what: Es ist keine Variable definiert.'];
+    if (vars.isEmpty) return [l10n.codeErrorNoVariable(what)];
     final errors = <String>[];
     for (final v in vars.where((v) => v.field.trim().isEmpty)) {
-      errors.add('$what: Variable ${v.name} hat kein Feld.');
+      errors.add(l10n.codeErrorVariableNoField(what, v.name));
     }
-    final stepErr = FormulaEvaluator.validateSteps(
+    final stepErr = FormulaEvaluator.stepsError(
       steps ?? const [],
       formula,
       variableNames: vars.map((v) => v.name).toList(),
     );
-    if (stepErr != null) errors.add('$what: $stepErr');
+    if (stepErr != null) {
+      errors.add(l10n.codeErrorFormula(what, formulaErrorText(l10n, stepErr)));
+    }
     return errors;
   }
 }

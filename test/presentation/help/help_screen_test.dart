@@ -5,12 +5,19 @@ import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   testWidgets('help screen lists functions, sections and templates', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: FormulaHelpScreen()));
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: FormulaHelpScreen(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('Formel-Hilfe'), findsOneWidget);
@@ -24,7 +31,13 @@ void main() {
   testWidgets('apply buttons are hidden unless applying is enabled', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: FormulaHelpScreen()));
+    await tester.pumpWidget(
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: FormulaHelpScreen(),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.scrollUntilVisible(find.text('IAQ (Sensirion SEN66)'), 300);
     expect(find.byKey(const Key('apply_template_iaq_sen66')), findsNothing);
@@ -34,6 +47,8 @@ void main() {
     FormulaTemplate? picked;
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Builder(
           builder: (context) => TextButton(
             onPressed: () async {
@@ -73,6 +88,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: StatefulBuilder(
             builder: (context, setState) => SingleChildScrollView(

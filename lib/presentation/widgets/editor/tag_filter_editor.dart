@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Interactive widget for viewing, adding, and removing InfluxDB tag filters.
 class TagFilterEditor extends StatefulWidget {
@@ -90,7 +91,7 @@ class _TagFilterEditorState extends State<TagFilterEditor> {
           children: [
             Expanded(
               child: Text(
-                'Tag-Filter (Optional)',
+                AppLocalizations.of(context).tagFilterTitle,
                 style: theme.textTheme.titleSmall,
               ),
             ),
@@ -103,7 +104,7 @@ class _TagFilterEditorState extends State<TagFilterEditor> {
             if (hasError && widget.onReloadTagKeys != null)
               IconButton(
                 icon: const Icon(Icons.refresh, size: 20),
-                tooltip: 'Tags neu laden',
+                tooltip: AppLocalizations.of(context).tagFilterReloadTags,
                 onPressed: widget.onReloadTagKeys,
               ),
           ],
@@ -130,7 +131,7 @@ class _TagFilterEditorState extends State<TagFilterEditor> {
           )
         else
           Text(
-            'Keine Tag-Filter aktiv (Daten für alle Tags abrufen)',
+            AppLocalizations.of(context).tagFilterNone,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -139,7 +140,7 @@ class _TagFilterEditorState extends State<TagFilterEditor> {
         OutlinedButton.icon(
           key: const Key('add_tag_filter_button'),
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Filter hinzufügen'),
+          label: Text(AppLocalizations.of(context).tagFilterAdd),
           onPressed: widget.enabled ? _openAddFilterSheet : null,
         ),
       ],
@@ -218,8 +219,9 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                   Expanded(
                     child: Text(
                       isStepKey
-                          ? 'Tag-Key auswählen'
-                          : 'Tag-Value für "$_selectedKey" auswählen',
+                          ? AppLocalizations.of(context).tagFilterPickKey
+                          : AppLocalizations.of(context)
+                                .tagFilterPickValue(_selectedKey ?? ''),
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
@@ -233,7 +235,7 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
               if (isStepKey) ...[
                 if (widget.tagKeys.isNotEmpty) ...[
                   Text(
-                    'Aus Datenbank wählen:',
+                    AppLocalizations.of(context).schemaPickFromDb,
                     style: theme.textTheme.labelMedium,
                   ),
                   const SizedBox(height: 6),
@@ -249,7 +251,7 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                   const SizedBox(height: 12),
                 ],
                 Text(
-                  'Oder manuell eingeben:',
+                  AppLocalizations.of(context).schemaOrEnterManually,
                   style: theme.textTheme.labelMedium,
                 ),
                 const SizedBox(height: 6),
@@ -259,9 +261,10 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                       child: TextField(
                         key: const Key('manual_tag_key_input'),
                         controller: _manualKeyController,
-                        decoration: const InputDecoration(
-                          hintText: 'Tag-Key (z. B. room)',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)
+                              .tagFilterKeyHint,
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
                       ),
@@ -273,7 +276,7 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                         final k = _manualKeyController.text.trim();
                         if (k.isNotEmpty) _onKeyChosen(k);
                       },
-                      child: const Text('Weiter'),
+                      child: Text(AppLocalizations.of(context).commonNext),
                     ),
                   ],
                 ),
@@ -291,25 +294,28 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (valuesState?.isLoading == true)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Row(
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 14,
                                   height: 14,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                   ),
                                 ),
-                                SizedBox(width: 8),
-                                Text('Lade Werte aus Datenbank...'),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppLocalizations.of(context)
+                                      .tagFilterLoadingValues,
+                                ),
                               ],
                             ),
                           ),
                         if (availableValues.isNotEmpty) ...[
                           Text(
-                            'Aus Datenbank wählen:',
+                            AppLocalizations.of(context).schemaPickFromDb,
                             style: theme.textTheme.labelMedium,
                           ),
                           const SizedBox(height: 6),
@@ -329,7 +335,7 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                   },
                 ),
                 Text(
-                  'Oder manuell eingeben:',
+                  AppLocalizations.of(context).schemaOrEnterManually,
                   style: theme.textTheme.labelMedium,
                 ),
                 const SizedBox(height: 6),
@@ -339,9 +345,10 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                       child: TextField(
                         key: const Key('manual_tag_value_input'),
                         controller: _manualValueController,
-                        decoration: const InputDecoration(
-                          hintText: 'Tag-Value (z. B. living_room)',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          hintText: AppLocalizations.of(context)
+                              .tagFilterValueHint,
+                          border: const OutlineInputBorder(),
                           isDense: true,
                         ),
                       ),
@@ -353,7 +360,7 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                         final v = _manualValueController.text.trim();
                         if (v.isNotEmpty) _onValueChosen(v);
                       },
-                      child: const Text('Hinzufügen'),
+                      child: Text(AppLocalizations.of(context).commonAdd),
                     ),
                   ],
                 ),

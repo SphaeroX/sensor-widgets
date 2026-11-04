@@ -1,6 +1,7 @@
 package io.github.sphaerox.influx_sensor_widgets.worker
 
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -66,7 +67,7 @@ class WidgetRefreshWorkerSeriesTest {
         enqueueBuckets("[[1000,10.0,2.0],[2000,10.0,0.0],[3000,9.0,3.0]]")
         prefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] = widgetJson("history_chart")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient())
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german)
 
         val cache = cache()
         val points = cache.getJSONArray("points")
@@ -83,7 +84,7 @@ class WidgetRefreshWorkerSeriesTest {
         enqueueBuckets("[[1000,10.0,2.0],[2000,10.0,0.0],[3000,9.0,3.0]]")
         prefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] = widgetJson("aggregate")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient())
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german)
 
         val agg = cache().getJSONObject("aggregates")
         assertEquals(3.0, agg.getDouble("min"), 1e-9)
@@ -96,7 +97,7 @@ class WidgetRefreshWorkerSeriesTest {
         enqueueBuckets("[[1000,10.0,0.0]]")
         prefs[WidgetStorageReader.KEY_WIDGET_DEFINITIONS] = widgetJson("history_chart")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient())
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german)
 
         assertTrue(cache().getString("error").contains("Division durch Null"))
     }

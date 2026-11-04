@@ -14,7 +14,10 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/domain/formula/formula_exception.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/domain/services/formula_calculation_service.dart';
+import 'package:sensor_widgets/l10n/formula_error_text.dart';
+import 'package:sensor_widgets/presentation/providers/l10n_provider.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Holds preview query results for any widget type.
 class WidgetPreviewData {
@@ -108,14 +111,15 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
     state = AsyncValue.data(await _repository.getWidgets());
   }
 
-  /// Duplicates a widget with a new unique ID and "(Kopie)" suffix.
+  /// Duplicates a widget with a new unique ID and a "(copy)" suffix in the
+  /// device language.
   Future<void> duplicateWidget(WidgetDefinition widget) async {
     final randomSuffix = Random().nextInt(999999).toString().padLeft(6, '0');
     final newId =
         'widget_${DateTime.now().millisecondsSinceEpoch}_$randomSuffix';
     final duplicated = widget.copyWith(
       id: newId,
-      title: '${widget.title} (Kopie)',
+      title: ref.read(appLocalizationsProvider).widgetCopySuffix(widget.title),
     );
     await saveWidget(duplicated);
   }
@@ -152,31 +156,28 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
       widget.formulaVariables != null &&
       widget.formulaVariables!.isNotEmpty;
 
-  List<String>? _summarizeBucketErrors(List<FormulaBucketError> errors) {
+  List<String>? _summarizeBucketErrors(
+    List<FormulaBucketError> errors,
+    AppLocalizations l10n,
+  ) {
     if (errors.isEmpty) return null;
-    final first = errors.first.message;
-    final count = errors.length;
-    return [
-      count == 1
-          ? '1 Zeit-Bucket nicht berechenbar: $first'
-          : '$count Zeit-Buckets nicht berechenbar: $first',
-    ];
+    final first = formulaErrorText(l10n, errors.first.exception);
+    return [l10n.previewBucketErrors(errors.length, first)];
   }
 
   Future<WidgetPreviewData> fetchPreviewData(WidgetDefinition widget) async {
+    final l10n = ref.read(appLocalizationsProvider);
     try {
       final connection = await _connectionRepository.getConnection(
         widget.connectionId,
       );
       if (connection == null) {
-        return WidgetPreviewData(errorMessage: 'Verbindung nicht gefunden.');
+        return WidgetPreviewData(errorMessage: l10n.schemaConnectionNotFound);
       }
 
       final token = await _connectionRepository.getToken(widget.connectionId);
       if (token == null || token.isEmpty) {
-        return WidgetPreviewData(
-          errorMessage: 'Kein Authentifizierungs-Token vorhanden.',
-        );
+        return WidgetPreviewData(errorMessage: l10n.previewNoToken);
       }
 
       switch (widget.type) {
@@ -201,12 +202,12 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
                 ),
               );
             } catch (e) {
-              return WidgetPreviewData(errorMessage: e.toString());
+              return WidgetPreviewData(errorMessage: errorText(l10n, e));
             }
           }
           final field = widget.field ?? '';
           if (field.isEmpty) {
-            return WidgetPreviewData(errorMessage: 'Kein Feld angegeben.');
+            return WidgetPreviewData(errorMessage: l10n.previewNoField);
           }
           final q = _queryBuilder.buildSingleValueQuery(
             measurement: widget.measurement,
@@ -231,15 +232,15 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
               );
               return WidgetPreviewData(
                 historyPoints: series.points,
-                bucketErrors: _summarizeBucketErrors(series.errors),
+                bucketErrors: _summarizeBucketErrors(series.errors, l10n),
               );
             } catch (e) {
-              return WidgetPreviewData(errorMessage: e.toString());
+              return WidgetPreviewData(errorMessage: errorText(l10n, e));
             }
           }
           final field = widget.field ?? '';
           if (field.isEmpty) {
-            return WidgetPreviewData(errorMessage: 'Kein Feld angegeben.');
+            return WidgetPreviewData(errorMessage: l10n.previewNoField);
           }
           final q = _queryBuilder.buildHistoryQuery(
             measurement: widget.measurement,
@@ -267,12 +268,12 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
                   );
               return WidgetPreviewData(aggregateValues: aggregates);
             } catch (e) {
-              return WidgetPreviewData(errorMessage: e.toString());
+              return WidgetPreviewData(errorMessage: errorText(l10n, e));
             }
           }
           final field = widget.field ?? '';
           if (field.isEmpty) {
-            return WidgetPreviewData(errorMessage: 'Kein Feld angegeben.');
+            return WidgetPreviewData(errorMessage: l10n.previewNoField);
           }
           final q = _queryBuilder.buildAggregateQuery(
             measurement: widget.measurement,
@@ -301,9 +302,7 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
                   ? [widget.field!]
                   : <String>[]);
           if (fields.isEmpty && formulaItems.isEmpty) {
-            return WidgetPreviewData(
-              errorMessage: 'Keine Sensor-Felder konfiguriert.',
-            );
+            return WidgetPreviewData(errorMessage: l10n.previewNoFields);
           }
           final multi = <String, SensorDataPoint>{};
           if (fields.isNotEmpty) {
@@ -335,7 +334,7 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
                 field: item.field,
               );
             } on FormulaException catch (e) {
-              rowErrors[item.field] = e.message;
+              rowErrors[item.field] = formulaErrorText(l10n, e);
             }
           }
           return WidgetPreviewData(
@@ -344,7 +343,7 @@ class WidgetsController extends AsyncNotifier<List<WidgetDefinition>> {
           );
       }
     } catch (e) {
-      return WidgetPreviewData(errorMessage: 'Abfragefehler: $e');
+      return WidgetPreviewData(errorMessage: l10n.influxErrorQuery('$e'));
     }
   }
 }

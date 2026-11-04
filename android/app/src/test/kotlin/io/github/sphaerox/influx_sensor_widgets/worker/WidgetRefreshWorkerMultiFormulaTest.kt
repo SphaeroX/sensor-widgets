@@ -2,6 +2,7 @@ package io.github.sphaerox.influx_sensor_widgets.worker
 
 import io.github.sphaerox.influx_sensor_widgets.glance.WidgetUiStateMapper
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.FormulaStep
 import io.github.sphaerox.influx_sensor_widgets.model.FormulaVariable
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinitionParser
@@ -85,7 +86,7 @@ class WidgetRefreshWorkerMultiFormulaTest {
         enqueueLatest("\"temp\"", "21.5")
         enqueueLatest("\"voc\"", "50.0")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient())
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german)
 
         val cache = JSONObject(prefs.getValue("${WidgetStorageReader.KEY_CACHE_PREFIX}w-room"))
         val values = cache.getJSONObject("values")
@@ -107,7 +108,7 @@ class WidgetRefreshWorkerMultiFormulaTest {
         enqueueLatest("\"temp\"", "21.5")
         enqueueLatest("\"zero\"", "0.0")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient())
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german)
 
         val cache = JSONObject(prefs.getValue("${WidgetStorageReader.KEY_CACHE_PREFIX}w1"))
         assertEquals(21.5, cache.getJSONObject("values").getJSONObject("temp").getDouble("value"), 1e-9)
@@ -130,6 +131,7 @@ class WidgetRefreshWorkerMultiFormulaTest {
                 widget = widget,
                 cacheJson =
                     """{"values":{"temp":{"value":21.5,"timestamp":1}},"valueErrors":{"ratio":"Division durch Null"},"timestamp":5}""",
+                texts = TestTexts.german,
             )
         assertEquals("Fehler: Division durch Null", state.multiValues!!["ratio"])
         assertTrue(state.multiValues!!.containsKey("temp"))

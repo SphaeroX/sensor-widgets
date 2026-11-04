@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Screen to create or edit an InfluxDB connection.
 class ConnectionFormScreen extends ConsumerStatefulWidget {
@@ -84,12 +85,13 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
           .testConnection(connection: conn, token: token);
 
       if (mounted) {
+        final l10n = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
               success
-                  ? 'Connection successful!'
-                  : 'Connection failed: no response',
+                  ? l10n.connectionTestSuccess
+                  : l10n.connectionTestNoResponse,
             ),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
@@ -99,7 +101,9 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Connection failed: $e'),
+            content: Text(
+              AppLocalizations.of(context).connectionTestFailed('$e'),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -129,7 +133,9 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save connection: $e'),
+            content: Text(
+              AppLocalizations.of(context).connectionSaveFailed('$e'),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -144,14 +150,17 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.connection != null;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Edit Connection' : 'New Connection'),
+        title: Text(
+          isEditing ? l10n.connectionEditTitle : l10n.connectionNewTitle,
+        ),
         actions: [
           TextButton(
             onPressed: _isSaving ? null : _handleSave,
-            child: const Text('Save'),
+            child: Text(l10n.commonSave),
           ),
         ],
       ),
@@ -162,14 +171,14 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
           children: [
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Connection Name',
-                hintText: 'e.g. Home Server',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.connectionNameLabel,
+                hintText: l10n.connectionNameHint,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
-                  return 'Please enter a connection name';
+                  return l10n.connectionNameRequired;
                 }
                 return null;
               },
@@ -177,20 +186,20 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _urlController,
-              decoration: const InputDecoration(
-                labelText: 'Host URL',
+              decoration: InputDecoration(
+                labelText: l10n.connectionUrlLabel,
                 hintText: 'https://influx.example.com:8086',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.url,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
-                  return 'Please enter host URL';
+                  return l10n.connectionUrlRequired;
                 }
                 final uri = Uri.tryParse(v.trim());
                 if (uri == null ||
                     (!uri.isScheme('http') && !uri.isScheme('https'))) {
-                  return 'URL must start with http:// or https://';
+                  return l10n.connectionUrlScheme;
                 }
                 return null;
               },
@@ -198,14 +207,14 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _databaseController,
-              decoration: const InputDecoration(
-                labelText: 'Database / Bucket',
-                hintText: 'e.g. sensors',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.connectionDatabaseLabel,
+                hintText: l10n.connectionDatabaseHint,
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) {
-                  return 'Please enter database name';
+                  return l10n.connectionDatabaseRequired;
                 }
                 return null;
               },
@@ -213,10 +222,10 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
             const SizedBox(height: 16),
             TextFormField(
               controller: _orgController,
-              decoration: const InputDecoration(
-                labelText: 'Organization (optional)',
-                hintText: 'e.g. home-org',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.connectionOrgLabel,
+                hintText: l10n.connectionOrgHint,
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
@@ -224,10 +233,10 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
               controller: _tokenController,
               obscureText: _obscureToken,
               decoration: InputDecoration(
-                labelText: 'API Token',
+                labelText: l10n.connectionTokenLabel,
                 hintText: isEditing
-                    ? '(Keep current token)'
-                    : 'Required for auth',
+                    ? l10n.connectionTokenKeepHint
+                    : l10n.connectionTokenRequiredHint,
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   icon: Icon(
@@ -240,7 +249,7 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
               ),
               validator: (v) {
                 if (!isEditing && (v == null || v.trim().isEmpty)) {
-                  return 'Please enter API token';
+                  return l10n.connectionTokenRequired;
                 }
                 return null;
               },
@@ -255,7 +264,7 @@ class _ConnectionFormScreenState extends ConsumerState<ConnectionFormScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.network_check),
-              label: const Text('Test Connection'),
+              label: Text(l10n.connectionTestButton),
             ),
           ],
         ),

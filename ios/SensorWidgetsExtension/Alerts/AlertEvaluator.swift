@@ -74,9 +74,11 @@ public enum AlertEvaluator {
     }
 }
 
-/// German notification texts, e.g. "Temperatur: 17.2 °C (unter 18.5 °C)".
+/// Notification texts in the device language, e.g. "Temperature: 17.2 °C (below 18.5 °C)".
 public enum AlertMessage {
-    private static let aggregateNames = ["min": "Minimum", "max": "Maximum", "mean": "Mittelwert"]
+    private static let aggregateNames: [String: WidgetTexts.Key] = [
+        "min": .alertTargetMin, "max": .alertTargetMax, "mean": .alertTargetMean
+    ]
 
     public static func title(_ widget: WidgetDefinition) -> String {
         widget.title
@@ -91,12 +93,20 @@ public enum AlertMessage {
         } else if let item = item {
             label = item.label ?? item.field
         } else {
-            label = aggregateNames[target] ?? target
+            label = aggregateNames[target].map { WidgetTexts.current.text($0) } ?? target
         }
         let unit = (item?.unit ?? widget.unit).map { " \($0)" } ?? ""
         let decimals = min(max(item?.decimalPlaces ?? widget.decimalPlaces ?? 1, 0), 6)
-        let direction = hit.rule.operator == .greaterThan ? "über" : "unter"
-        return "\(label): \(format(hit.actualValue, decimals))\(unit) (\(direction) \(format(hit.rule.value, decimals))\(unit))"
+        let direction = WidgetTexts.current.text(hit.rule.operator == .greaterThan ? .alertAbove : .alertBelow)
+        return WidgetTexts.current.text(
+            .alertBody,
+            label,
+            format(hit.actualValue, decimals),
+            unit,
+            direction,
+            format(hit.rule.value, decimals),
+            unit
+        )
     }
 
     private static func format(_ value: Double, _ decimals: Int) -> String {

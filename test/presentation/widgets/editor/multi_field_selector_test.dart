@@ -4,10 +4,13 @@ import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   Widget buildTestable(Widget child) {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: Padding(padding: const EdgeInsets.all(16), child: child),

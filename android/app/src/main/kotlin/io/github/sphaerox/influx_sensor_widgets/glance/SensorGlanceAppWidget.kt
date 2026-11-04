@@ -47,7 +47,9 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import io.github.sphaerox.influx_sensor_widgets.MainActivity
+import io.github.sphaerox.influx_sensor_widgets.R
 import io.github.sphaerox.influx_sensor_widgets.glance.chart.NativeChartBitmapRenderer
+import io.github.sphaerox.influx_sensor_widgets.l10n.WidgetTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetType
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import io.github.sphaerox.influx_sensor_widgets.worker.WidgetRefreshWorker
@@ -122,6 +124,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             boundWidgetId = widgetDef?.id ?: boundWidgetId,
             widget = widgetDef,
             cacheJson = cacheJson,
+            texts = WidgetTexts.of(context),
         )
     }
 
@@ -216,12 +219,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "Widget einrichten",
+                text = LocalContext.current.getString(R.string.widget_setup_title),
                 style = TextStyle(color = LocalPalette.current.text, fontWeight = FontWeight.Bold, fontSize = LocalPalette.current.sp(14f)),
             )
             Spacer(modifier = GlanceModifier.height(4.dp))
             Text(
-                text = "Tippen zum Öffnen der App",
+                text = LocalContext.current.getString(R.string.widget_tap_to_open),
                 style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(11f)),
             )
         }
@@ -233,7 +236,7 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
             WidgetHeader(title = title, timestamp = "Lade...", showRefresh = false)
             Spacer(modifier = GlanceModifier.height(12.dp))
             Text(
-                text = "Daten werden abgerufen...",
+                text = LocalContext.current.getString(R.string.widget_loading),
                 style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(12f)),
             )
         }
@@ -245,7 +248,11 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
         error: String,
     ) {
         Column(modifier = GlanceModifier.fillMaxSize()) {
-            WidgetHeader(title = title, timestamp = "Fehler", showRefresh = true)
+            WidgetHeader(
+                title = title,
+                timestamp = LocalContext.current.getString(R.string.widget_error_header),
+                showRefresh = true,
+            )
             Spacer(modifier = GlanceModifier.height(8.dp))
             Text(
                 text = error,
@@ -354,7 +361,12 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                 )
                 Spacer(modifier = GlanceModifier.defaultWeight())
                 Text(
-                    text = "Min: ${state.chartMinStr ?: "--"}  Max: ${state.chartMaxStr ?: "--"}",
+                    text =
+                        LocalContext.current.getString(
+                            R.string.widget_min_max,
+                            state.chartMinStr ?: "--",
+                            state.chartMaxStr ?: "--",
+                        ),
                     style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }
@@ -412,7 +424,10 @@ class SensorGlanceAppWidget : GlanceAppWidget() {
                         ),
                 )
                 Text(
-                    text = if (active) "Status: Aktiv" else "Status: Inaktiv",
+                    text =
+                        LocalContext.current.getString(
+                            if (active) R.string.widget_status_active else R.string.widget_status_inactive,
+                        ),
                     style = TextStyle(color = LocalPalette.current.muted, fontSize = LocalPalette.current.sp(10f)),
                 )
             }

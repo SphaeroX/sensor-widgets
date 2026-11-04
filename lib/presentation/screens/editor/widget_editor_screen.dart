@@ -15,6 +15,7 @@ import 'package:sensor_widgets/domain/models/widget_appearance.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/domain/widget_code/widget_code_codec.dart';
+import 'package:sensor_widgets/l10n/formula_error_text.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_controller.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
@@ -29,6 +30,7 @@ import 'package:sensor_widgets/presentation/widgets/editor/tag_filter_editor.dar
 import 'package:sensor_widgets/presentation/widgets/editor/widget_code_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/widget_type_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Form screen for creating or editing a widget configuration with live preview and schema discovery.
 class WidgetEditorScreen extends ConsumerStatefulWidget {
@@ -275,6 +277,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     final result = WidgetCodeCodec.decode(
       code,
       base: _buildCurrentDefinition(),
+      l10n: AppLocalizations.of(context),
     );
     final def = result.definition;
     if (def == null) return result.errors;
@@ -330,20 +333,34 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
             AlertTarget(id: item.field, label: item.label ?? item.field),
         ];
       case WidgetType.aggregate:
-        return const [
-          AlertTarget(id: 'mean', label: 'Mittelwert'),
-          AlertTarget(id: 'min', label: 'Minimum'),
-          AlertTarget(id: 'max', label: 'Maximum'),
+        return [
+          AlertTarget(
+            id: 'mean',
+            label: AppLocalizations.of(context).alertTargetMean,
+          ),
+          AlertTarget(
+            id: 'min',
+            label: AppLocalizations.of(context).alertTargetMin,
+          ),
+          AlertTarget(
+            id: 'max',
+            label: AppLocalizations.of(context).alertTargetMax,
+          ),
         ];
       case WidgetType.historyChart:
-        return const [
-          AlertTarget(id: AlertRule.targetValue, label: 'Letzter Wert'),
+        return [
+          AlertTarget(
+            id: AlertRule.targetValue,
+            label: AppLocalizations.of(context).alertTargetLatest,
+          ),
         ];
       default:
         return [
           AlertTarget(
             id: AlertRule.targetValue,
-            label: _isFormulaEnabled ? 'Berechneter Wert' : 'Wert',
+            label: _isFormulaEnabled
+                ? AppLocalizations.of(context).alertTargetCalculated
+                : AppLocalizations.of(context).alertTargetValue,
           ),
         ];
     }
@@ -364,12 +381,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Lücken im Verlauf',
+              AppLocalizations.of(context).gapPolicyTitle,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 4),
             Text(
-              'Was passiert, wenn in einem Zeit-Bucket ein Wert der Formel fehlt?',
+              AppLocalizations.of(context).gapPolicyQuestion,
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 8),
@@ -378,13 +395,13 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               children: [
                 ChoiceChip(
                   key: const Key('gap_policy_skip'),
-                  label: const Text('Bucket überspringen'),
+                  label: Text(AppLocalizations.of(context).gapPolicySkip),
                   selected: _gapPolicy != 'previous',
                   onSelected: (_) => setState(() => _gapPolicy = null),
                 ),
                 ChoiceChip(
                   key: const Key('gap_policy_previous'),
-                  label: const Text('Letzten Wert übernehmen'),
+                  label: Text(AppLocalizations.of(context).gapPolicyPrevious),
                   selected: _gapPolicy == 'previous',
                   onSelected: (_) => setState(() => _gapPolicy = 'previous'),
                 ),
@@ -437,7 +454,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         ..._formulaRows,
         SensorQueryItem(
           field: 'formula_$n',
-          label: 'Berechnung $n',
+          label: AppLocalizations.of(context).formulaRowDefaultLabel(n),
           formula: '',
           formulaVariables: [FormulaVariable(name: 'A', field: defaultField)],
           formulaSteps: const [],
@@ -480,21 +497,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               children: [
                 Expanded(
                   child: Text(
-                    'Berechnete Zeilen (Formel)',
+                    AppLocalizations.of(context).formulaRowsTitle,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                 ),
                 TextButton.icon(
                   key: const Key('add_formula_row_button'),
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Formel-Zeile'),
+                  label: Text(AppLocalizations.of(context).formulaRowsAdd),
                   onPressed: () => _addFormulaRow(schemaState),
                 ),
               ],
             ),
             if (_formulaRows.isEmpty)
               Text(
-                'Optional: Zeilen, deren Wert aus einer eigenen Formel berechnet wird.',
+                AppLocalizations.of(context).formulaRowsHint,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             for (var i = 0; i < _formulaRows.length; i++)
@@ -510,9 +527,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           child: TextFormField(
                             key: Key('formula_row_label_$i'),
                             initialValue: _formulaRows[i].label,
-                            decoration: const InputDecoration(
-                              labelText: 'Bezeichnung der Zeile',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .formulaRowLabel,
+                              border: const OutlineInputBorder(),
                               isDense: true,
                             ),
                             onChanged: (v) => _updateFormulaRow(i, label: v),
@@ -521,7 +539,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         IconButton(
                           key: Key('delete_formula_row_$i'),
                           icon: const Icon(Icons.delete_outline),
-                          tooltip: 'Zeile löschen',
+                          tooltip: AppLocalizations.of(context)
+                              .formulaRowDelete,
                           onPressed: () => setState(
                             () =>
                                 _formulaRows = List.of(_formulaRows)
@@ -573,45 +592,43 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   }
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context);
     if (_isFormulaEnabled) {
       if (_formula.trim().isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bitte gib eine Berechnungsformel ein.'),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.editorEnterFormula)));
         return;
       }
-      final err = FormulaEvaluator.validateSyntax(_formula);
+      final err = FormulaEvaluator.syntaxError(_formula);
       if (err != null) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Ungültige Formel: $err')));
+        final text = formulaErrorText(l10n, err, withPosition: true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.editorInvalidFormula(text))),
+        );
         return;
       }
       if (_formulaVariables.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bitte füge mindestens eine Variable hinzu.'),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.editorAddVariable)));
         return;
       }
       if (_formulaVariables.any((v) => v.field.trim().isEmpty)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Bitte allen Variablen ein Feld zuordnen.'),
-          ),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.editorAssignFields)));
         return;
       }
-      final stepErr = FormulaEvaluator.validateSteps(
+      final stepErr = FormulaEvaluator.stepsError(
         _formulaSteps,
         _formula,
         variableNames: _formulaVariables.map((v) => v.name).toList(),
       );
       if (stepErr != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ungültige Zwischenschritte: $stepErr')),
+          SnackBar(
+            content: Text(
+              l10n.editorInvalidSteps(formulaErrorText(l10n, stepErr)),
+            ),
+          ),
         );
         return;
       }
@@ -621,18 +638,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       for (final row in _formulaRows) {
         final vars = row.formulaVariables ?? const <FormulaVariable>[];
         final rowErr = (row.formula ?? '').trim().isEmpty
-            ? 'Formel darf nicht leer sein'
+            ? l10n.formulaErrorEmpty
             : vars.isEmpty
-            ? 'Keine Variable definiert'
-            : FormulaEvaluator.validateSteps(
+            ? l10n.editorNoVariable
+            : _stepsErrorText(
+                l10n,
                 row.formulaSteps ?? const [],
                 row.formula!,
-                variableNames: vars.map((v) => v.name).toList(),
+                vars.map((v) => v.name).toList(),
               );
         if (rowErr != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Formelzeile "${row.label ?? row.field}": $rowErr'),
+              content: Text(
+                l10n.editorFormulaRowError(row.label ?? row.field, rowErr),
+              ),
             ),
           );
           return;
@@ -648,8 +668,23 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     }
   }
 
+  String? _stepsErrorText(
+    AppLocalizations l10n,
+    List<FormulaStep> steps,
+    String formula,
+    List<String> variableNames,
+  ) {
+    final error = FormulaEvaluator.stepsError(
+      steps,
+      formula,
+      variableNames: variableNames,
+    );
+    return error == null ? null : formulaErrorText(l10n, error);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final connectionsAsync = ref.watch(connectionsControllerProvider);
     final schemaState = ref.watch(editorSchemaControllerProvider);
     final schemaNotifier = ref.read(editorSchemaControllerProvider.notifier);
@@ -671,21 +706,21 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       appBar: AppBar(
         title: Text(
           widget.widgetToEdit == null
-              ? 'Widget konfigurieren'
-              : 'Widget bearbeiten',
+              ? l10n.editorTitleNew
+              : l10n.editorTitleEdit,
         ),
         actions: [
           IconButton(
             key: const Key('save_widget_button'),
             icon: const Icon(Icons.check),
-            tooltip: 'Speichern',
+            tooltip: l10n.commonSave,
             onPressed: _save,
           ),
         ],
       ),
       body: connectionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Fehler: $err')),
+        error: (err, _) => Center(child: Text(l10n.commonErrorDetails('$err'))),
         data: (connections) {
           if (connections.isEmpty) {
             return Center(
@@ -696,14 +731,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   children: [
                     const Icon(Icons.cloud_off, size: 48, color: Colors.grey),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Keine InfluxDB-Verbindung vorhanden.\nBitte zuerst eine Verbindung erstellen.',
-                      textAlign: TextAlign.center,
-                    ),
+                    Text(l10n.editorNoConnection, textAlign: TextAlign.center),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Zurück'),
+                      child: Text(l10n.commonBack),
                     ),
                   ],
                 ),
@@ -744,7 +776,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
                           : const Icon(Icons.refresh),
-                      label: const Text('Vorschau laden'),
+                      label: Text(l10n.editorLoadPreview),
                       onPressed: _isLoadingPreview ? null : _fetchPreview,
                     ),
                   ),
@@ -758,19 +790,20 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Basis-Einstellungen',
+                            l10n.editorBasicSettings,
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 12),
                           TextFormField(
                             key: const Key('widget_title_field'),
                             controller: _titleController,
-                            decoration: const InputDecoration(
-                              labelText: 'Widget Titel',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .editorWidgetTitle,
+                              border: const OutlineInputBorder(),
                             ),
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Bitte Titel eingeben'
+                                ? l10n.editorTitleRequired
                                 : null,
                             onChanged: (_) => setState(() {}),
                           ),
@@ -778,14 +811,17 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           DropdownButtonFormField<String>(
                             key: const Key('widget_connection_dropdown'),
                             initialValue: _selectedConnectionId,
-                            decoration: const InputDecoration(
-                              labelText: 'InfluxDB Verbindung',
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              labelText: AppLocalizations.of(context)
+                                  .editorConnection,
+                              border: const OutlineInputBorder(),
                             ),
                             items: connections.map((c) {
                               return DropdownMenuItem(
                                 value: c.id,
-                                child: Text('${c.name} (${c.database})'),
+                                child: Text(
+                                  l10n.editorConnectionItem(c.name, c.database),
+                                ),
                               );
                             }).toList(),
                             onChanged: (val) {
@@ -800,7 +836,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           const SizedBox(height: 12),
                           const SizedBox(height: 16),
                           Text(
-                            'Widget-Typ',
+                            l10n.editorWidgetType,
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 8),
@@ -824,7 +860,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Datenquelle (InfluxQL)',
+                            l10n.editorDataSource,
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           const SizedBox(height: 12),
@@ -833,7 +869,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           SearchableSchemaPicker(
                             fieldKey: const Key('widget_measurement_field'),
                             label: 'Measurement',
-                            hintText: 'z. B. climate, home_sensors',
+                            hintText: l10n.editorMeasurementHint,
                             selectedValue: _measurementController.text,
                             options: schemaState.measurements.items
                                 .map(SchemaPickerOption.fromString)
@@ -847,7 +883,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                             },
                             onReload: () => schemaNotifier.reloadMeasurements(),
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Bitte Measurement eingeben'
+                                ? l10n.editorMeasurementRequired
                                 : null,
                           ),
                           const SizedBox(height: 12),
@@ -870,7 +906,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                               validator: (items) =>
                                   ((items == null || items.isEmpty) &&
                                       _formulaRows.isEmpty)
-                                  ? 'Mindestens 1 Feld auswählen'
+                                  ? l10n.editorFieldsRequired
                                   : null,
                             ),
                             const SizedBox(height: 12),
@@ -878,8 +914,8 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                           ] else ...[
                             SearchableSchemaPicker(
                               fieldKey: const Key('widget_field_field'),
-                              label: 'Feld',
-                              hintText: 'z. B. temperature, power',
+                              label: l10n.editorField,
+                              hintText: l10n.editorFieldHint,
                               selectedValue: _fieldController.text,
                               options: schemaState.fields.items
                                   .map(SchemaPickerOption.fromFieldInfo)
@@ -900,7 +936,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                               validator: (v) =>
                                   (!_isFormulaEnabled &&
                                       (v == null || v.trim().isEmpty))
-                                  ? 'Bitte Feld angeben'
+                                  ? l10n.editorFieldRequired
                                   : null,
                             ),
                           ],
@@ -955,10 +991,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                                 child: TextFormField(
                                   key: const Key('widget_unit_field'),
                                   controller: _unitController,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Einheit (optional)',
+                                  decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .editorUnit,
                                     hintText: '°C, %, W',
-                                    border: OutlineInputBorder(),
+                                    border: const OutlineInputBorder(),
                                   ),
                                 ),
                               ),
@@ -968,10 +1005,12 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                                   key: const Key('widget_decimals_field'),
                                   controller: _decimalPlacesController,
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Nachkommastellen',
-                                    hintText: 'Max. 2 (z. B. 1 oder 2)',
-                                    border: OutlineInputBorder(),
+                                  decoration: InputDecoration(
+                                    labelText: AppLocalizations.of(context)
+                                        .editorDecimals,
+                                    hintText: AppLocalizations.of(context)
+                                        .editorDecimalsHint,
+                                    border: const OutlineInputBorder(),
                                   ),
                                 ),
                               ),
@@ -1029,7 +1068,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     icon: const Icon(Icons.save),
-                    label: const Text('Widget Speichern'),
+                    label: Text(l10n.editorSaveWidget),
                     onPressed: _save,
                   ),
                 ],
@@ -1039,6 +1078,28 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
         },
       ),
     );
+  }
+
+  List<DropdownMenuItem<String>> _timeRangeItems() {
+    final l10n = AppLocalizations.of(context);
+    return [
+      DropdownMenuItem(value: '1h', child: Text(l10n.durationHours(1))),
+      DropdownMenuItem(value: '6h', child: Text(l10n.durationHours(6))),
+      DropdownMenuItem(value: '24h', child: Text(l10n.durationHours(24))),
+      DropdownMenuItem(value: '7d', child: Text(l10n.durationDays(7))),
+      DropdownMenuItem(value: '30d', child: Text(l10n.durationDays(30))),
+    ];
+  }
+
+  List<DropdownMenuItem<String>> _intervalItems() {
+    final l10n = AppLocalizations.of(context);
+    return [
+      DropdownMenuItem(value: '1m', child: Text(l10n.durationMinutes(1))),
+      DropdownMenuItem(value: '5m', child: Text(l10n.durationMinutes(5))),
+      DropdownMenuItem(value: '15m', child: Text(l10n.durationMinutes(15))),
+      DropdownMenuItem(value: '1h', child: Text(l10n.durationHours(1))),
+      DropdownMenuItem(value: '1d', child: Text(l10n.durationDays(1))),
+    ];
   }
 
   Widget _buildTypeSpecificSettings(BuildContext context) {
@@ -1051,24 +1112,18 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Verlauf-Einstellungen',
+                  AppLocalizations.of(context).editorHistorySettings,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   key: const Key('history_timerange_field'),
                   initialValue: _historyTimeRangeController.text,
-                  decoration: const InputDecoration(
-                    labelText: 'Zeitraum',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).editorTimeRange,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: '1h', child: Text('1 Stunde')),
-                    DropdownMenuItem(value: '6h', child: Text('6 Stunden')),
-                    DropdownMenuItem(value: '24h', child: Text('24 Stunden')),
-                    DropdownMenuItem(value: '7d', child: Text('7 Tage')),
-                    DropdownMenuItem(value: '30d', child: Text('30 Tage')),
-                  ],
+                  items: _timeRangeItems(),
                   onChanged: (val) {
                     if (val != null) {
                       _historyTimeRangeController.text = val;
@@ -1080,17 +1135,11 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                 DropdownButtonFormField<String>(
                   key: const Key('history_interval_field'),
                   initialValue: _historyIntervalController.text,
-                  decoration: const InputDecoration(
-                    labelText: 'Aggregations-Intervall',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).editorInterval,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: '1m', child: Text('1 Minute')),
-                    DropdownMenuItem(value: '5m', child: Text('5 Minuten')),
-                    DropdownMenuItem(value: '15m', child: Text('15 Minuten')),
-                    DropdownMenuItem(value: '1h', child: Text('1 Stunde')),
-                    DropdownMenuItem(value: '1d', child: Text('1 Tag')),
-                  ],
+                  items: _intervalItems(),
                   onChanged: (val) {
                     if (val != null) {
                       _historyIntervalController.text = val;
@@ -1111,7 +1160,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Schwellenwert-Bedingung',
+                  AppLocalizations.of(context).editorThresholdCondition,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 12),
@@ -1121,9 +1170,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                       width: 90,
                       child: DropdownButtonFormField<String>(
                         initialValue: _indicatorOperator,
-                        decoration: const InputDecoration(
-                          labelText: 'Op',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)
+                              .editorOperator,
+                          border: const OutlineInputBorder(),
                         ),
                         items: const [
                           DropdownMenuItem(value: '>', child: Text('>')),
@@ -1143,9 +1193,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         key: const Key('indicator_threshold_field'),
                         controller: _indicatorThresholdController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Schwellenwert',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)
+                              .alertsThreshold,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -1164,7 +1215,7 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Skala & Grenzen',
+                  AppLocalizations.of(context).editorScale,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 12),
@@ -1175,9 +1226,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         key: const Key('gauge_min_field'),
                         controller: _gaugeMinController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Minimum',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)
+                              .alertTargetMin,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -1187,9 +1239,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                         key: const Key('gauge_max_field'),
                         controller: _gaugeMaxController,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: 'Maximum',
-                          border: OutlineInputBorder(),
+                        decoration: InputDecoration(
+                          labelText: AppLocalizations.of(context)
+                              .alertTargetMax,
+                          border: const OutlineInputBorder(),
                         ),
                       ),
                     ),
@@ -1208,23 +1261,17 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Aggregat-Zeitraum',
+                  AppLocalizations.of(context).editorAggregateRange,
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: _historyTimeRangeController.text,
-                  decoration: const InputDecoration(
-                    labelText: 'Zeitraum',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: AppLocalizations.of(context).editorTimeRange,
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: '1h', child: Text('1 Stunde')),
-                    DropdownMenuItem(value: '6h', child: Text('6 Stunden')),
-                    DropdownMenuItem(value: '24h', child: Text('24 Stunden')),
-                    DropdownMenuItem(value: '7d', child: Text('7 Tage')),
-                    DropdownMenuItem(value: '30d', child: Text('30 Tage')),
-                  ],
+                  items: _timeRangeItems(),
                   onChanged: (val) {
                     if (val != null) {
                       _historyTimeRangeController.text = val;

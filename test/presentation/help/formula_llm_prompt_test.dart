@@ -8,6 +8,10 @@ import 'package:sensor_widgets/domain/widget_code/widget_code_codec.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
 import 'package:sensor_widgets/presentation/help/formula_llm_prompt.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
+
+/// The tests assert the German texts.
+final _de = lookupAppLocalizations(const Locale('de'));
 
 void main() {
   group('buildFormulaLlmPrompt', () {
@@ -18,8 +22,8 @@ void main() {
     ];
 
     test('lists every function, constant and operator of the language', () {
-      final prompt = buildFormulaLlmPrompt();
-      for (final entry in formulaHelpEntries) {
+      final prompt = buildFormulaLlmPrompt(l10n: _de);
+      for (final entry in formulaHelpEntries(_de)) {
         expect(prompt, contains(entry.signature));
       }
       expect(prompt, contains('+ - * /'));
@@ -28,6 +32,7 @@ void main() {
 
     test('lists measurement and fields with their types', () {
       final prompt = buildFormulaLlmPrompt(
+        l10n: _de,
         measurement: 'sen66',
         availableMeasurements: const ['sen66', 'outdoor'],
         availableFields: fields,
@@ -40,21 +45,24 @@ void main() {
     });
 
     test('works without schema information', () {
-      final prompt = buildFormulaLlmPrompt();
+      final prompt = buildFormulaLlmPrompt(l10n: _de);
       expect(prompt, contains('keine Schema-Informationen'));
     });
 
     test('demands a plain OK first and then formula plus variable mapping', () {
-      final prompt = buildFormulaLlmPrompt();
+      final prompt = buildFormulaLlmPrompt(l10n: _de);
       expect(prompt, contains('Antworte jetzt nur mit "OK"'));
       expect(prompt, contains('Variablen-Zuweisung'));
       expect(prompt, contains('nur die Formel'));
     });
 
     test('mentions intermediate steps only when they are supported', () {
-      expect(buildFormulaLlmPrompt(supportsSteps: true), contains('Schritt'));
       expect(
-        buildFormulaLlmPrompt(supportsSteps: false),
+        buildFormulaLlmPrompt(l10n: _de, supportsSteps: true),
+        contains('Schritt'),
+      );
+      expect(
+        buildFormulaLlmPrompt(l10n: _de, supportsSteps: false),
         isNot(contains('Zwischenschritt')),
       );
     });
@@ -67,8 +75,8 @@ void main() {
     ];
 
     test('describes language, widget types and JSON keys', () {
-      final prompt = buildWidgetCodePrompt();
-      for (final entry in formulaHelpEntries) {
+      final prompt = buildWidgetCodePrompt(l10n: _de);
+      for (final entry in formulaHelpEntries(_de)) {
         expect(prompt, contains(entry.signature));
       }
       for (final type in WidgetType.values) {
@@ -93,6 +101,7 @@ void main() {
 
     test('lists measurement and fields of the environment', () {
       final prompt = buildWidgetCodePrompt(
+        l10n: _de,
         measurement: 'sen66',
         availableMeasurements: const ['sen66'],
         availableFields: fields,
@@ -103,22 +112,26 @@ void main() {
     });
 
     test('includes the current widget code when given', () {
-      final prompt = buildWidgetCodePrompt(currentCode: '{"type":"gauge_bar"}');
+      final prompt = buildWidgetCodePrompt(
+        l10n: _de,
+        currentCode: '{"type":"gauge_bar"}',
+      );
       expect(prompt, contains('{"type":"gauge_bar"}'));
     });
 
     test('demands OK first and then only one JSON code block', () {
-      final prompt = buildWidgetCodePrompt();
+      final prompt = buildWidgetCodePrompt(l10n: _de);
       expect(prompt, contains('Antworte jetzt nur mit "OK"'));
       expect(prompt, contains('genau einem JSON-Codeblock'));
       expect(prompt, isNot(contains('Variablen-Zuweisung:')));
     });
 
     test('contains an example that the app itself accepts', () {
-      final prompt = buildWidgetCodePrompt();
+      final prompt = buildWidgetCodePrompt(l10n: _de);
       final match = RegExp(r'```json\n([\s\S]*?)\n```').firstMatch(prompt);
       expect(match, isNotNull);
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         match!.group(1)!,
         base: const WidgetDefinition(
           id: 'x',
@@ -153,6 +166,8 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SingleChildScrollView(
               child: FormulaEditorSection(
@@ -187,6 +202,8 @@ void main() {
       String? shared;
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SingleChildScrollView(
               child: FormulaEditorSection(

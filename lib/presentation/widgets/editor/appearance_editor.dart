@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/chart/chart_color.dart';
 import 'package:sensor_widgets/domain/models/widget_appearance.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Editor card "Aussehen": colors (palette + hex), opacity, font scale and
 /// corner radius of a widget. No color picker dependency: swatches + hex field.
@@ -79,6 +80,7 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Card(
       key: const Key('appearance_editor'),
       child: Padding(
@@ -89,7 +91,10 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
             Row(
               children: [
                 Expanded(
-                  child: Text('Aussehen', style: theme.textTheme.titleSmall),
+                  child: Text(
+                    l10n.appearanceTitle,
+                    style: theme.textTheme.titleSmall,
+                  ),
                 ),
                 if (widget.appearance != null)
                   TextButton(
@@ -100,20 +105,20 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
                       _accent.clear();
                       widget.onChanged(null);
                     },
-                    child: const Text('Zurücksetzen'),
+                    child: Text(l10n.commonReset),
                   ),
               ],
             ),
             const SizedBox(height: 8),
             _colorField(
-              label: 'Hintergrundfarbe',
+              label: l10n.appearanceBackgroundColor,
               field: 'background',
               keyName: 'appearance_background_color',
               controller: _background,
             ),
             _slider(
               keyName: 'appearance_opacity_slider',
-              label: 'Hintergrund-Transparenz',
+              label: l10n.appearanceBackgroundOpacity,
               value:
                   _value.backgroundOpacity ??
                   WidgetAppearance.defaultBackgroundOpacity,
@@ -123,20 +128,20 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
               onChanged: (v) => _emit(_value.copyWith(backgroundOpacity: v)),
             ),
             _colorField(
-              label: 'Textfarbe',
+              label: l10n.appearanceTextColor,
               field: 'text',
               keyName: 'appearance_text_color',
               controller: _text,
             ),
             _colorField(
-              label: 'Akzentfarbe',
+              label: l10n.appearanceAccentColor,
               field: 'accent',
               keyName: 'appearance_accent_color',
               controller: _accent,
             ),
             _slider(
               keyName: 'appearance_font_scale_slider',
-              label: 'Schriftgröße',
+              label: l10n.appearanceFontScale,
               value: _value.fontScale ?? WidgetAppearance.defaultFontScale,
               min: WidgetAppearance.minFontScale,
               max: WidgetAppearance.maxFontScale,
@@ -145,7 +150,7 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
             ),
             _slider(
               keyName: 'appearance_corner_radius_slider',
-              label: 'Eckenrundung',
+              label: l10n.appearanceCornerRadius,
               value:
                   _value.cornerRadius ?? WidgetAppearance.defaultCornerRadius,
               min: 0,
@@ -154,7 +159,7 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
               onChanged: (v) => _emit(_value.copyWith(cornerRadius: v)),
             ),
             Text(
-              'Hinweis: Auf iOS bestimmt das System die Eckenrundung der Widgets.',
+              l10n.appearanceIosCornerHint,
               style: theme.textTheme.bodySmall,
             ),
           ],
@@ -172,6 +177,7 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
     final text = controller.text.trim();
     final invalid = text.isNotEmpty && parseHexColor(text) == null;
     final paletteName = field == 'accent' ? 'accent' : field;
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Column(
@@ -182,9 +188,9 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
             controller: controller,
             decoration: InputDecoration(
               labelText: label,
-              hintText: '#RRGGBB (leer = Standard)',
+              hintText: l10n.appearanceColorHint,
               isDense: true,
-              errorText: invalid ? 'Ungültige Farbe (#RRGGBB)' : null,
+              errorText: invalid ? l10n.colorInvalid : null,
             ),
             onChanged: (v) => _setColor(field, controller, v),
           ),

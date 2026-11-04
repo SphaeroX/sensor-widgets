@@ -1,9 +1,12 @@
 package io.github.sphaerox.influx_sensor_widgets.formula
 
+import io.github.sphaerox.influx_sensor_widgets.R
 import io.github.sphaerox.influx_sensor_widgets.influx.DurationUtils
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxQlBuilder
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxResponseParser
+import io.github.sphaerox.influx_sensor_widgets.l10n.WidgetTexts
+import io.github.sphaerox.influx_sensor_widgets.l10n.formulaError
 import io.github.sphaerox.influx_sensor_widgets.model.FormulaVariable
 import io.github.sphaerox.influx_sensor_widgets.model.InfluxConnection
 import io.github.sphaerox.influx_sensor_widgets.model.SensorDataPoint
@@ -68,7 +71,7 @@ object FormulaSeriesCalculator {
         widget: WidgetDefinition,
         byVariable: Map<String, Map<Long, Double>>,
     ): SeriesResult {
-        val formula = widget.formula ?: throw FormulaSyntaxException("Widget besitzt keine Formel")
+        val formula = widget.formula ?: throw FormulaSyntaxException(FormulaErrorKind.NO_FORMULA)
         for ((name, series) in byVariable) {
             if (series.isEmpty()) throw MissingVariableException(name)
         }
@@ -143,14 +146,17 @@ object FormulaSeriesCalculator {
         )
     }
 
-    /** Short German summary of failed buckets, or null if all buckets succeeded. */
-    fun summarizeErrors(errors: List<BucketError>): String? {
+    /** Short summary of failed buckets in the language of [texts], or null if all buckets succeeded. */
+    fun summarizeErrors(
+        errors: List<BucketError>,
+        texts: WidgetTexts,
+    ): String? {
         if (errors.isEmpty()) return null
-        val first = errors.first().exception.message
+        val first = texts.formulaError(errors.first().exception)
         return if (errors.size == 1) {
-            "1 Zeit-Bucket nicht berechenbar: $first"
+            texts.get(R.string.formula_bucket_error_one, first)
         } else {
-            "${errors.size} Zeit-Buckets nicht berechenbar: $first"
+            texts.get(R.string.formula_bucket_errors, errors.size, first)
         }
     }
 

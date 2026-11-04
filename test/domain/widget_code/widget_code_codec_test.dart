@@ -6,6 +6,11 @@ import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/domain/widget_code/widget_code_codec.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
+import 'package:flutter/widgets.dart';
+
+/// The tests assert the German texts.
+final _de = lookupAppLocalizations(const Locale('de'));
 
 void main() {
   const base = WidgetDefinition(
@@ -56,6 +61,7 @@ void main() {
   group('decode', () {
     test('round trips and keeps id and connection of the base', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         WidgetCodeCodec.encode(iaq),
         base: base,
       );
@@ -70,6 +76,7 @@ void main() {
 
     test('ignores id and connectionId written in the code', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"id":"evil","connectionId":"other","type":"single_value",'
         '"formula":"A*2","formulaVariables":[{"name":"A","field":"x"}]}',
         base: base,
@@ -80,6 +87,7 @@ void main() {
 
     test('falls back to measurement and title of the base', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","formula":"A","formulaVariables":'
         '[{"name":"A","field":"x"}]}',
         base: base,
@@ -90,6 +98,7 @@ void main() {
 
     test('accepts a markdown code fence around the JSON', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '```json\n{"type":"single_value","formula":"A","formulaVariables":'
         '[{"name":"A","field":"x"}]}\n```',
         base: base,
@@ -98,18 +107,23 @@ void main() {
     });
 
     test('reports invalid JSON', () {
-      final result = WidgetCodeCodec.decode('{nope', base: base);
+      final result = WidgetCodeCodec.decode('{nope', base: base, l10n: _de);
       expect(result.definition, isNull);
       expect(result.errors.single, contains('JSON'));
     });
 
     test('reports unknown widget type', () {
-      final result = WidgetCodeCodec.decode('{"type":"pie"}', base: base);
+      final result = WidgetCodeCodec.decode(
+        '{"type":"pie"}',
+        base: base,
+        l10n: _de,
+      );
       expect(result.errors.single, contains('pie'));
     });
 
     test('reports formula syntax errors', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","formula":"A +","formulaVariables":'
         '[{"name":"A","field":"x"}]}',
         base: base,
@@ -120,6 +134,7 @@ void main() {
 
     test('reports undefined variables', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","formula":"A + B","formulaVariables":'
         '[{"name":"A","field":"x"}]}',
         base: base,
@@ -129,6 +144,7 @@ void main() {
 
     test('reports variables without a field', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","formula":"A","formulaVariables":'
         '[{"name":"A","field":""}]}',
         base: base,
@@ -138,6 +154,7 @@ void main() {
 
     test('reports wrongly typed values instead of throwing', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","refreshIntervalMinutes":"viel"}',
         base: base,
       );
@@ -147,6 +164,7 @@ void main() {
 
     test('validates formulas of multi value rows', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"multi_value","items":[{"field":"f1","label":"X",'
         '"formula":"A/","formulaVariables":[{"name":"A","field":"x"}]}]}',
         base: base,
@@ -164,6 +182,7 @@ void main() {
         measurement: 'm',
       );
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value","field":"temp"}',
         base: fresh,
       );
@@ -173,6 +192,7 @@ void main() {
 
     test('rejects a widget without formula and without field', () {
       final result = WidgetCodeCodec.decode(
+        l10n: _de,
         '{"type":"single_value"}',
         base: base,
       );

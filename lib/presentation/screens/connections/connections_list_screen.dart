@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/presentation/controllers/connections_controller.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connection_form_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Screen listing all configured InfluxDB connections with actions to add, edit, test, and delete.
 class ConnectionsListScreen extends ConsumerWidget {
@@ -10,26 +11,27 @@ class ConnectionsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final connectionsAsync = ref.watch(connectionsControllerProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('InfluxDB Connections')),
+      appBar: AppBar(title: Text(l10n.connectionsTitle)),
       body: connectionsAsync.when(
         data: (connections) {
           if (connections.isEmpty) {
-            return const Center(
+            return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.cloud_off, size: 64, color: Colors.grey),
-                  SizedBox(height: 16),
+                  const Icon(Icons.cloud_off, size: 64, color: Colors.grey),
+                  const SizedBox(height: 16),
                   Text(
-                    'No connections configured',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
+                    l10n.connectionsEmptyTitle,
+                    style: const TextStyle(fontSize: 18, color: Colors.grey),
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
-                    'Tap + to add an InfluxDB server',
-                    style: TextStyle(color: Colors.grey),
+                    l10n.connectionsEmptyHint,
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ],
               ),
@@ -50,7 +52,9 @@ class ConnectionsListScreen extends ConsumerWidget {
                     conn.name,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text('${conn.url} • DB: ${conn.database}'),
+                  subtitle: Text(
+                    l10n.connectionsSubtitle(conn.url, conn.database),
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -75,21 +79,21 @@ class ConnectionsListScreen extends ConsumerWidget {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: const Text('Delete Connection'),
+                              title: Text(l10n.connectionsDeleteTitle),
                               content: Text(
-                                'Are you sure you want to delete "${conn.name}"?',
+                                l10n.connectionsDeleteConfirm(conn.name),
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('Cancel'),
+                                  child: Text(l10n.commonCancel),
                                 ),
                                 FilledButton(
                                   style: FilledButton.styleFrom(
                                     backgroundColor: Colors.red,
                                   ),
                                   onPressed: () => Navigator.of(ctx).pop(true),
-                                  child: const Text('Delete'),
+                                  child: Text(l10n.commonDelete),
                                 ),
                               ],
                             ),
@@ -118,7 +122,7 @@ class ConnectionsListScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) =>
-            Center(child: Text('Error loading connections: $err')),
+            Center(child: Text(l10n.connectionsLoadError('$err'))),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

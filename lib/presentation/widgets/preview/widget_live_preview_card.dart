@@ -7,6 +7,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Live preview card rendering mock native representation for all 6 widget types.
 class WidgetLivePreviewCard extends StatelessWidget {
@@ -111,7 +112,7 @@ class WidgetLivePreviewCard extends StatelessWidget {
                   child: Text(
                     widgetDef.title.isNotEmpty
                         ? widgetDef.title
-                        : 'Widget Vorschau',
+                        : AppLocalizations.of(context).previewDefaultTitle,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -167,13 +168,13 @@ class WidgetLivePreviewCard extends StatelessWidget {
                 ),
               ),
             ] else if (previewData == null) ...[
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
+                  padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    'Noch keine Vorschau geladen.\nDrücke auf „Vorschau laden“.',
+                    AppLocalizations.of(context).previewNotLoaded,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey),
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 ),
               ),
@@ -252,9 +253,9 @@ class WidgetLivePreviewCard extends StatelessWidget {
       case WidgetType.historyChart:
         final points = previewData?.historyPoints ?? [];
         if (points.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Text('Keine Datenpunkte im gewählten Zeitraum gefunden.'),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(AppLocalizations.of(context).previewNoPoints),
           );
         }
         final minVal = points
@@ -282,7 +283,8 @@ class WidgetLivePreviewCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Aktuell: $latestStr $unit  (Min: $minStr, Max: $maxStr)',
+              AppLocalizations.of(context)
+                  .previewHistorySummary(latestStr, unit, minStr, maxStr),
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -377,8 +379,15 @@ class WidgetLivePreviewCard extends StatelessWidget {
                   ),
                   Text(
                     rule != null
-                        ? 'Bedingung: $opStr ${rule.value} (${active ? "Aktiv" : "Inaktiv"})'
-                        : 'Keine Schwelle konfiguriert',
+                        ? AppLocalizations.of(context).previewLampCondition(
+                            opStr,
+                            '${rule.value}',
+                            active
+                                ? AppLocalizations.of(context).previewLampActive
+                                : AppLocalizations.of(context)
+                                      .previewLampInactive,
+                          )
+                        : AppLocalizations.of(context).previewNoThreshold,
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -451,9 +460,9 @@ class WidgetLivePreviewCard extends StatelessWidget {
         final multi = previewData?.multiValues ?? {};
         final rowErrors = previewData?.multiErrors ?? const <String, String>{};
         if (multi.isEmpty && rowErrors.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
-            child: Text('Keine Multi-Value Datenpunkte geladen.'),
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(AppLocalizations.of(context).previewNoMultiPoints),
           );
         }
         return Padding(

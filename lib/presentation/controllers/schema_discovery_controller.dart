@@ -6,7 +6,9 @@ import 'package:sensor_widgets/domain/errors/influx_exception.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/presentation/providers/l10n_provider.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 export 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
 
@@ -132,12 +134,16 @@ final schemaDiscoveryControllerProvider = Provider<SchemaDiscoveryController>((
 class EditorSchemaController extends StateNotifier<EditorSchemaState> {
   final ConnectionRepository connectionRepository;
   final InfluxApiClient apiClient;
+
+  /// Language of the error messages.
+  final AppLocalizations l10n;
   int _connectionRequestId = 0;
   int _measurementRequestId = 0;
 
   EditorSchemaController({
     required this.connectionRepository,
     required this.apiClient,
+    required this.l10n,
   }) : super(EditorSchemaState.initial());
 
   Future<void> selectConnection(String? connectionId) async {
@@ -162,9 +168,7 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       if (connection == null) {
         if (reqId == _connectionRequestId) {
           state = state.copyWith(
-            measurements: const SchemaListState.error(
-              'Verbindung nicht gefunden.',
-            ),
+            measurements: SchemaListState.error(l10n.schemaConnectionNotFound),
           );
         }
         return;
@@ -173,9 +177,7 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       if (token == null) {
         if (reqId == _connectionRequestId) {
           state = state.copyWith(
-            measurements: const SchemaListState.error(
-              'API-Token für diese Verbindung nicht gefunden.',
-            ),
+            measurements: SchemaListState.error(l10n.schemaTokenNotFound),
           );
         }
         return;
@@ -188,12 +190,20 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       }
     } on InfluxException catch (e) {
       if (reqId == _connectionRequestId) {
-        final formatted = InfluxErrorFormatter.format(e, token: token);
+        final formatted = InfluxErrorFormatter.format(
+          e,
+          token: token,
+          l10n: l10n,
+        );
         state = state.copyWith(measurements: SchemaListState.error(formatted));
       }
     } catch (e) {
       if (reqId == _connectionRequestId) {
-        final formatted = InfluxErrorFormatter.format(e, token: token);
+        final formatted = InfluxErrorFormatter.format(
+          e,
+          token: token,
+          l10n: l10n,
+        );
         state = state.copyWith(measurements: SchemaListState.error(formatted));
       }
     }
@@ -237,8 +247,8 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
     final connectionId = state.selectedConnectionId;
     if (connectionId == null) {
       state = state.copyWith(
-        fields: const SchemaListState.error('Keine Verbindung ausgewählt.'),
-        tagKeys: const SchemaListState.error('Keine Verbindung ausgewählt.'),
+        fields: SchemaListState.error(l10n.schemaNoConnectionSelected),
+        tagKeys: SchemaListState.error(l10n.schemaNoConnectionSelected),
       );
       return;
     }
@@ -250,11 +260,9 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       if (connection == null || token == null) {
         if (reqId == _measurementRequestId) {
           state = state.copyWith(
-            fields: const SchemaListState.error(
-              'Verbindung oder Token nicht gefunden.',
-            ),
-            tagKeys: const SchemaListState.error(
-              'Verbindung oder Token nicht gefunden.',
+            fields: SchemaListState.error(l10n.schemaConnectionOrTokenNotFound),
+            tagKeys: SchemaListState.error(
+              l10n.schemaConnectionOrTokenNotFound,
             ),
           );
         }
@@ -273,7 +281,11 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       }
     } on InfluxException catch (e) {
       if (reqId == _measurementRequestId) {
-        final formatted = InfluxErrorFormatter.format(e, token: token);
+        final formatted = InfluxErrorFormatter.format(
+          e,
+          token: token,
+          l10n: l10n,
+        );
         state = state.copyWith(
           fields: SchemaListState.error(formatted),
           tagKeys: SchemaListState.error(formatted),
@@ -281,7 +293,11 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       }
     } catch (e) {
       if (reqId == _measurementRequestId) {
-        final formatted = InfluxErrorFormatter.format(e, token: token);
+        final formatted = InfluxErrorFormatter.format(
+          e,
+          token: token,
+          l10n: l10n,
+        );
         state = state.copyWith(
           fields: SchemaListState.error(formatted),
           tagKeys: SchemaListState.error(formatted),
@@ -359,9 +375,7 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
         final errMap = Map<String, SchemaListState<String>>.from(
           state.tagValuesByKey,
         );
-        errMap[tagKey] = const SchemaListState.error(
-          'Verbindung nicht gefunden.',
-        );
+        errMap[tagKey] = SchemaListState.error(l10n.schemaConnectionNotFound);
         state = state.copyWith(tagValuesByKey: errMap);
         return;
       }
@@ -379,7 +393,11 @@ class EditorSchemaController extends StateNotifier<EditorSchemaState> {
       loadedMap[tagKey] = SchemaListState.loaded(values);
       state = state.copyWith(tagValuesByKey: loadedMap);
     } catch (e) {
-      final formatted = InfluxErrorFormatter.format(e, token: token);
+      final formatted = InfluxErrorFormatter.format(
+        e,
+        token: token,
+        l10n: l10n,
+      );
       final errMap = Map<String, SchemaListState<String>>.from(
         state.tagValuesByKey,
       );
@@ -409,5 +427,6 @@ final editorSchemaControllerProvider =
       return EditorSchemaController(
         connectionRepository: ref.watch(connectionRepositoryProvider),
         apiClient: ref.watch(influxApiClientProvider),
+        l10n: ref.watch(appLocalizationsProvider),
       );
     });

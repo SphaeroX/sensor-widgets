@@ -9,6 +9,7 @@ import 'package:sensor_widgets/data/storage/shared_widget_store.dart';
 import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
@@ -41,7 +42,11 @@ void main() {
           influxApiClientProvider.overrideWithValue(MockApi()),
           sharedWidgetStoreProvider.overrideWithValue(MockStore()),
         ],
-        child: const MaterialApp(home: WidgetEditorScreen()),
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: WidgetEditorScreen(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

@@ -15,6 +15,7 @@ import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Logical phone size of the README screenshots (rendered at [screenshotPixelRatio]).
 const screenshotLogicalSize = Size(390, 844);
@@ -244,6 +245,8 @@ Widget screenshotApp({required Widget home, List<WidgetDefinition>? widgets}) {
       influxApiClientProvider.overrideWithValue(FakeInfluxApiClient()),
     ],
     child: MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark(),
       home: home,

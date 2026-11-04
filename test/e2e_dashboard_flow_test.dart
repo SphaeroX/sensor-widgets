@@ -13,6 +13,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/dashboard/widgets_dashboard_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class MockSharedWidgetStore extends Mock implements SharedWidgetStore {}
 
@@ -161,7 +162,11 @@ void main() {
               secureTokenStoreProvider.overrideWithValue(mockTokenStore),
               influxApiClientProvider.overrideWithValue(mockApiClient),
             ],
-            child: const MaterialApp(home: WidgetsDashboardScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: WidgetsDashboardScreen(),
+            ),
           ),
         );
         await tester.pumpAndSettle();
@@ -176,39 +181,39 @@ void main() {
         await tester.tap(connAction);
         await tester.pumpAndSettle();
 
-        expect(find.text('No connections configured'), findsOneWidget);
+        expect(find.text('Keine Verbindungen konfiguriert'), findsOneWidget);
 
         // 3. Open Connection Form
         await tester.tap(find.byType(FloatingActionButton));
         await tester.pumpAndSettle();
 
-        expect(find.text('New Connection'), findsOneWidget);
+        expect(find.text('Neue Verbindung'), findsOneWidget);
 
         // 4. Fill and save connection
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'Connection Name'),
+          find.widgetWithText(TextFormField, 'Verbindungsname'),
           'Home Server',
         );
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'Host URL'),
+          find.widgetWithText(TextFormField, 'Host-URL'),
           'http://192.168.1.50:8086',
         );
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'Database / Bucket'),
+          find.widgetWithText(TextFormField, 'Datenbank / Bucket'),
           'home_data',
         );
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'API Token'),
+          find.widgetWithText(TextFormField, 'API-Token'),
           'secret_token_123',
         );
 
         // Test connection
-        await tester.tap(find.text('Test Connection'));
+        await tester.tap(find.text('Verbindung testen'));
         await tester.pumpAndSettle();
-        expect(find.text('Connection successful!'), findsOneWidget);
+        expect(find.text('Verbindung erfolgreich!'), findsOneWidget);
 
         // Save connection
-        await tester.tap(find.text('Save'));
+        await tester.tap(find.text('Speichern'));
         await tester.pumpAndSettle();
 
         List<dynamic> getStoredConnections() =>
@@ -233,7 +238,7 @@ void main() {
         expect(storedTokens.values.first, 'secret_token_123');
 
         // 5. Navigate back to Dashboard
-        await tester.tap(find.byTooltip('Back'));
+        await tester.tap(find.byType(BackButton));
         await tester.pumpAndSettle();
 
         // 6. Add First Widget (Single Value)

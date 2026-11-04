@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/help/formula_llm_prompt.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Card with a large text area in which the whole widget is defined as code
 /// (JSON), plus buttons to copy or share a prompt that makes an LLM write it.
@@ -68,8 +69,9 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
       if (errors.isEmpty) _dirty = false;
     });
     if (errors.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Code übernommen.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).widgetCodeApplied)),
+      );
     }
   }
 
@@ -82,6 +84,7 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
   }
 
   String _prompt() => buildWidgetCodePrompt(
+    l10n: AppLocalizations.of(context),
     measurement: widget.measurement,
     availableMeasurements: widget.availableMeasurements,
     availableFields: widget.availableFields,
@@ -92,10 +95,8 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
     await Clipboard.setData(ClipboardData(text: _prompt()));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Prompt kopiert. In eine KI einfügen, dann die Aufgabe beschreiben.',
-        ),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).widgetCodePromptCopied),
       ),
     );
   }
@@ -105,15 +106,15 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
     await share(_prompt());
   }
 
-  static Future<void> _shareViaSystem(String text) async {
-    await SharePlus.instance.share(
-      ShareParams(text: text, subject: 'Widget-Prompt für KI'),
-    );
+  Future<void> _shareViaSystem(String text) async {
+    final subject = AppLocalizations.of(context).widgetCodeShareSubject;
+    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Card(
       key: const Key('widget_code_card'),
       child: Padding(
@@ -121,27 +122,22 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Widget als Code', style: theme.textTheme.titleSmall),
+            Text(l10n.widgetCodeTitle, style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(
-              'Das ganze Widget (Typ, Formel, Zwischenschritte, Variablen, '
-              'Darstellung) als JSON. Lass es von einer KI schreiben, füge es '
-              'hier ein und tippe auf "Code übernehmen".',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l10n.widgetCodeDescription, style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             Wrap(
               children: [
                 TextButton.icon(
                   key: const Key('copy_widget_prompt_button'),
                   icon: const Icon(Icons.copy_all_outlined, size: 18),
-                  label: const Text('Prompt für KI kopieren'),
+                  label: Text(l10n.widgetCodeCopyPrompt),
                   onPressed: _copyPrompt,
                 ),
                 TextButton.icon(
                   key: const Key('share_widget_prompt_button'),
                   icon: const Icon(Icons.share_outlined, size: 18),
-                  label: const Text('Teilen'),
+                  label: Text(l10n.commonShare),
                   onPressed: _sharePrompt,
                 ),
               ],
@@ -159,10 +155,10 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
               decoration: InputDecoration(
                 border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
-                labelText: 'Widget-Code (JSON)',
+                labelText: l10n.widgetCodeFieldLabel,
                 helperText: _dirty
-                    ? 'Nicht übernommene Änderungen'
-                    : 'Spiegelt das Formular',
+                    ? l10n.widgetCodeDirty
+                    : l10n.widgetCodeMirrorsForm,
               ),
               onChanged: (_) {
                 if (!_dirty) setState(() => _dirty = true);
@@ -191,12 +187,12 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
                 TextButton(
                   key: const Key('widget_code_reset_button'),
                   onPressed: _reset,
-                  child: const Text('Aus Formular neu erzeugen'),
+                  child: Text(l10n.widgetCodeRegenerate),
                 ),
                 FilledButton.icon(
                   key: const Key('widget_code_apply_button'),
                   icon: const Icon(Icons.check, size: 18),
-                  label: const Text('Code übernehmen'),
+                  label: Text(l10n.widgetCodeApply),
                   onPressed: _apply,
                 ),
               ],

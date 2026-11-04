@@ -6,6 +6,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 WidgetDefinition _def({WidgetAppearance? appearance}) => WidgetDefinition(
   id: 'w',
@@ -21,6 +22,8 @@ WidgetDefinition _def({WidgetAppearance? appearance}) => WidgetDefinition(
 Future<void> _pump(WidgetTester tester, WidgetDefinition def) async {
   await tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: WidgetLivePreviewCard(
           widgetDef: def,

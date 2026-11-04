@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Applying a template changes formula and steps from outside while the
 /// section sits inside a Form (as in the editor screen). That must not set a
@@ -17,6 +18,8 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
             child: StatefulBuilder(

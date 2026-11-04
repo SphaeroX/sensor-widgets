@@ -1,5 +1,6 @@
 package io.github.sphaerox.influx_sensor_widgets.glance
 
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetType
 import org.junit.Assert.assertEquals
@@ -22,6 +23,7 @@ class WidgetUiStateWarningTest {
             boundWidgetId = "w1",
             widget = widget,
             cacheJson = cache,
+            texts = TestTexts.german,
         )
 
     @Test

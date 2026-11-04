@@ -1,6 +1,7 @@
 package io.github.sphaerox.influx_sensor_widgets.glance.chart
 
 import io.github.sphaerox.influx_sensor_widgets.glance.WidgetUiStateMapper
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.ChartStyle
 import io.github.sphaerox.influx_sensor_widgets.model.ColorStop
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinitionParser
@@ -160,6 +161,7 @@ class ChartStyleTest {
                 boundWidgetId = widget.id,
                 widget = widget,
                 cacheJson = """{"points":[{"t":1,"v":10.0},{"t":2,"v":20.0}],"timestamp":5}""",
+                texts = TestTexts.german,
             )
         assertEquals(listOf(10.0, 20.0), state.chartValues)
         assertEquals(widget.chartStyle, state.chartStyle)

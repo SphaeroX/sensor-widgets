@@ -8,12 +8,17 @@ import 'package:sensor_widgets/domain/models/influx_connection.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connection_form_screen.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
+
+import '../../../l10n/english_locale.dart';
 
 class MockConnectionRepository extends Mock implements ConnectionRepository {}
 
 class MockInfluxApiClient extends Mock implements InfluxApiClient {}
 
 void main() {
+  useEnglishDeviceLocale();
+
   setUpAll(() {
     registerFallbackValue(
       const InfluxConnection(
@@ -51,7 +56,11 @@ void main() {
             overrides: [
               connectionRepositoryProvider.overrideWithValue(mockRepo),
             ],
-            child: const MaterialApp(home: ConnectionsListScreen()),
+            child: const MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: ConnectionsListScreen(),
+            ),
           ),
         );
 
@@ -70,7 +79,11 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [connectionRepositoryProvider.overrideWithValue(mockRepo)],
-          child: const MaterialApp(home: ConnectionsListScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ConnectionsListScreen(),
+          ),
         ),
       );
 
@@ -101,7 +114,11 @@ void main() {
             connectionRepositoryProvider.overrideWithValue(mockRepo),
             influxApiClientProvider.overrideWithValue(mockApiClient),
           ],
-          child: const MaterialApp(home: ConnectionFormScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: ConnectionFormScreen(),
+          ),
         ),
       );
 

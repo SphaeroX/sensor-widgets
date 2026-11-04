@@ -2,6 +2,7 @@ package io.github.sphaerox.influx_sensor_widgets.worker
 
 import io.github.sphaerox.influx_sensor_widgets.alerts.AlertHit
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import okhttp3.mockwebserver.MockResponse
@@ -54,6 +55,7 @@ class WidgetRefreshWorkerAlertTest {
         WidgetRefreshWorker.refreshWidgets(
             storageReader,
             InfluxHttpClient(),
+            TestTexts.german,
             onAlert = { widget: WidgetDefinition, hit: AlertHit -> hits += widget.id to hit },
         )
     }

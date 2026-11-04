@@ -13,6 +13,8 @@
 - Shared InfluxDB response fixtures live in `fixtures/influx/` at the repo root and are loaded by all three test suites. Other shared contract fixtures: `fixtures/widget_definitions/`, `fixtures/formula/`, `fixtures/chart/`, `fixtures/alerts/`.
 
 ## Best practices (project-specific)
+- No hard-coded user-visible text. Flutter: add the key to `lib/l10n/app_en.arb` and `app_de.arb` (keys camelCase, prefixed by area, e.g. `editorTitleNew`; shared ones `common...`), then `flutter gen-l10n`. Android: `res/values/strings.xml` and `res/values-de/strings.xml` (snake_case). iOS: both tables in `ios/SensorWidgetsExtension/Localization/WidgetTexts.swift`. English is the fallback, so every key needs an English text.
+- Domain code reports errors as kinds plus arguments (`FormulaErrorKind`), not as finished sentences; the presentation layer translates.
 - Fixtures and docs contain only fake tokens and fake hostnames.
 - Never log API tokens.
 

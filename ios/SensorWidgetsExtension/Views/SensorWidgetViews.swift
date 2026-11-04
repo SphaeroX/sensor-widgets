@@ -136,7 +136,7 @@ public struct HistoryChartWidgetView: View {
 
             if series.isEmpty {
                 Spacer()
-                Text("No data available")
+                Text(WidgetTexts.current.text(.noData))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -438,7 +438,7 @@ public struct MultiValueWidgetView: View {
                         .lineLimit(1)
                     Spacer()
                     if let rowError = rowError {
-                        Text("Fehler: \(rowError)")
+                        Text(WidgetTexts.current.text(.rowError, rowError))
                             .font(.caption2)
                             .foregroundStyle(.red)
                             .lineLimit(1)
@@ -572,10 +572,10 @@ public struct SensorWidgetEntryView: View {
                 Image(systemName: "gauge.with.needle")
                     .font(.title2)
                     .foregroundStyle(.secondary)
-                Text("Select Widget")
+                Text(WidgetTexts.current.text(.selectWidget))
                     .font(.caption)
                     .fontWeight(.semibold)
-                Text("Long press to configure")
+                Text(WidgetTexts.current.text(.longPressToConfigure))
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }

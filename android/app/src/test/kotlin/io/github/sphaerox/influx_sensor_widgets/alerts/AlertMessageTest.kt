@@ -1,5 +1,6 @@
 package io.github.sphaerox.influx_sensor_widgets.alerts
 
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.AlertRule
 import io.github.sphaerox.influx_sensor_widgets.model.SensorQueryItem
 import io.github.sphaerox.influx_sensor_widgets.model.ThresholdOperator
@@ -24,7 +25,7 @@ class AlertMessageTest {
         val hit = AlertHit(AlertRule("value", ThresholdOperator.GREATER_THAN, 150.0), 163.4)
 
         assertEquals("IAQ Index", AlertMessage.title(iaq))
-        assertEquals("IAQ Index: 163 (über 150)", AlertMessage.body(iaq, hit))
+        assertEquals("IAQ Index: 163 (über 150)", AlertMessage.body(iaq, hit, TestTexts.german))
     }
 
     @Test
@@ -38,7 +39,7 @@ class AlertMessageTest {
             )
         val hit = AlertHit(AlertRule("temp", ThresholdOperator.LESS_THAN, 18.5), 17.24)
 
-        assertEquals("Temperatur: 17.2 °C (unter 18.5 °C)", AlertMessage.body(widget, hit))
+        assertEquals("Temperatur: 17.2 °C (unter 18.5 °C)", AlertMessage.body(widget, hit, TestTexts.german))
     }
 
     @Test
@@ -46,6 +47,6 @@ class AlertMessageTest {
         val widget = iaq.copy(type = WidgetType.AGGREGATE, unit = "°C", decimalPlaces = 1)
         val hit = AlertHit(AlertRule("max", ThresholdOperator.GREATER_THAN, 30.0), 31.0)
 
-        assertEquals("Maximum: 31.0 °C (über 30.0 °C)", AlertMessage.body(widget, hit))
+        assertEquals("Maximum: 31.0 °C (über 30.0 °C)", AlertMessage.body(widget, hit, TestTexts.german))
     }
 }

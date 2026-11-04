@@ -9,6 +9,7 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_card.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class _Call {
   final String kind;
@@ -167,6 +168,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: WidgetLivePreviewCard(
               widgetDef: def(style: const ChartStyle(colorStops: _stops)),
@@ -183,6 +186,8 @@ void main() {
     ) async {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: WidgetLivePreviewCard(widgetDef: def(), previewData: data()),
           ),

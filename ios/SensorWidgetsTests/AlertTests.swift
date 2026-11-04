@@ -6,6 +6,16 @@ import XCTest
 
 /// Threshold push notifications (`alerts`) and the network error grace period. CI only.
 final class AlertTests: XCTestCase {
+    // These tests assert the German texts; the CI machine may use any language.
+    override func setUp() {
+        super.setUp()
+        WidgetTexts.current = .german
+    }
+
+    override func tearDown() {
+        WidgetTexts.current = WidgetTexts.forLanguages(Locale.preferredLanguages)
+        super.tearDown()
+    }
 
     private func loadFixture(named name: String, subdirectory: String) -> Data {
         let fileManager = FileManager.default

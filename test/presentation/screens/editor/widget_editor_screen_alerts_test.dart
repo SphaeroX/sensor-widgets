@@ -15,6 +15,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
@@ -90,7 +91,11 @@ void main() {
         sharedWidgetStoreProvider.overrideWithValue(store),
         notificationPermissionProvider.overrideWithValue(permission),
       ],
-      child: MaterialApp(home: WidgetEditorScreen(widgetToEdit: edit)),
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: WidgetEditorScreen(widgetToEdit: edit),
+      ),
     );
   }
 

@@ -38,17 +38,17 @@ public enum FormulaError: LocalizedError, Equatable {
     public var errorDescription: String? {
         switch self {
         case .emptyFormula:
-            return "Formel darf nicht leer sein"
+            return WidgetTexts.current.text(.formulaEmpty)
         case .syntaxError(let detail), .syntaxErrorAt(let detail, _):
-            return "Syntaxfehler: \(detail)"
+            return WidgetTexts.current.text(.syntaxError, detail)
         case .divisionByZero:
-            return "Division durch Null"
+            return WidgetTexts.current.text(.divisionByZero)
         case .missingVariable(let name):
-            return "Fehlende Variable: \(name)"
+            return WidgetTexts.current.text(.missingVariable, name)
         case .unknownFunction(let name, _):
-            return "Unbekannte Funktion: \(name)"
+            return WidgetTexts.current.text(.unknownFunction, name)
         case .wrongArity(let function, let expected, let actual, _):
-            return "Funktion \(function) erwartet \(expected) Argument(e), erhalten: \(actual)"
+            return WidgetTexts.current.text(.wrongArity, function, expected, actual)
         case .domainError(let detail):
             return detail
         case .stepReference(let detail):
@@ -107,13 +107,13 @@ public enum FormulaEvaluator {
 
     public static func validateSyntax(_ formula: String) -> String? {
         if formula.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return "Formel darf nicht leer sein"
+            return WidgetTexts.current.text(.formulaEmpty)
         }
         do {
             _ = try parse(formula)
             return nil
         } catch let error as FormulaError {
-            let message = error.errorDescription ?? "Ungültige Formel"
+            let message = error.errorDescription ?? WidgetTexts.current.text(.invalidFormula)
             if let position = error.position {
                 return "\(message) (Position \(position + 1))"
             }
@@ -178,13 +178,13 @@ public enum FormulaEvaluator {
             && isIdentStart(chars[0])
             && chars.allSatisfy { isIdentStart($0) || isDigit($0) }
         if !validName {
-            throw FormulaError.stepReference("Ungültiger Schrittname: \"\(name)\"")
+            throw FormulaError.stepReference(WidgetTexts.current.text(.invalidStepName, name))
         }
         if functions[name] != nil {
-            throw FormulaError.stepReference("Schrittname \"\(name)\" ist ein Funktionsname")
+            throw FormulaError.stepReference(WidgetTexts.current.text(.stepNameIsFunction, name))
         }
         if taken.contains(name) {
-            throw FormulaError.stepReference("Doppelter Name: \"\(name)\"")
+            throw FormulaError.stepReference(WidgetTexts.current.text(.duplicateName, name))
         }
     }
 
@@ -198,9 +198,9 @@ public enum FormulaEvaluator {
         collectIdents(ast, &idents)
         for id in idents where !known.contains(id) && allSteps.contains(id) {
             if id == current {
-                throw FormulaError.stepReference("Schritt \"\(id)\" verweist auf sich selbst")
+                throw FormulaError.stepReference(WidgetTexts.current.text(.stepSelfReference, id))
             }
-            throw FormulaError.stepReference("Schritt verweist auf später definierten Schritt \"\(id)\"")
+            throw FormulaError.stepReference(WidgetTexts.current.text(.stepForwardReference, id))
         }
     }
 
@@ -274,13 +274,13 @@ public enum FormulaEvaluator {
                 if next == "=" { add(.ge, ">=", i); i += 2 } else { add(.gt, ">", i); i += 1 }
             case "=":
                 guard next == "=" else {
-                    throw FormulaError.syntaxErrorAt("Unerwartetes Zeichen: \"=\" (Vergleich: \"==\")", position: i)
+                    throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.unexpectedAssign), position: i)
                 }
                 add(.eq, "==", i)
                 i += 2
             case "!":
                 guard next == "=" else {
-                    throw FormulaError.syntaxErrorAt("Unerwartetes Zeichen: \"!\"", position: i)
+                    throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.unexpectedCharacter, "!"), position: i)
                 }
                 add(.ne, "!=", i)
                 i += 2
@@ -294,7 +294,7 @@ public enum FormulaEvaluator {
                     }
                     let text = String(chars[start..<i])
                     guard let value = Double(text) else {
-                        throw FormulaError.syntaxErrorAt("Ungültige Zahl: \(text)", position: start)
+                        throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.invalidNumber, text), position: start)
                     }
                     add(.number, text, start, value)
                 } else if isIdentStart(c) {
@@ -304,7 +304,7 @@ public enum FormulaEvaluator {
                     }
                     add(.identifier, String(chars[start..<i]), start)
                 } else {
-                    throw FormulaError.syntaxErrorAt("Unerwartetes Zeichen: \"\(c)\"", position: i)
+                    throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.unexpectedCharacter, String(c)), position: i)
                 }
             }
         }
@@ -334,9 +334,9 @@ public enum FormulaEvaluator {
             if cur.type != .end {
                 let message: String
                 switch cur.type {
-                case .rparen: message = "Fehlende öffnende Klammer"
-                case .number, .identifier: message = "Fehlender Operator zwischen Operanden"
-                default: message = "Unerwartetes Zeichen: \"\(cur.text)\""
+                case .rparen: message = WidgetTexts.current.text(.missingOpeningParen)
+                case .number, .identifier: message = WidgetTexts.current.text(.missingOperator)
+                default: message = WidgetTexts.current.text(.unexpectedCharacter, cur.text)
                 }
                 throw FormulaError.syntaxErrorAt(message, position: cur.pos)
             }
@@ -399,15 +399,15 @@ public enum FormulaEvaluator {
                 try expectClose()
                 return inner
             case .end:
-                throw FormulaError.syntaxErrorAt("Ausdruck unvollständig", position: t.pos)
+                throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.incompleteExpression), position: t.pos)
             default:
-                throw FormulaError.syntaxErrorAt("Unerwartetes Zeichen: \"\(t.text)\"", position: t.pos)
+                throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.unexpectedCharacter, t.text), position: t.pos)
             }
         }
 
         private mutating func expectClose() throws {
             guard cur.type == .rparen else {
-                throw FormulaError.syntaxErrorAt("Nicht geschlossene Klammer", position: cur.pos)
+                throw FormulaError.syntaxErrorAt(WidgetTexts.current.text(.unclosedParen), position: cur.pos)
             }
             index += 1
         }
@@ -430,9 +430,9 @@ public enum FormulaEvaluator {
             if args.count < arity.min || (arity.max != nil && args.count > arity.max!) {
                 let expected: String
                 if let maxArgs = arity.max {
-                    expected = arity.min == maxArgs ? "\(arity.min)" : "\(arity.min) bis \(maxArgs)"
+                    expected = arity.min == maxArgs ? "\(arity.min)" : WidgetTexts.current.text(.arityRange, arity.min, maxArgs)
                 } else {
-                    expected = "mindestens \(arity.min)"
+                    expected = WidgetTexts.current.text(.arityAtLeast, arity.min)
                 }
                 throw FormulaError.wrongArity(
                     function: name,
@@ -447,9 +447,9 @@ public enum FormulaEvaluator {
 
     // MARK: - Evaluation
 
-    private static func finite(_ value: Double, _ what: String = "Ergebnis") throws -> Double {
+    private static func finite(_ value: Double, _ what: String = "") throws -> Double {
         if value.isNaN || value.isInfinite {
-            throw FormulaError.domainError("\(what): Ergebnis ist nicht endlich")
+            throw FormulaError.domainError(what.isEmpty ? WidgetTexts.current.text(.resultNotFinite) : WidgetTexts.current.text(.notFinite, what))
         }
         return value
     }
@@ -483,7 +483,7 @@ public enum FormulaEvaluator {
             case .ge: return bool(a >= b)
             case .eq: return bool(a == b)
             case .ne: return bool(a != b)
-            default: throw FormulaError.syntaxError("Unbekannter Operator")
+            default: throw FormulaError.syntaxError(WidgetTexts.current.text(.unknownOperator))
             }
         case .call(let name, let args):
             return try call(name, args, scope)
@@ -501,19 +501,19 @@ public enum FormulaEvaluator {
         case "max": return v.max()!
         case "clamp":
             if v[1] > v[2] {
-                throw FormulaError.domainError("clamp: untere Grenze größer als obere Grenze")
+                throw FormulaError.domainError(WidgetTexts.current.text(.clampBounds))
             }
             return Swift.min(Swift.max(v[0], v[1]), v[2])
         case "abs": return Swift.abs(v[0])
         case "pow": return try finite(Foundation.pow(v[0], v[1]), "pow")
         case "sqrt":
-            if v[0] < 0 { throw FormulaError.domainError("sqrt: Argument darf nicht negativ sein") }
+            if v[0] < 0 { throw FormulaError.domainError(WidgetTexts.current.text(.sqrtNegative)) }
             return v[0].squareRoot()
         case "ln":
-            if v[0] <= 0 { throw FormulaError.domainError("ln: Argument muss größer als 0 sein") }
+            if v[0] <= 0 { throw FormulaError.domainError(WidgetTexts.current.text(.lnNonPositive)) }
             return Foundation.log(v[0])
         case "log10":
-            if v[0] <= 0 { throw FormulaError.domainError("log10: Argument muss größer als 0 sein") }
+            if v[0] <= 0 { throw FormulaError.domainError(WidgetTexts.current.text(.log10NonPositive)) }
             return Foundation.log(v[0]) / Foundation.log(10.0)
         case "exp": return try finite(Foundation.exp(v[0]), "exp")
         // Half away from zero, like Dart's roundToDouble().
