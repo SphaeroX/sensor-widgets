@@ -5,10 +5,20 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+import java.util.Properties
+
 val ktlint: Configuration by configurations.creating
 
+// Upload key for Google Play, read from the gitignored android/key.properties.
+// Without that file (CI, other contributors) release builds stay debug-signed.
+val keystoreProperties =
+    Properties().apply {
+        val file = rootProject.file("key.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }
+
 android {
-    namespace = "io.github.mgasc.influx_sensor_widgets"
+    namespace = "io.github.sphaerox.influx_sensor_widgets"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +32,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "io.github.mgasc.influx_sensor_widgets"
+        applicationId = "io.github.sphaerox.influx_sensor_widgets"
         minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
@@ -30,9 +40,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (keystoreProperties.isNotEmpty()) {
+            create("release") {
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
             isMinifyEnabled = false
             isShrinkResources = false
             proguardFiles(

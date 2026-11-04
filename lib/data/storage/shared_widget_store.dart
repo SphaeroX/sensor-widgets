@@ -47,7 +47,7 @@ class HomeWidgetStorageDelegate implements WidgetStorageDelegate {
       await HomeWidget.updateWidget(
         name: 'SensorGlanceWidgetReceiver',
         androidName: 'SensorGlanceWidgetReceiver',
-        qualifiedAndroidName: 'io.github.mgasc.influx_sensor_widgets.glance.SensorGlanceWidgetReceiver',
+        qualifiedAndroidName: 'io.github.sphaerox.influx_sensor_widgets.glance.SensorGlanceWidgetReceiver',
         iOSName: 'SensorWidget',
       );
       return true;

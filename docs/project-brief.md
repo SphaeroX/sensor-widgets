@@ -26,7 +26,7 @@ Working title: `sensor-widgets`. A mobile app for Android and iOS that serves as
 - Name: avoid "Influx" or "InfluxDB" in the app name and store listing (InfluxData trademark; not legal advice).
 
 ## Decisions & status
-- Display title: `Sensor Widgets`, package/bundle ID: `io.github.mgasc.influx_sensor_widgets`.
+- Display title: `Sensor Widgets`, Android package: `io.github.sphaerox.influx_sensor_widgets`, iOS bundle ID: `io.github.mgasc.influx_sensor_widgets`.
 - Technical decisions: see `docs/architecture.md`.
 - Implementation roadmap: see `Roadmap/README.md` (milestones 1 to 4 implemented; `Task_21`, a dashboard layout bug, could not be reproduced and is covered by regression tests only).
 - Store release remains optional and may be done later.

@@ -12,7 +12,7 @@
   - `share_plus`: ^12.0.2 (system share sheet for the formula LLM prompt)
   - `mocktail`: ^1.0.4 (installed 1.0.5)
   - `flutter_lints`: ^6.0.0
-- **Android Target:** `minSdk 26`, `compileSdk 36`, target JVM 17. Application ID: `io.github.mgasc.influx_sensor_widgets`.
+- **Android Target:** `minSdk 26`, `compileSdk 36`, target JVM 17. Application ID and Kotlin package: `io.github.sphaerox.influx_sensor_widgets` (renamed from `io.github.mgasc…` before the first Play upload; the iOS bundle ID and App Group below still use `mgasc`).
 - **iOS Target:** iOS `17.0+`. Bundle ID: `io.github.mgasc.influx_sensor_widgets`.
 - **Widgets:** SwiftUI + WidgetKit (iOS) and Kotlin + Jetpack Glance (Android). Flutter cannot draw home-screen widgets, so this layer is native.
 - **App <-> widget data exchange:** `home_widget` plugin (shared storage: App Group `group.io.github.mgasc.influx_sensor_widgets` on iOS, SharedPreferences on Android).
@@ -34,13 +34,15 @@
 - No local Mac or iPhone. iOS code is built (unsigned) and unit-tested in GitHub Actions on `macos-latest` runners.
 - iOS code is never run on a local physical device. Do not describe iOS behavior as verified unless CI ran it.
 - CI/CD workflows: `.github/workflows/ci.yml` (push/PR verification) and `.github/workflows/release.yml` (APK build and GitHub Release creation).
+- Android release signing: `android/app/build.gradle.kts` reads the Google Play upload key from `android/key.properties` (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`; gitignored, like `*.jks`). Without that file release builds fall back to the debug key, so CI and contributors can still build; such builds cannot be uploaded to Play. Play bundles: `flutter build appbundle --release`.
+- Android launcher icon: adaptive icon `mipmap-anydpi-v26/ic_launcher.xml` with vector layers `drawable/ic_launcher_background.xml` (teal gradient), `ic_launcher_foreground.xml` (widget card with sparkline, 512 grid scaled into the 66 dp safe zone) and `ic_launcher_monochrome.xml` (themed icons, Android 13+). The `mipmap-*/ic_launcher.png` files are only a fallback (minSdk 26 always uses the adaptive icon). The Play Store icon uses the same design.
 
 ## Scaffolding Status
 Scaffolding executed:
 ```bash
 flutter create --project-name sensor_widgets --org io.github.mgasc --platforms android,ios .
 ```
-Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` across Android (`android/app/build.gradle.kts`) and iOS (`ios/Runner.xcodeproj/project.pbxproj`).
+Application / bundle ID configured to `io.github.mgasc.influx_sensor_widgets` across Android (`android/app/build.gradle.kts`) and iOS (`ios/Runner.xcodeproj/project.pbxproj`). Android was later renamed to `io.github.sphaerox.influx_sensor_widgets`; `test/core/contract/cross_platform_schema_contract_test.dart` pins it and checks that class names referenced from Dart (`qualifiedAndroidName`) and `sensor_widget_info.xml` exist as Kotlin sources.
 
 ## Architectural decisions
 - **State management & DI:** `flutter_riverpod` (`mocktail` for unit and widget tests).
