@@ -7,6 +7,6 @@
     android:updatePeriodMillis="1800000"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:configure="io.github.mgasc.influx_sensor_widgets.glance.SensorWidgetConfigActivity"
+    android:configure="io.github.sphaerox.influx_sensor_widgets.glance.SensorWidgetConfigActivity"
     android:description="@string/app_name">
 </appwidget-provider>

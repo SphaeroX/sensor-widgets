@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Launcher icon foreground: widget card with a rising sparkline.
+     Paths use a 512 grid (as the Play Store icon), scaled into the 66 dp safe zone. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.17"
+        android:scaleY="0.17"
+        android:translateX="10.48"
+        android:translateY="10.48">
+        <path
+            android:fillColor="#FF0F2A26"
+            android:pathData="M140,124H372A44,44 0,0 1,416 168V344A44,44 0,0 1,372 388H140A44,44 0,0 1,96 344V168A44,44 0,0 1,140 124Z" />
+        <path android:pathData="M130,318C155,318 155,290 180,290C201,290 201,304 222,304C245,304 245,246 268,246C290,246 290,262 312,262C345,262 345,186 378,186L378,352L130,352Z">
+            <aapt:attr name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="0"
+                    android:startY="186"
+                    android:endX="0"
+                    android:endY="352"
+                    android:startColor="#8C4DB6AC"
+                    android:endColor="#004DB6AC" />
+            </aapt:attr>
+        </path>
+        <path
+            android:strokeColor="#FF80CBC4"
+            android:strokeWidth="20"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M130,318C155,318 155,290 180,290C201,290 201,304 222,304C245,304 245,246 268,246C290,246 290,262 312,262C345,262 345,186 378,186" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M356,186a22,22 0,1 0,44 0a22,22 0,1 0,-44 0Z" />
+        <path
+            android:fillColor="#FF00796B"
+            android:pathData="M367,186a11,11 0,1 0,22 0a11,11 0,1 0,-22 0Z" />
+        <path
+            android:fillColor="#FF4DB6AC"
+            android:pathData="M134,172a16,16 0,1 0,32 0a16,16 0,1 0,-32 0Z" />
+    </group>
+</vector>

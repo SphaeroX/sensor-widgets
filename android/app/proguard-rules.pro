@@ -19,7 +19,7 @@
 -keep class * extends androidx.work.ListenableWorker { *; }
 
 # App Native Code & Widgets
--keep class io.github.mgasc.influx_sensor_widgets.** { *; }
+-keep class io.github.sphaerox.influx_sensor_widgets.** { *; }
 -keep class * extends android.appwidget.AppWidgetProvider { *; }
 -keep class * extends android.content.BroadcastReceiver { *; }
 

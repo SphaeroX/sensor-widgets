@@ -126,7 +126,21 @@ cd ..
 
 # Build release APK locally
 flutter build apk --release
+
+# Build the Google Play app bundle
+flutter build appbundle --release
 ```
+
+Release builds are signed with the upload key from `android/key.properties` (never committed):
+
+```
+storePassword=...
+keyPassword=...
+keyAlias=upload
+storeFile=/absolute/path/to/upload-keystore.jks
+```
+
+Without that file, release builds fall back to the debug key (fine for local testing and the GitHub APK, not accepted by Google Play).
 
 ### GitHub Actions CI/CD
 - **`ci.yml`:** Automatically tests Dart, runs Ktlint and Android JUnit tests, builds release APK check, and executes SwiftLint and Swift unit tests against shared fixtures on `macos-latest`.

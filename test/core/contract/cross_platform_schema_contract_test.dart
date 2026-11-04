@@ -26,7 +26,7 @@ void main() {
 
     test('Kotlin WidgetStorageReader contains exact matching storage keys', () {
       final kotlinFile = File(
-        'android/app/src/main/kotlin/io/github/mgasc/influx_sensor_widgets/storage/WidgetStorageReader.kt',
+        'android/app/src/main/kotlin/io/github/sphaerox/influx_sensor_widgets/storage/WidgetStorageReader.kt',
       );
       expect(kotlinFile.existsSync(), isTrue);
 
@@ -53,6 +53,35 @@ void main() {
       expect(content.contains('connections_metadata_v1'), isTrue);
       expect(content.contains('influx_token_'), isTrue);
       expect(content.contains('widget_cache_'), isTrue);
+    });
+
+    test('Android package matches the Play application ID', () {
+      const package = 'io.github.sphaerox.influx_sensor_widgets';
+      final gradle = File('android/app/build.gradle.kts').readAsStringSync();
+      expect(gradle, contains('namespace = "$package"'));
+      expect(gradle, contains('applicationId = "$package"'));
+    });
+
+    test('Android class names referenced outside Kotlin exist', () {
+      final references = [
+        RegExp(r"qualifiedAndroidName:\s*'([\w.]+)'").firstMatch(
+          File('lib/data/storage/shared_widget_store.dart').readAsStringSync(),
+        ),
+        RegExp(r'android:configure="([\w.]+)"').firstMatch(
+          File('android/app/src/main/res/xml/sensor_widget_info.xml')
+              .readAsStringSync(),
+        ),
+      ];
+
+      for (final match in references) {
+        expect(match, isNotNull);
+        final path = match!.group(1)!.replaceAll('.', '/');
+        expect(
+          File('android/app/src/main/kotlin/$path.kt').existsSync(),
+          isTrue,
+          reason: '${match.group(1)} has no Kotlin source',
+        );
+      }
     });
 
     test('All 6 widget types have exact matching string representations', () {
