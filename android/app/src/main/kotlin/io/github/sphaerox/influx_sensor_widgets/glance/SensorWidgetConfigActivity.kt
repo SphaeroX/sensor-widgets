@@ -18,6 +18,7 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import io.github.sphaerox.influx_sensor_widgets.MainActivity
+import io.github.sphaerox.influx_sensor_widgets.R
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import io.github.sphaerox.influx_sensor_widgets.worker.WidgetRefreshWorker
@@ -61,7 +62,7 @@ class SensorWidgetConfigActivity : Activity() {
 
         val titleView =
             TextView(this).apply {
-                text = "Sensor Widgets"
+                text = getString(R.string.app_name)
                 setTextColor(Color.WHITE)
                 textSize = 20f
                 typeface = Typeface.DEFAULT_BOLD
@@ -72,8 +73,7 @@ class SensorWidgetConfigActivity : Activity() {
         if (widgets.isEmpty()) {
             val emptyMsg =
                 TextView(this).apply {
-                    text =
-                        "Noch keine Widgets konfiguriert.\n\nBitte erstelle zuerst in der App ein Widget und platziere es anschließend auf dem Homescreen."
+                    text = getString(R.string.config_no_widgets)
                     setTextColor(Color.parseColor("#A6ADC8"))
                     textSize = 15f
                     setPadding(0, (16 * resources.displayMetrics.density).toInt(), 0, (24 * resources.displayMetrics.density).toInt())
@@ -82,7 +82,7 @@ class SensorWidgetConfigActivity : Activity() {
 
             val openAppBtn =
                 Button(this).apply {
-                    text = "Sensor Widgets App öffnen"
+                    text = getString(R.string.config_open_app)
                     setBackgroundColor(Color.parseColor("#89B4FA"))
                     setTextColor(Color.parseColor("#11111B"))
                     setOnClickListener {
@@ -97,7 +97,7 @@ class SensorWidgetConfigActivity : Activity() {
 
         val subtitleView =
             TextView(this).apply {
-                text = "Wähle das Widget für diesen Homescreen-Platzhalter:"
+                text = getString(R.string.config_pick_widget)
                 setTextColor(Color.parseColor("#A6ADC8"))
                 textSize = 14f
                 setPadding(0, 0, 0, (12 * resources.displayMetrics.density).toInt())

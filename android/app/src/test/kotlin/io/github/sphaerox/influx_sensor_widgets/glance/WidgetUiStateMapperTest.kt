@@ -1,5 +1,6 @@
 package io.github.sphaerox.influx_sensor_widgets.glance
 
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetType
 import org.junit.Assert.assertEquals
@@ -30,6 +31,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = null,
                 widget = null,
                 cacheJson = null,
+                texts = TestTexts.german,
             )
         assertFalse(state.isConfigured)
         assertEquals("Widget konfigurieren", state.title)
@@ -43,6 +45,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = testWidget,
                 cacheJson = null,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertTrue(state.isLoading)
@@ -58,6 +61,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = testWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertFalse(state.isLoading)
@@ -73,6 +77,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = testWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertNull(state.errorMessage)
@@ -91,6 +96,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = chartWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertEquals(2, state.chartNormalizedPoints?.size)
@@ -107,6 +113,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = aggWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertEquals("18.2", state.aggregates?.get("min"))
@@ -123,6 +130,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = testWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertFalse(state.isLoading)
@@ -138,6 +146,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = testWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertFalse(state.isLoading)
@@ -154,6 +163,7 @@ class WidgetUiStateMapperTest {
                 boundWidgetId = "w1",
                 widget = lampWidget,
                 cacheJson = cacheJson,
+                texts = TestTexts.german,
             )
         assertTrue(state.isConfigured)
         assertNull(state.errorMessage)

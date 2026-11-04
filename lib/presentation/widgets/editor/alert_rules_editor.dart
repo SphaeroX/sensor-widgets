@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/models/alert_rule.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// A value of the widget a notification rule can watch.
 class AlertTarget {
@@ -98,6 +99,7 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Card(
       key: const Key('alert_rules_editor'),
       child: Padding(
@@ -105,19 +107,15 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Benachrichtigungen', style: theme.textTheme.titleSmall),
+            Text(l10n.alertsTitle, style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
-            Text(
-              'Push-Benachrichtigung, sobald ein Wert die Schwelle überschreitet. '
-              'Erneut erst, nachdem er wieder zurückgegangen ist.',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l10n.alertsDescription, style: theme.textTheme.bodySmall),
             for (var i = 0; i < widget.rules.length; i++) _buildRow(i),
             const SizedBox(height: 8),
             OutlinedButton.icon(
               key: const Key('alert_add_button'),
               icon: const Icon(Icons.notifications_active_outlined),
-              label: const Text('Benachrichtigung hinzufügen'),
+              label: Text(l10n.alertsAdd),
               onPressed: _add,
             ),
           ],
@@ -128,6 +126,7 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
 
   Widget _buildRow(int i) {
     final rule = widget.rules[i];
+    final l10n = AppLocalizations.of(context);
     final targets = [
       ...widget.targets,
       if (!widget.targets.any((t) => t.id == rule.target))
@@ -161,14 +160,14 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
                   key: Key('alert_operator_$i'),
                   value: rule.operator,
                   isExpanded: true,
-                  items: const [
+                  items: [
                     DropdownMenuItem(
                       value: ThresholdOperator.greaterThan,
-                      child: Text('über'),
+                      child: Text(l10n.alertsAbove),
                     ),
                     DropdownMenuItem(
                       value: ThresholdOperator.lessThan,
-                      child: Text('unter'),
+                      child: Text(l10n.alertsBelow),
                     ),
                   ],
                   onChanged: (v) {
@@ -185,7 +184,7 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
                     decimal: true,
                     signed: true,
                   ),
-                  decoration: const InputDecoration(labelText: 'Schwellenwert'),
+                  decoration: InputDecoration(labelText: l10n.alertsThreshold),
                   onChanged: (text) {
                     final v = double.tryParse(text.trim().replaceAll(',', '.'));
                     if (v != null) _replace(i, rule.copyWith(value: v));
@@ -194,7 +193,7 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
               ),
               IconButton(
                 key: Key('alert_remove_$i'),
-                tooltip: 'Benachrichtigung entfernen',
+                tooltip: l10n.alertsRemove,
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () => _remove(i),
               ),

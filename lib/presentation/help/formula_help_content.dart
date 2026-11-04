@@ -1,5 +1,6 @@
 import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Help text for one function or constant of the formula language.
 ///
@@ -49,167 +50,140 @@ class FormulaTemplate {
   });
 }
 
-const List<FormulaHelpSection> formulaHelpSections = [
+/// Explanatory sections of the formula help in the language of [l10n].
+List<FormulaHelpSection> formulaHelpSections(AppLocalizations l10n) => [
   FormulaHelpSection(
-    title: 'Variablen',
-    body:
-        'Jede Variable (z. B. A, B oder co2) steht für ein Feld aus der Datenbank. '
-        'Messwerte werden aus dem Schema gewählt; optional mit eigenem Measurement '
-        'und Tag-Filtern. In der Formel verwendest du nur den Namen der Variable.',
+    title: l10n.helpVariablesTitle,
+    body: l10n.helpVariablesBody,
   ),
   FormulaHelpSection(
-    title: 'Operatoren',
-    body:
-        '+ - * / und Klammern. Vergleiche (< > <= >= == !=) liefern 1 (wahr) '
-        'oder 0 (falsch). Beispiel: (A + B) / 2 oder A > 25.',
+    title: l10n.helpOperatorsTitle,
+    body: l10n.helpOperatorsBody,
   ),
-  FormulaHelpSection(
-    title: 'Zwischenschritte',
-    body:
-        'Zwischenschritte sind benannte Teilformeln. Sie werden von oben nach '
-        'unten berechnet und dürfen Variablen und frühere Schritte verwenden. '
-        'Die Formel oben ist das Ergebnis und darf alle Schritte verwenden.',
-  ),
-  FormulaHelpSection(
-    title: 'Verlauf und Aggregat',
-    body:
-        'Beim Verlaufschart und beim Aggregat wird die Formel je Zeit-Bucket '
-        'berechnet (Mittelwert pro Intervall). Fehlt in einem Bucket ein Wert, '
-        'wird der Bucket übersprungen oder der letzte Wert übernommen '
-        '(Lückenregel). Aggregat bildet min/max/mean über die berechneten Werte.',
-  ),
-  FormulaHelpSection(
-    title: 'Fehler',
-    body:
-        'Syntaxfehler zeigen die Position im Text. "Division durch Null", '
-        '"Unbekannte Funktion", falsche Argumentzahl, "Fehlende Variable" und '
-        'Bereichsfehler (z. B. sqrt einer negativen Zahl, ln(0)) werden nie '
-        'still als 0 angezeigt, sondern als lesbare Fehlermeldung.',
-  ),
+  FormulaHelpSection(title: l10n.helpStepsTitle, body: l10n.helpStepsBody),
+  FormulaHelpSection(title: l10n.helpHistoryTitle, body: l10n.helpHistoryBody),
+  FormulaHelpSection(title: l10n.helpErrorsTitle, body: l10n.helpErrorsBody),
 ];
 
-const List<FormulaHelpEntry> formulaHelpEntries = [
+/// All functions and constants of the formula language, described in the
+/// language of [l10n]. Names, examples and results are language-neutral.
+List<FormulaHelpEntry> formulaHelpEntries(AppLocalizations l10n) => [
   FormulaHelpEntry(
     name: 'min',
     signature: 'min(a, b, …)',
-    description: 'Kleinster Wert (beliebig viele Argumente, mindestens eins).',
+    description: l10n.helpFnMin,
     example: 'min(4, 2, 7)',
     exampleResult: 2,
   ),
   FormulaHelpEntry(
     name: 'max',
     signature: 'max(a, b, …)',
-    description: 'Größter Wert (beliebig viele Argumente, mindestens eins).',
+    description: l10n.helpFnMax,
     example: 'max(4, 2, 7)',
     exampleResult: 7,
   ),
   FormulaHelpEntry(
     name: 'clamp',
-    signature: 'clamp(x, unten, oben)',
-    description: 'Begrenzt x auf den Bereich unten bis oben.',
+    signature: l10n.helpFnClampSignature,
+    description: l10n.helpFnClamp,
     example: 'clamp(140, 0, 100)',
     exampleResult: 100,
   ),
   FormulaHelpEntry(
     name: 'abs',
     signature: 'abs(x)',
-    description: 'Betrag (ohne Vorzeichen).',
+    description: l10n.helpFnAbs,
     example: 'abs(0 - 3)',
     exampleResult: 3,
   ),
   FormulaHelpEntry(
     name: 'pow',
-    signature: 'pow(basis, exponent)',
-    description: 'Potenz.',
+    signature: l10n.helpFnPowSignature,
+    description: l10n.helpFnPow,
     example: 'pow(2, 10)',
     exampleResult: 1024,
   ),
   FormulaHelpEntry(
     name: 'sqrt',
     signature: 'sqrt(x)',
-    description: 'Quadratwurzel (x darf nicht negativ sein).',
+    description: l10n.helpFnSqrt,
     example: 'sqrt(16)',
     exampleResult: 4,
   ),
   FormulaHelpEntry(
     name: 'ln',
     signature: 'ln(x)',
-    description: 'Natürlicher Logarithmus (x muss größer als 0 sein).',
+    description: l10n.helpFnLn,
     example: 'ln(e)',
     exampleResult: 1,
   ),
   FormulaHelpEntry(
     name: 'log10',
     signature: 'log10(x)',
-    description: 'Logarithmus zur Basis 10 (x muss größer als 0 sein).',
+    description: l10n.helpFnLog10,
     example: 'log10(1000)',
     exampleResult: 3,
   ),
   FormulaHelpEntry(
     name: 'exp',
     signature: 'exp(x)',
-    description: 'e hoch x.',
+    description: l10n.helpFnExp,
     example: 'exp(0)',
     exampleResult: 1,
   ),
   FormulaHelpEntry(
     name: 'round',
     signature: 'round(x)',
-    description: 'Rundet auf die nächste ganze Zahl (.5 weg von 0).',
+    description: l10n.helpFnRound,
     example: 'round(2.5)',
     exampleResult: 3,
   ),
   FormulaHelpEntry(
     name: 'floor',
     signature: 'floor(x)',
-    description: 'Rundet ab.',
+    description: l10n.helpFnFloor,
     example: 'floor(0 - 1.2)',
     exampleResult: -2,
   ),
   FormulaHelpEntry(
     name: 'ceil',
     signature: 'ceil(x)',
-    description: 'Rundet auf.',
+    description: l10n.helpFnCeil,
     example: 'ceil(1.2)',
     exampleResult: 2,
   ),
   FormulaHelpEntry(
     name: 'if',
-    signature: 'if(bedingung, dann, sonst)',
-    description:
-        'Wählt je nach Bedingung (ungleich 0 = wahr) einen von zwei Werten. '
-        'Nur der gewählte Zweig wird berechnet, z. B. if(B == 0, 0, A / B).',
+    signature: l10n.helpFnIfSignature,
+    description: l10n.helpFnIf,
     example: 'if(5 > 3, 10, 20)',
     exampleResult: 10,
   ),
   FormulaHelpEntry(
     name: 'pi',
     signature: 'pi',
-    description: 'Kreiszahl 3,14159…',
+    description: l10n.helpConstPi,
     example: 'round(pi * 100) / 100',
     exampleResult: 3.14,
   ),
   FormulaHelpEntry(
     name: 'e',
     signature: 'e',
-    description: 'Eulersche Zahl 2,71828…',
+    description: l10n.helpConstE,
     example: 'round(e * 100) / 100',
     exampleResult: 2.72,
   ),
 ];
 
-const List<FormulaTemplate> formulaTemplates = [
+/// Ready-made formulas; titles, descriptions and variable labels follow
+/// [l10n], formulas and variable names are language-neutral.
+List<FormulaTemplate> formulaTemplates(AppLocalizations l10n) => [
   FormulaTemplate(
     id: 'iaq_sen66',
     title: 'IAQ (Sensirion SEN66)',
-    description:
-        'Luftqualitäts-Index 0 bis 100. Jeder Teil-Score ist eine lineare Rampe '
-        '(CO₂ 600 ppm = 100, 2000 ppm = 0; VOC-Index 100 = 100, 250 = 0; '
-        'PM2.5 5 µg/m³ = 100, 35 = 0; Feuchte 50 % = 100, 20 % oder 80 % = 0). '
-        'Der schlechteste Teil-Score bestimmt das Ergebnis. Schwellen lassen sich '
-        'in den Zwischenschritten anpassen.',
+    description: l10n.templateIaqDescription,
     formula: 'min(s_co2, s_voc, s_pm25, s_rh)',
-    steps: [
+    steps: const [
       FormulaStep(
         name: 's_co2',
         expression: 'clamp(100 * (2000 - co2) / 1400, 0, 100)',
@@ -228,27 +202,41 @@ const List<FormulaTemplate> formulaTemplates = [
       ),
     ],
     variables: [
-      FormulaVariable(name: 'co2', field: '', label: 'CO₂ (ppm)'),
-      FormulaVariable(name: 'voc', field: '', label: 'VOC-Index'),
-      FormulaVariable(name: 'pm25', field: '', label: 'PM2.5 (µg/m³)'),
-      FormulaVariable(name: 'rh', field: '', label: 'Rel. Feuchte (%)'),
+      const FormulaVariable(name: 'co2', field: '', label: 'CO₂ (ppm)'),
+      FormulaVariable(name: 'voc', field: '', label: l10n.templateIaqVocLabel),
+      const FormulaVariable(name: 'pm25', field: '', label: 'PM2.5 (µg/m³)'),
+      FormulaVariable(name: 'rh', field: '', label: l10n.templateIaqRhLabel),
     ],
   ),
   FormulaTemplate(
     id: 'celsius_to_fahrenheit',
-    title: 'Celsius in Fahrenheit',
-    description: 'Rechnet eine Temperatur von °C in °F um.',
+    title: l10n.templateFahrenheitTitle,
+    description: l10n.templateFahrenheitDescription,
     formula: 'temp * 1.8 + 32',
-    variables: [FormulaVariable(name: 'temp', field: '', label: 'Temperatur')],
+    variables: [
+      FormulaVariable(
+        name: 'temp',
+        field: '',
+        label: l10n.templateFahrenheitTempLabel,
+      ),
+    ],
   ),
   FormulaTemplate(
     id: 'average_two',
-    title: 'Mittelwert zweier Sensoren',
-    description: 'Durchschnitt von zwei Messwerten.',
+    title: l10n.templateAverageTitle,
+    description: l10n.templateAverageDescription,
     formula: '(a + b) / 2',
     variables: [
-      FormulaVariable(name: 'a', field: '', label: 'Sensor 1'),
-      FormulaVariable(name: 'b', field: '', label: 'Sensor 2'),
+      FormulaVariable(
+        name: 'a',
+        field: '',
+        label: l10n.templateAverageSensorLabel(1),
+      ),
+      FormulaVariable(
+        name: 'b',
+        field: '',
+        label: l10n.templateAverageSensorLabel(2),
+      ),
     ],
   ),
 ];

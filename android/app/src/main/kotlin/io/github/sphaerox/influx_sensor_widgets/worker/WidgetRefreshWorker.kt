@@ -10,6 +10,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import io.github.sphaerox.influx_sensor_widgets.R
 import io.github.sphaerox.influx_sensor_widgets.alerts.AlertEvaluator
 import io.github.sphaerox.influx_sensor_widgets.alerts.AlertHit
 import io.github.sphaerox.influx_sensor_widgets.alerts.AlertNotifier
@@ -22,6 +23,8 @@ import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxNetworkException
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxQlBuilder
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxResponseParser
+import io.github.sphaerox.influx_sensor_widgets.l10n.WidgetTexts
+import io.github.sphaerox.influx_sensor_widgets.l10n.formulaError
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetType
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
@@ -44,6 +47,7 @@ class WidgetRefreshWorker(
                     refreshWidgetsOrThrowOnNetworkFailure(
                         storageReader,
                         httpClient,
+                        WidgetTexts.of(applicationContext),
                         targetId,
                         onAlert = { widget, hit -> AlertNotifier.notify(applicationContext, widget, hit) },
                     )
@@ -62,6 +66,7 @@ class WidgetRefreshWorker(
         fun refreshWidgetsOrThrowOnNetworkFailure(
             storageReader: WidgetStorageReader,
             httpClient: InfluxHttpClient,
+            texts: WidgetTexts,
             targetWidgetId: String? = null,
             nowMillis: () -> Long = System::currentTimeMillis,
             onAlert: (WidgetDefinition, AlertHit) -> Unit = { _, _ -> },
@@ -71,6 +76,7 @@ class WidgetRefreshWorker(
                 refreshWidgets(
                     storageReader,
                     httpClient,
+                    texts,
                     targetWidgetId,
                     nowMillis,
                     onNetworkFailure = { networkFailed = true },
@@ -80,9 +86,11 @@ class WidgetRefreshWorker(
             return count
         }
 
+        /** Refreshes the caches; error texts are in the language of [texts]. */
         fun refreshWidgets(
             storageReader: WidgetStorageReader,
             httpClient: InfluxHttpClient,
+            texts: WidgetTexts,
             targetWidgetId: String? = null,
             nowMillis: () -> Long = System::currentTimeMillis,
             onNetworkFailure: () -> Unit = {},
@@ -105,7 +113,7 @@ class WidgetRefreshWorker(
                 if (conn == null) {
                     val errJson =
                         JSONObject().apply {
-                            put("error", "Verbindung nicht gefunden")
+                            put("error", texts.get(R.string.error_connection_not_found))
                             put("timestamp", System.currentTimeMillis())
                         }
                     storageReader.saveWidgetCache(widget.id, errJson.toString())
@@ -116,7 +124,7 @@ class WidgetRefreshWorker(
                 if (token.isNullOrEmpty()) {
                     val errJson =
                         JSONObject().apply {
-                            put("error", "Authentifizierungs-Token fehlt")
+                            put("error", texts.get(R.string.error_token_missing))
                             put("timestamp", System.currentTimeMillis())
                         }
                     storageReader.saveWidgetCache(widget.id, errJson.toString())
@@ -124,7 +132,7 @@ class WidgetRefreshWorker(
                 }
 
                 try {
-                    val cacheJson = executeQueryAndBuildCache(widget, conn, token, httpClient)
+                    val cacheJson = executeQueryAndBuildCache(widget, conn, token, httpClient, texts)
                     storageReader.saveWidgetCache(widget.id, cacheJson)
                     checkAlerts(storageReader, widget, cacheJson, onAlert)
                 } catch (e: InfluxNetworkException) {
@@ -132,14 +140,16 @@ class WidgetRefreshWorker(
                     val graced =
                         NetworkErrorGrace.cacheAfterNetworkError(
                             previousCacheJson = storageReader.getWidgetCache(widget.id),
-                            errorMessage = e.message ?: "Netzwerkfehler",
+                            errorMessage = e.message ?: texts.get(R.string.error_network),
                             nowMillis = nowMillis(),
                         )
                     storageReader.saveWidgetCache(widget.id, graced)
                 } catch (e: Exception) {
+                    val message =
+                        if (e is FormulaException) texts.formulaError(e) else e.message ?: texts.get(R.string.error_query)
                     val errJson =
                         JSONObject().apply {
-                            put("error", e.message ?: "Abfragefehler")
+                            put("error", message)
                             put("timestamp", System.currentTimeMillis())
                         }
                     storageReader.saveWidgetCache(widget.id, errJson.toString())
@@ -154,6 +164,7 @@ class WidgetRefreshWorker(
             conn: io.github.sphaerox.influx_sensor_widgets.model.InfluxConnection,
             token: String,
             httpClient: InfluxHttpClient,
+            texts: WidgetTexts,
         ): String {
             val cacheObj = JSONObject()
             cacheObj.put("widgetId", widget.id)
@@ -231,7 +242,7 @@ class WidgetRefreshWorker(
                                 cacheObj.put("isActive", widget.threshold.matches(point.value))
                             }
                         } else {
-                            cacheObj.put("error", "Keine Messdaten gefunden")
+                            cacheObj.put("error", texts.get(R.string.error_no_data))
                             cacheObj.put("timestamp", System.currentTimeMillis())
                         }
                     }
@@ -245,7 +256,7 @@ class WidgetRefreshWorker(
                             pointsArr.put(JSONObject().apply { put("t", p.timestamp).put("v", p.value) })
                         }
                         cacheObj.put("points", pointsArr)
-                        FormulaSeriesCalculator.summarizeErrors(series.errors)?.let { cacheObj.put("warning", it) }
+                        FormulaSeriesCalculator.summarizeErrors(series.errors, texts)?.let { cacheObj.put("warning", it) }
                         cacheObj.put("timestamp", System.currentTimeMillis())
                         return cacheObj.toString()
                     }
@@ -279,7 +290,7 @@ class WidgetRefreshWorker(
                         val aggObj = JSONObject()
                         FormulaSeriesCalculator.aggregate(series, widget).forEach { (k, v) -> aggObj.put(k, v) }
                         cacheObj.put("aggregates", aggObj)
-                        FormulaSeriesCalculator.summarizeErrors(series.errors)?.let { cacheObj.put("warning", it) }
+                        FormulaSeriesCalculator.summarizeErrors(series.errors, texts)?.let { cacheObj.put("warning", it) }
                         cacheObj.put("timestamp", System.currentTimeMillis())
                         return cacheObj.toString()
                     }
@@ -326,7 +337,7 @@ class WidgetRefreshWorker(
                                 JSONObject().apply { put("value", value).put("timestamp", System.currentTimeMillis()) },
                             )
                         } catch (e: FormulaException) {
-                            rowErrors.put(item.field, e.message ?: "Formelfehler")
+                            rowErrors.put(item.field, texts.formulaError(e))
                         }
                     }
                     cacheObj.put("values", multiObj)

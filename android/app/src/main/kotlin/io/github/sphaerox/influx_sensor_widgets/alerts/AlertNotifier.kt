@@ -11,6 +11,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import io.github.sphaerox.influx_sensor_widgets.MainActivity
 import io.github.sphaerox.influx_sensor_widgets.R
+import io.github.sphaerox.influx_sensor_widgets.l10n.WidgetTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 
 /** Posts threshold notifications; silently skips them while the permission is missing. */
@@ -29,8 +30,12 @@ object AlertNotifier {
         }
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         manager.createNotificationChannel(
-            NotificationChannel(CHANNEL_ID, "Schwellenwerte", NotificationManager.IMPORTANCE_HIGH).apply {
-                description = "Benachrichtigungen, wenn ein Widget-Wert einen Schwellenwert überschreitet"
+            NotificationChannel(
+                CHANNEL_ID,
+                context.getString(R.string.alert_channel_name),
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = context.getString(R.string.alert_channel_description)
             },
         )
         val openApp =
@@ -45,7 +50,7 @@ object AlertNotifier {
                 .Builder(context, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_alert)
                 .setContentTitle(AlertMessage.title(widget))
-                .setContentText(AlertMessage.body(widget, hit))
+                .setContentText(AlertMessage.body(widget, hit, WidgetTexts.of(context)))
                 .setContentIntent(openApp)
                 .setAutoCancel(true)
                 .build()

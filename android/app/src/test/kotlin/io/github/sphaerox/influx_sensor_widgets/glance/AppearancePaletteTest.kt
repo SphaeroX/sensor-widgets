@@ -1,5 +1,6 @@
 package io.github.sphaerox.influx_sensor_widgets.glance
 
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetAppearance
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinitionParser
 import org.junit.Assert.assertEquals
@@ -109,6 +110,7 @@ class AppearancePaletteTest {
                 boundWidgetId = widget.id,
                 widget = widget,
                 cacheJson = """{"value":21.5,"timestamp":5}""",
+                texts = TestTexts.german,
             )
         assertEquals(widget.appearance, state.appearance)
     }

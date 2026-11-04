@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/chart_style_editor.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class _Harness extends StatefulWidget {
   final ChartStyle? initial;
@@ -19,6 +20,8 @@ class _HarnessState extends State<_Harness> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: ChartStyleEditor(

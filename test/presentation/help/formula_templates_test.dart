@@ -1,9 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/domain/formula/formula_evaluator.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
+import 'package:flutter/widgets.dart';
+
+/// The tests assert the German texts.
+final _de = lookupAppLocalizations(const Locale('de'));
 
 FormulaTemplate _template(String id) =>
-    formulaTemplates.firstWhere((t) => t.id == id);
+    formulaTemplates(_de).firstWhere((t) => t.id == id);
 
 double _eval(FormulaTemplate t, Map<String, double> values) =>
     FormulaEvaluator.evaluate(t.formula, values, steps: t.steps);
@@ -11,8 +16,8 @@ double _eval(FormulaTemplate t, Map<String, double> values) =>
 void main() {
   group('formula templates', () {
     test('every template is syntactically valid and self-consistent', () {
-      expect(formulaTemplates, isNotEmpty);
-      for (final t in formulaTemplates) {
+      expect(formulaTemplates(_de), isNotEmpty);
+      for (final t in formulaTemplates(_de)) {
         final names = t.variables.map((v) => v.name).toList();
         expect(t.title, isNotEmpty);
         expect(t.description, isNotEmpty);
@@ -29,7 +34,7 @@ void main() {
     });
 
     test('template ids are unique', () {
-      final ids = formulaTemplates.map((t) => t.id).toList();
+      final ids = formulaTemplates(_de).map((t) => t.id).toList();
       expect(ids.toSet().length, ids.length);
     });
 

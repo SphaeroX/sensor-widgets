@@ -89,20 +89,20 @@ object FormulaEvaluator {
 
     private val identPattern = Regex("^[A-Za-z_][A-Za-z0-9_]*$")
 
+    /** English description with the 1-based position where known, or null if valid. */
     fun validateSyntax(formula: String): String? {
-        if (formula.trim().isEmpty()) return "Formel darf nicht leer sein"
+        val e = syntaxError(formula) ?: return null
+        val position = e.errorPosition
+        return if (position == null) e.message else "${e.message} (Position ${position + 1})"
+    }
+
+    fun syntaxError(formula: String): FormulaException? {
+        if (formula.trim().isEmpty()) return FormulaSyntaxException(FormulaErrorKind.EMPTY_FORMULA)
         return try {
             parse(formula)
             null
         } catch (e: FormulaException) {
-            val position =
-                when (e) {
-                    is FormulaSyntaxException -> e.position
-                    is UnknownFunctionException -> e.position
-                    is WrongArgumentCountException -> e.position
-                    else -> null
-                }
-            if (position == null) e.message else "${e.message} (Position ${position + 1})"
+            e
         }
     }
 
@@ -141,7 +141,7 @@ object FormulaEvaluator {
         steps: List<FormulaStep> = emptyList(),
     ): Double {
         if (formula.trim().isEmpty()) {
-            throw FormulaSyntaxException("Formel darf nicht leer sein")
+            throw FormulaSyntaxException(FormulaErrorKind.EMPTY_FORMULA)
         }
         val scope = variables.toMutableMap()
         val allSteps = steps.map { it.name }.toSet()
@@ -159,13 +159,13 @@ object FormulaEvaluator {
         taken: Collection<String>,
     ) {
         if (!identPattern.matches(name)) {
-            throw StepReferenceException("Ungültiger Schrittname: \"$name\"")
+            throw StepReferenceException(FormulaErrorKind.INVALID_STEP_NAME, listOf(name))
         }
         if (functions.containsKey(name)) {
-            throw StepReferenceException("Schrittname \"$name\" ist ein Funktionsname")
+            throw StepReferenceException(FormulaErrorKind.STEP_NAME_IS_FUNCTION, listOf(name))
         }
         if (taken.contains(name)) {
-            throw StepReferenceException("Doppelter Name: \"$name\"")
+            throw StepReferenceException(FormulaErrorKind.DUPLICATE_NAME, listOf(name))
         }
     }
 
@@ -180,11 +180,8 @@ object FormulaEvaluator {
         for (id in idents) {
             if (!known.contains(id) && allSteps.contains(id)) {
                 throw StepReferenceException(
-                    if (id == current) {
-                        "Schritt \"$id\" verweist auf sich selbst"
-                    } else {
-                        "Schritt verweist auf später definierten Schritt \"$id\""
-                    },
+                    if (id == current) FormulaErrorKind.STEP_SELF_REFERENCE else FormulaErrorKind.STEP_FORWARD_REFERENCE,
+                    listOf(id),
                 )
             }
         }
@@ -266,13 +263,13 @@ object FormulaEvaluator {
                 }
                 c == '=' -> {
                     if (next != '=') {
-                        throw FormulaSyntaxException("Unerwartetes Zeichen: \"=\" (Vergleich: \"==\")", i)
+                        throw FormulaSyntaxException(FormulaErrorKind.UNEXPECTED_ASSIGN, position = i)
                     }
                     tokens.add(Token(T.EQ, "==", i))
                     i += 2
                 }
                 c == '!' -> {
-                    if (next != '=') throw FormulaSyntaxException("Unerwartetes Zeichen: \"!\"", i)
+                    if (next != '=') throw FormulaSyntaxException(FormulaErrorKind.UNEXPECTED_CHARACTER, listOf("!"), i)
                     tokens.add(Token(T.NE, "!=", i))
                     i += 2
                 }
@@ -286,7 +283,7 @@ object FormulaEvaluator {
                     val text = s.substring(start, i)
                     val value =
                         text.toDoubleOrNull()
-                            ?: throw FormulaSyntaxException("Ungültige Zahl: $text", start)
+                            ?: throw FormulaSyntaxException(FormulaErrorKind.INVALID_NUMBER, listOf(text), start)
                     tokens.add(Token(T.NUMBER, text, start, value))
                 }
                 isIdentStart(c) -> {
@@ -294,7 +291,7 @@ object FormulaEvaluator {
                     while (i < s.length && (isIdentStart(s[i]) || isDigit(s[i]))) i++
                     tokens.add(Token(T.IDENT, s.substring(start, i), start))
                 }
-                else -> throw FormulaSyntaxException("Unerwartetes Zeichen: \"$c\"", i)
+                else -> throw FormulaSyntaxException(FormulaErrorKind.UNEXPECTED_CHARACTER, listOf(c.toString()), i)
             }
         }
         tokens.add(Token(T.END, "", s.length))
@@ -312,13 +309,11 @@ object FormulaEvaluator {
         fun parseAll(): Node {
             val node = comparison()
             if (cur.type != T.END) {
-                val msg =
-                    when (cur.type) {
-                        T.RPAREN -> "Fehlende öffnende Klammer"
-                        T.NUMBER, T.IDENT -> "Fehlender Operator zwischen Operanden"
-                        else -> "Unerwartetes Zeichen: \"${cur.text}\""
-                    }
-                throw FormulaSyntaxException(msg, cur.pos)
+                throw when (cur.type) {
+                    T.RPAREN -> FormulaSyntaxException(FormulaErrorKind.MISSING_OPENING_PAREN, position = cur.pos)
+                    T.NUMBER, T.IDENT -> FormulaSyntaxException(FormulaErrorKind.MISSING_OPERATOR, position = cur.pos)
+                    else -> FormulaSyntaxException(FormulaErrorKind.UNEXPECTED_CHARACTER, listOf(cur.text), cur.pos)
+                }
             }
             return node
         }
@@ -377,14 +372,14 @@ object FormulaEvaluator {
                     expectClose()
                     inner
                 }
-                T.END -> throw FormulaSyntaxException("Ausdruck unvollständig", t.pos)
-                else -> throw FormulaSyntaxException("Unerwartetes Zeichen: \"${t.text}\"", t.pos)
+                T.END -> throw FormulaSyntaxException(FormulaErrorKind.INCOMPLETE_EXPRESSION, position = t.pos)
+                else -> throw FormulaSyntaxException(FormulaErrorKind.UNEXPECTED_CHARACTER, listOf(t.text), t.pos)
             }
         }
 
         private fun expectClose() {
             if (cur.type != T.RPAREN) {
-                throw FormulaSyntaxException("Nicht geschlossene Klammer", cur.pos)
+                throw FormulaSyntaxException(FormulaErrorKind.UNCLOSED_PAREN, position = cur.pos)
             }
             i++
         }
@@ -404,13 +399,7 @@ object FormulaEvaluator {
             }
             expectClose()
             if (args.size < minArgs || (maxArgs != null && args.size > maxArgs)) {
-                val expected =
-                    when {
-                        maxArgs == null -> "mindestens $minArgs"
-                        minArgs == maxArgs -> "$minArgs"
-                        else -> "$minArgs bis $maxArgs"
-                    }
-                throw WrongArgumentCountException(name, expected, args.size, nameToken.pos)
+                throw WrongArgumentCountException(name, minArgs, maxArgs, args.size, nameToken.pos)
             }
             return Node.Call(name, args)
         }
@@ -420,10 +409,10 @@ object FormulaEvaluator {
 
     private fun finite(
         value: Double,
-        what: String = "Ergebnis",
+        what: String = "",
     ): Double {
         if (value.isNaN() || value.isInfinite()) {
-            throw FormulaDomainException("$what: Ergebnis ist nicht endlich")
+            throw FormulaDomainException(FormulaErrorKind.NOT_FINITE, listOf(what))
         }
         return value
     }
@@ -452,7 +441,7 @@ object FormulaEvaluator {
                     T.GE -> bool(a >= b)
                     T.EQ -> bool(a == b)
                     T.NE -> bool(a != b)
-                    else -> throw FormulaSyntaxException("Unbekannter Operator: ${node.op}")
+                    else -> throw FormulaSyntaxException(FormulaErrorKind.UNKNOWN_OPERATOR, listOf("${node.op}"))
                 }
             }
             is Node.Call -> call(node.name, node.args, scope)
@@ -473,22 +462,22 @@ object FormulaEvaluator {
             "max" -> v.max()
             "clamp" -> {
                 if (v[1] > v[2]) {
-                    throw FormulaDomainException("clamp: untere Grenze größer als obere Grenze")
+                    throw FormulaDomainException(FormulaErrorKind.CLAMP_BOUNDS)
                 }
                 v[0].coerceIn(v[1], v[2])
             }
             "abs" -> kotlin.math.abs(v[0])
             "pow" -> finite(v[0].pow(v[1]), "pow")
             "sqrt" -> {
-                if (v[0] < 0) throw FormulaDomainException("sqrt: Argument darf nicht negativ sein")
+                if (v[0] < 0) throw FormulaDomainException(FormulaErrorKind.SQRT_NEGATIVE)
                 sqrt(v[0])
             }
             "ln" -> {
-                if (v[0] <= 0) throw FormulaDomainException("ln: Argument muss größer als 0 sein")
+                if (v[0] <= 0) throw FormulaDomainException(FormulaErrorKind.LN_NON_POSITIVE)
                 ln(v[0])
             }
             "log10" -> {
-                if (v[0] <= 0) throw FormulaDomainException("log10: Argument muss größer als 0 sein")
+                if (v[0] <= 0) throw FormulaDomainException(FormulaErrorKind.LOG10_NON_POSITIVE)
                 ln(v[0]) / ln(10.0)
             }
             "exp" -> finite(exp(v[0]), "exp")

@@ -2,6 +2,7 @@ package io.github.sphaerox.influx_sensor_widgets.worker
 
 import androidx.work.NetworkType
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import okhttp3.mockwebserver.MockWebServer
 import org.json.JSONObject
@@ -41,7 +42,7 @@ class WidgetRefreshWorkerNetworkTest {
     fun unreachableServerKeepsLastValuesWithinGrace() {
         storageReader.saveWidgetCache("w1", """{"widgetId":"w1","type":"single_value","value":22.8,"timestamp":1000}""")
 
-        val result = WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), nowMillis = { 50_000L })
+        val result = WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german, nowMillis = { 50_000L })
 
         val cache = JSONObject(storageReader.getWidgetCache("w1")!!)
         assertFalse(cache.has("error"))
@@ -53,10 +54,11 @@ class WidgetRefreshWorkerNetworkTest {
     fun unreachableServerShowsErrorAfterGrace() {
         storageReader.saveWidgetCache("w1", """{"widgetId":"w1","type":"single_value","value":22.8,"timestamp":1000}""")
 
-        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), nowMillis = { 50_000L })
+        WidgetRefreshWorker.refreshWidgets(storageReader, InfluxHttpClient(), TestTexts.german, nowMillis = { 50_000L })
         WidgetRefreshWorker.refreshWidgets(
             storageReader,
             InfluxHttpClient(),
+            TestTexts.german,
             nowMillis = { 50_000L + NetworkErrorGrace.GRACE_MILLIS },
         )
 
@@ -75,7 +77,7 @@ class WidgetRefreshWorkerNetworkTest {
 
         var thrown: Exception? = null
         try {
-            WidgetRefreshWorker.refreshWidgetsOrThrowOnNetworkFailure(storageReader, InfluxHttpClient())
+            WidgetRefreshWorker.refreshWidgetsOrThrowOnNetworkFailure(storageReader, InfluxHttpClient(), TestTexts.german)
         } catch (e: Exception) {
             thrown = e
         }

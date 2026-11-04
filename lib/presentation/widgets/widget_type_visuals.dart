@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Icon and short description of each widget type (shared by dashboard and editor).
 class WidgetTypeVisuals {
@@ -22,20 +23,20 @@ class WidgetTypeVisuals {
     }
   }
 
-  static String description(WidgetType type) {
+  static String description(WidgetType type, AppLocalizations l10n) {
     switch (type) {
       case WidgetType.singleValue:
-        return 'Ein aktueller Messwert';
+        return l10n.widgetTypeSingleValueDescription;
       case WidgetType.historyChart:
-        return 'Verlauf über die Zeit';
+        return l10n.widgetTypeHistoryChartDescription;
       case WidgetType.indicatorLamp:
-        return 'Lampe mit Schwellenwert';
+        return l10n.widgetTypeIndicatorLampDescription;
       case WidgetType.multiValue:
-        return 'Mehrere Werte im Überblick';
+        return l10n.widgetTypeMultiValueDescription;
       case WidgetType.aggregate:
-        return 'Min, Max und Mittelwert';
+        return l10n.widgetTypeAggregateDescription;
       case WidgetType.gaugeBar:
-        return 'Pegel mit Farbzonen';
+        return l10n.widgetTypeGaugeBarDescription;
     }
   }
 }

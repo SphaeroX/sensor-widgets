@@ -13,6 +13,7 @@ import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/dashboard/widgets_dashboard_screen.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 class MockSharedWidgetStore extends Mock implements SharedWidgetStore {}
 
@@ -144,7 +145,11 @@ void main() {
             secureTokenStoreProvider.overrideWithValue(mockTokenStore),
             influxApiClientProvider.overrideWithValue(mockApiClient),
           ],
-          child: const MaterialApp(home: WidgetsDashboardScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: WidgetsDashboardScreen(),
+          ),
         ),
       );
       await tester.pumpAndSettle();

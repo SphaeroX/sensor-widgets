@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Represents a selectable schema option with optional data type badge and numeric flag.
 @immutable
@@ -136,7 +137,7 @@ class _SearchableSchemaPickerState extends State<SearchableSchemaPicker> {
 
     Widget? helperWidget;
     if (isLoading) {
-      helperWidget = const Text('Lade aus Datenbank...');
+      helperWidget = Text(AppLocalizations.of(context).schemaLoadingFromDb);
     } else if (hasError && widget.errorMessage != null) {
       helperWidget = Text(
         widget.errorMessage!,
@@ -162,7 +163,7 @@ class _SearchableSchemaPickerState extends State<SearchableSchemaPicker> {
         suffixActions.add(
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Neu laden',
+            tooltip: AppLocalizations.of(context).commonReload,
             onPressed: widget.onReload,
           ),
         );
@@ -172,7 +173,7 @@ class _SearchableSchemaPickerState extends State<SearchableSchemaPicker> {
         suffixActions.add(
           IconButton(
             icon: const Icon(Icons.arrow_drop_down_circle_outlined),
-            tooltip: 'Aus Liste wählen',
+            tooltip: AppLocalizations.of(context).schemaPickFromList,
             onPressed: _openBottomSheet,
           ),
         );
@@ -181,7 +182,7 @@ class _SearchableSchemaPickerState extends State<SearchableSchemaPicker> {
         suffixActions.add(
           IconButton(
             icon: const Icon(Icons.refresh),
-            tooltip: 'Neu laden',
+            tooltip: AppLocalizations.of(context).commonReload,
             onPressed: widget.onReload,
           ),
         );
@@ -286,7 +287,8 @@ class _SchemaPickerBottomSheetState extends State<_SchemaPickerBottomSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      '${widget.title} auswählen',
+                      AppLocalizations.of(context)
+                          .schemaPickTitle(widget.title),
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
@@ -304,7 +306,7 @@ class _SchemaPickerBottomSheetState extends State<_SchemaPickerBottomSheet> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  hintText: 'Suchen...',
+                  hintText: AppLocalizations.of(context).commonSearchHint,
                   border: const OutlineInputBorder(),
                   isDense: true,
                   suffixIcon: _searchQuery.isNotEmpty
@@ -327,7 +329,7 @@ class _SchemaPickerBottomSheetState extends State<_SchemaPickerBottomSheet> {
                   alignment: Alignment.centerLeft,
                   child: FilterChip(
                     key: const Key('numeric_filter_chip'),
-                    label: const Text('Nur Zahlenfelder'),
+                    label: Text(AppLocalizations.of(context).schemaNumericOnly),
                     selected: _filterNumericOnly,
                     onSelected: (val) =>
                         setState(() => _filterNumericOnly = val),
@@ -337,7 +339,9 @@ class _SchemaPickerBottomSheetState extends State<_SchemaPickerBottomSheet> {
             const Divider(),
             Expanded(
               child: filteredOptions.isEmpty
-                  ? const Center(child: Text('Keine Treffer gefunden'))
+                  ? Center(
+                      child: Text(AppLocalizations.of(context).schemaNoMatches),
+                    )
                   : ListView.builder(
                       itemCount: filteredOptions.length,
                       itemBuilder: (context, index) {

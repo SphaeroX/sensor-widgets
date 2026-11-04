@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
@@ -15,24 +16,25 @@ class WidgetsDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final widgetsAsync = ref.watch(widgetsControllerProvider);
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Sensor Widgets'),
+        title: Text(l10n.appTitle),
         actions: [
           IconButton(
             key: const Key('refresh_native_widgets_btn'),
             icon: const Icon(Icons.sync),
-            tooltip: 'Native Widgets synchronisieren',
+            tooltip: l10n.dashboardSyncTooltip,
             onPressed: () async {
               await ref
                   .read(widgetsControllerProvider.notifier)
                   .triggerNativeRefresh();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Native Widgets aktualisiert.'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: Text(l10n.dashboardSyncDone),
+                    duration: const Duration(seconds: 2),
                   ),
                 );
               }
@@ -41,7 +43,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
           IconButton(
             key: const Key('open_formula_help_btn'),
             icon: const Icon(Icons.help_outline),
-            tooltip: 'Formel-Hilfe',
+            tooltip: l10n.dashboardHelpTooltip,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -53,7 +55,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
           IconButton(
             key: const Key('open_connections_btn'),
             icon: const Icon(Icons.settings_ethernet),
-            tooltip: 'InfluxDB Verbindungen',
+            tooltip: l10n.dashboardConnectionsTooltip,
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
@@ -66,7 +68,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
       ),
       body: widgetsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Fehler: $err')),
+        error: (err, _) => Center(child: Text(l10n.commonErrorDetails('$err'))),
         data: (widgets) {
           if (widgets.isEmpty) {
             return Center(
@@ -82,12 +84,12 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Noch keine Widgets konfiguriert',
+                      l10n.dashboardEmptyTitle,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Erstelle dein erstes Widget für den Homescreen!',
+                      l10n.dashboardEmptyBody,
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -96,7 +98,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 16),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.add),
-                      label: const Text('Neues Widget anlegen'),
+                      label: Text(l10n.dashboardCreateWidget),
                       onPressed: () {
                         Navigator.of(context).push(
                           MaterialPageRoute<void>(
@@ -190,7 +192,10 @@ class _WidgetCardItem extends ConsumerWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${widgetDef.measurement} • alle ${widgetDef.refreshIntervalMinutes}m',
+                          AppLocalizations.of(context).dashboardCardSubtitle(
+                            widgetDef.measurement,
+                            widgetDef.refreshIntervalMinutes,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -235,8 +240,9 @@ class _WidgetCardItem extends ConsumerWidget {
   }
 
   Widget _buildMenu(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return PopupMenuButton<String>(
-      tooltip: 'Aktionen',
+      tooltip: l10n.dashboardActionsTooltip,
       onSelected: (value) async {
         if (value == 'edit') {
           _openEditor(context);
@@ -251,23 +257,23 @@ class _WidgetCardItem extends ConsumerWidget {
         }
       },
       itemBuilder: (context) => [
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit, size: 20),
-              SizedBox(width: 8),
-              Text('Bearbeiten'),
+              const Icon(Icons.edit, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.commonEdit),
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: 'duplicate',
           child: Row(
             children: [
-              Icon(Icons.copy, size: 20),
-              SizedBox(width: 8),
-              Text('Duplizieren'),
+              const Icon(Icons.copy, size: 20),
+              const SizedBox(width: 8),
+              Text(l10n.commonDuplicate),
             ],
           ),
         ),
@@ -282,7 +288,7 @@ class _WidgetCardItem extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Löschen',
+                l10n.commonDelete,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
             ],

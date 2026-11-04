@@ -1,4 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    English texts of the native Android widgets. English is the fallback for
+    every device language without its own values-<lang>/strings.xml.
+    Keep the names in sync with values-de/strings.xml.
+-->
 <resources>
-    <string name="app_name">Sensor Widgets</string>
+    <string name="app_name" translatable="false">Sensor Widgets</string>
+
+    <!-- Home-screen widget -->
+    <string name="widget_setup_title">Set up widget</string>
+    <string name="widget_tap_to_open">Tap to open the app</string>
+    <string name="widget_loading">Fetching data…</string>
+    <string name="widget_error_header">Error</string>
+    <string name="widget_min_max">Min: %1$s  Max: %2$s</string>
+    <string name="widget_status_active">Status: active</string>
+    <string name="widget_status_inactive">Status: inactive</string>
+    <string name="widget_configure">Configure widget</string>
+    <string name="widget_cache_read_error">Error reading the cached data</string>
+    <string name="widget_row_error">Error: %1$s</string>
+
+    <!-- Widget picker -->
+    <string name="config_no_widgets">No widgets configured yet.\n\nPlease create a widget in the app first and then place it on the home screen.</string>
+    <string name="config_open_app">Open Sensor Widgets app</string>
+    <string name="config_pick_widget">Choose the widget for this home-screen slot:</string>
+
+    <!-- Threshold notifications -->
+    <string name="alert_channel_name">Thresholds</string>
+    <string name="alert_channel_description">Notifications when a widget value crosses a threshold</string>
+    <string name="alert_body">%1$s: %2$s%3$s (%4$s %5$s%3$s)</string>
+    <string name="alert_above">above</string>
+    <string name="alert_below">below</string>
+    <string name="alert_target_min">Minimum</string>
+    <string name="alert_target_max">Maximum</string>
+    <string name="alert_target_mean">Average</string>
+
+    <!-- Refresh errors written to the widget cache -->
+    <string name="error_connection_not_found">Connection not found</string>
+    <string name="error_token_missing">Authentication token missing</string>
+    <string name="error_network">Network error</string>
+    <string name="error_query">Query error</string>
+    <string name="error_formula">Formula error</string>
+    <string name="error_no_data">No readings found</string>
+    <string name="formula_bucket_error_one">1 time bucket could not be calculated: %1$s</string>
+    <string name="formula_bucket_errors">%1$d time buckets could not be calculated: %2$s</string>
+
+    <!-- Formula errors (see formula/FormulaException.kt) -->
+    <string name="formula_error_empty">Formula must not be empty</string>
+    <string name="formula_error_unexpected_character">Unexpected character: \"%1$s\"</string>
+    <string name="formula_error_unexpected_assign">Unexpected character: \"=\" (comparison: \"==\")</string>
+    <string name="formula_error_invalid_number">Invalid number: %1$s</string>
+    <string name="formula_error_unknown_operator">Unknown operator: %1$s</string>
+    <string name="formula_error_missing_opening_paren">Missing opening parenthesis</string>
+    <string name="formula_error_missing_operator">Missing operator between operands</string>
+    <string name="formula_error_incomplete">Incomplete expression</string>
+    <string name="formula_error_unclosed_paren">Unclosed parenthesis</string>
+    <string name="formula_error_invalid_step_name">Invalid step name: \"%1$s\"</string>
+    <string name="formula_error_step_name_is_function">Step name \"%1$s\" is a function name</string>
+    <string name="formula_error_duplicate_name">Duplicate name: \"%1$s\"</string>
+    <string name="formula_error_step_self_reference">Step \"%1$s\" refers to itself</string>
+    <string name="formula_error_step_forward_reference">Step refers to a later step \"%1$s\"</string>
+    <string name="formula_error_division_by_zero">Division by zero</string>
+    <string name="formula_error_missing_variable">Missing variable: %1$s</string>
+    <string name="formula_error_unknown_function">Unknown function: %1$s</string>
+    <string name="formula_error_wrong_argument_count">Function %1$s expects %2$s argument(s), got: %3$s</string>
+    <string name="formula_arity_at_least">at least %1$s</string>
+    <string name="formula_arity_range">%1$s to %2$s</string>
+    <string name="formula_error_clamp_bounds">clamp: lower bound greater than upper bound</string>
+    <string name="formula_error_sqrt_negative">sqrt: argument must not be negative</string>
+    <string name="formula_error_ln_non_positive">ln: argument must be greater than 0</string>
+    <string name="formula_error_log10_non_positive">log10: argument must be greater than 0</string>
+    <string name="formula_error_not_finite">%1$s: result is not finite</string>
+    <string name="formula_error_result_not_finite">Result is not finite</string>
+    <string name="formula_error_no_formula">Widget has no formula</string>
 </resources>

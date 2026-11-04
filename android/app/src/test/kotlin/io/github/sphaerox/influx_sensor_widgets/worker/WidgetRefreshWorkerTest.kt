@@ -1,6 +1,7 @@
 package io.github.sphaerox.influx_sensor_widgets.worker
 
 import io.github.sphaerox.influx_sensor_widgets.influx.InfluxHttpClient
+import io.github.sphaerox.influx_sensor_widgets.l10n.TestTexts
 import io.github.sphaerox.influx_sensor_widgets.storage.WidgetStorageReader
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -96,7 +97,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w1")
@@ -126,7 +127,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w-broken")
@@ -194,7 +195,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w-calc")
@@ -264,7 +265,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w-divzero")
@@ -334,7 +335,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w-missing")
@@ -408,7 +409,7 @@ class WidgetRefreshWorkerTest {
             """.trimIndent()
 
         val httpClient = InfluxHttpClient()
-        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient)
+        val count = WidgetRefreshWorker.refreshWidgets(storageReader, httpClient, TestTexts.german)
 
         assertEquals(1, count)
         val cache = storageReader.getWidgetCache("w-lamp")

@@ -6,10 +6,12 @@ import 'package:sensor_widgets/domain/models/formula_step.dart';
 import 'package:sensor_widgets/domain/models/formula_variable.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/l10n/formula_error_text.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_content.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/help/formula_llm_prompt.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Loads the field keys (with type) of a measurement.
 typedef FieldInfoLoader = Future<List<InfluxFieldInfo>> Function(
@@ -179,14 +181,18 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     }
   }
 
-  String? _getValidationMessage() {
+  /// Problem of the current formula, if any; [syntax] marks syntax errors
+  /// (shown as field error) apart from warnings (shown as helper text).
+  ({String text, bool syntax})? _validation() {
+    final l10n = AppLocalizations.of(context);
     final formula = _formulaController.text.trim();
     if (formula.isEmpty) {
       return null;
     }
-    final syntaxErr = FormulaEvaluator.validateSyntax(formula);
+    final syntaxErr = FormulaEvaluator.syntaxError(formula);
     if (syntaxErr != null) {
-      return 'Syntaxfehler: $syntaxErr';
+      final text = formulaErrorText(l10n, syntaxErr, withPosition: true);
+      return (text: l10n.formulaSyntaxError(text), syntax: true);
     }
     final referenced = FormulaEvaluator.extractVariables(formula);
     final defined = {
@@ -195,15 +201,23 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     };
     final missing = referenced.where((r) => !defined.contains(r)).toList();
     if (missing.isNotEmpty) {
-      return 'Nicht definierte Variable: ${missing.join(', ')}';
+      return (
+        text: l10n.formulaUndefinedVariables(missing.join(', ')),
+        syntax: false,
+      );
     }
     if (widget.steps.isNotEmpty) {
-      final stepErr = FormulaEvaluator.validateSteps(
+      final stepErr = FormulaEvaluator.stepsError(
         widget.steps,
         formula,
         variableNames: widget.variables.map((v) => v.name).toList(),
       );
-      if (stepErr != null) return 'Schrittfehler: $stepErr';
+      if (stepErr != null) {
+        return (
+          text: l10n.formulaStepError(formulaErrorText(l10n, stepErr)),
+          syntax: false,
+        );
+      }
     }
     return null;
   }
@@ -259,13 +273,14 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Vorlage "${template.title}" übernommen. Bitte die Variablen zuordnen.',
+          AppLocalizations.of(context).formulaTemplateApplied(template.title),
         ),
       ),
     );
   }
 
   String _llmPrompt() => buildFormulaLlmPrompt(
+    l10n: AppLocalizations.of(context),
     measurement: widget.defaultMeasurement,
     availableMeasurements: widget.availableMeasurements,
     availableFields: widget.availableFields,
@@ -277,10 +292,9 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     await share(_llmPrompt());
   }
 
-  static Future<void> _shareViaSystem(String text) async {
-    await SharePlus.instance.share(
-      ShareParams(text: text, subject: 'Formel-Prompt für KI'),
-    );
+  Future<void> _shareViaSystem(String text) async {
+    final subject = AppLocalizations.of(context).formulaShareSubject;
+    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
   }
 
   Future<void> _copyLlmPrompt() async {
@@ -288,23 +302,22 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
     await Clipboard.setData(ClipboardData(text: prompt));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Prompt kopiert. In eine KI einfügen, dann die Aufgabe beschreiben.',
-        ),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).widgetCodePromptCopied),
       ),
     );
   }
 
   void _addStep() {
     final taken = widget.steps.map((s) => s.name).toSet();
+    final prefix = AppLocalizations.of(context).formulaDefaultStepName;
     var n = 1;
-    while (taken.contains('schritt$n')) {
+    while (taken.contains('$prefix$n')) {
       n++;
     }
     widget.onStepsChanged?.call([
       ...widget.steps,
-      FormulaStep(name: 'schritt$n', expression: ''),
+      FormulaStep(name: '$prefix$n', expression: ''),
     ]);
   }
 
@@ -343,10 +356,11 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
 
   @override
   Widget build(BuildContext context) {
-    final validationMsg = _getValidationMessage();
-    final isSyntaxError =
-        validationMsg != null && validationMsg.startsWith('Syntaxfehler:');
-    final isWarning = validationMsg != null && !isSyntaxError;
+    final l10n = AppLocalizations.of(context);
+    final validation = _validation();
+    final validationMsg = validation?.text;
+    final isSyntaxError = validation?.syntax ?? false;
+    final isWarning = validation != null && !isSyntaxError;
 
     return Card(
       child: Padding(
@@ -359,10 +373,8 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 key: const Key('formula_enabled_switch'),
                 secondary: const Icon(Icons.calculate_outlined, size: 28),
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Berechnungsformel verwenden'),
-                subtitle: const Text(
-                  'Werte aus InfluxDB vor der Anzeige lokal verrechnen',
-                ),
+                title: Text(l10n.formulaEnableTitle),
+                subtitle: Text(l10n.formulaEnableSubtitle),
                 value: widget.isEnabled,
                 onChanged: (val) {
                   widget.onEnabledChanged(val);
@@ -377,14 +389,14 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Mathematische Formel',
+                      l10n.formulaTitle,
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
                   IconButton(
                     key: const Key('formula_help_button'),
                     icon: const Icon(Icons.help_outline, size: 20),
-                    tooltip: 'Hilfe und Vorlagen',
+                    tooltip: l10n.formulaHelpTooltip,
                     visualDensity: VisualDensity.compact,
                     onPressed: _openHelp,
                   ),
@@ -398,13 +410,13 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                       TextButton.icon(
                         key: const Key('copy_llm_prompt_button'),
                         icon: const Icon(Icons.copy_all_outlined, size: 18),
-                        label: const Text('Prompt für KI kopieren'),
+                        label: Text(l10n.widgetCodeCopyPrompt),
                         onPressed: _copyLlmPrompt,
                       ),
                       TextButton.icon(
                         key: const Key('share_llm_prompt_button'),
                         icon: const Icon(Icons.share_outlined, size: 18),
-                        label: const Text('Teilen'),
+                        label: Text(l10n.commonShare),
                         onPressed: _shareLlmPrompt,
                       ),
                     ],
@@ -415,13 +427,13 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 key: const Key('formula_input_field'),
                 controller: _formulaController,
                 decoration: InputDecoration(
-                  labelText: 'Formel (z. B. (A + B) / 2 oder min(A, B))',
+                  labelText: l10n.formulaInputLabel,
                   border: const OutlineInputBorder(),
                   errorText: isSyntaxError ? validationMsg : null,
                   helperText: isWarning
                       ? validationMsg
                       : (validationMsg == null
-                            ? 'Unterstützt + - * /, Klammern, Vergleiche, Funktionen und if(...)'
+                            ? l10n.formulaInputHelper
                             : null),
                   helperStyle: isWarning
                       ? TextStyle(color: Theme.of(context).colorScheme.error)
@@ -442,24 +454,24 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Text(
-                    'Variablen-Zuweisung',
+                    l10n.formulaVariablesTitle,
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   TextButton.icon(
                     key: const Key('add_formula_variable_button'),
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Variable hinzufügen'),
+                    label: Text(l10n.formulaAddVariable),
                     onPressed: _addVariable,
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               if (widget.variables.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Keine Variablen vorhanden. Füge mindestens eine Variable hinzu.',
-                    style: TextStyle(color: Colors.grey),
+                    l10n.formulaNoVariables,
+                    style: const TextStyle(color: Colors.grey),
                   ),
                 )
               else
@@ -517,6 +529,7 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
 
   Widget _buildStepsSection() {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -524,20 +537,17 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
           alignment: WrapAlignment.spaceBetween,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text('Zwischenschritte', style: theme.textTheme.titleSmall),
+            Text(l10n.formulaStepsTitle, style: theme.textTheme.titleSmall),
             TextButton.icon(
               key: const Key('add_formula_step_button'),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Schritt hinzufügen'),
+              label: Text(l10n.formulaAddStep),
               onPressed: _addStep,
             ),
           ],
         ),
         if (widget.steps.isEmpty)
-          Text(
-            'Optional: benannte Teilformeln, die in der Formel oben verwendet werden. Die Formel oben ist das Ergebnis.',
-            style: theme.textTheme.bodySmall,
-          ),
+          Text(l10n.formulaStepsHint, style: theme.textTheme.bodySmall),
         for (var i = 0; i < widget.steps.length; i++)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -549,9 +559,9 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                   child: TextFormField(
                     key: Key('step_name_$i'),
                     controller: _stepNameControllers[i],
-                    decoration: const InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.formulaStepName,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                     onChanged: (v) => _updateStep(i, name: v.trim()),
@@ -563,7 +573,7 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                     key: Key('step_expression_$i'),
                     controller: _stepExprControllers[i],
                     decoration: InputDecoration(
-                      labelText: 'Ausdruck',
+                      labelText: l10n.formulaStepExpression,
                       border: const OutlineInputBorder(),
                       isDense: true,
                       errorText: _stepSyntaxError(widget.steps[i].expression),
@@ -574,7 +584,7 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
                 IconButton(
                   key: Key('delete_step_$i'),
                   icon: const Icon(Icons.delete_outline, size: 20),
-                  tooltip: 'Schritt löschen',
+                  tooltip: l10n.formulaDeleteStep,
                   onPressed: () => _removeStep(i),
                 ),
               ],
@@ -586,11 +596,19 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
 
   String? _stepSyntaxError(String expression) {
     if (expression.trim().isEmpty) return null;
-    return FormulaEvaluator.validateSyntax(expression);
+    final error = FormulaEvaluator.syntaxError(expression);
+    return error == null
+        ? null
+        : formulaErrorText(
+            AppLocalizations.of(context),
+            error,
+            withPosition: true,
+          );
   }
 
   Widget _buildVariableTile(FormulaVariable variable, int index) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
     final details = [
       if (variable.measurement != null) variable.measurement!,
       if (variable.tagFilters != null && variable.tagFilters!.isNotEmpty)
@@ -620,13 +638,13 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Variable ${variable.name}',
+                  l10n.formulaVariableTitle(variable.name),
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   variable.field.isNotEmpty
                       ? variable.field
-                      : 'Kein Feld zugewiesen',
+                      : l10n.formulaNoFieldAssigned,
                   style: theme.textTheme.bodySmall,
                 ),
                 if (details.isNotEmpty)
@@ -642,13 +660,13 @@ class _FormulaEditorSectionState extends State<FormulaEditorSection> {
           IconButton(
             key: Key('edit_variable_${variable.name}_button'),
             icon: const Icon(Icons.edit, size: 20),
-            tooltip: 'Feld bearbeiten',
+            tooltip: l10n.formulaEditField,
             onPressed: () => _editVariableDialog(variable, index),
           ),
           IconButton(
             key: Key('delete_variable_${variable.name}_button'),
             icon: const Icon(Icons.delete_outline, size: 20),
-            tooltip: 'Variable löschen',
+            tooltip: l10n.formulaDeleteVariable,
             onPressed: () => _removeVariable(index),
           ),
         ],
@@ -792,8 +810,9 @@ class _VariableDialogState extends State<_VariableDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return AlertDialog(
-      title: Text('Variable ${widget.variable.name} anpassen'),
+      title: Text(l10n.formulaVariableDialogTitle(widget.variable.name)),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -801,7 +820,7 @@ class _VariableDialogState extends State<_VariableDialog> {
           children: [
             SearchableSchemaPicker(
               fieldKey: const Key('variable_measurement_input'),
-              label: 'Abweichendes Measurement (optional)',
+              label: l10n.formulaVariableMeasurement,
               hintText: widget.defaultMeasurement,
               selectedValue: _measurement,
               options: widget.availableMeasurements
@@ -815,7 +834,7 @@ class _VariableDialogState extends State<_VariableDialog> {
             const SizedBox(height: 12),
             SearchableSchemaPicker(
               fieldKey: const Key('variable_field_input'),
-              label: 'Feldname (z. B. temperature)',
+              label: l10n.multiFieldNameLabel,
               selectedValue: _field,
               options: _fields.map(SchemaPickerOption.fromFieldInfo).toList(),
               status: _fieldStatus,
@@ -824,7 +843,10 @@ class _VariableDialogState extends State<_VariableDialog> {
               onReload: widget.fieldLoader == null ? null : _loadSchema,
             ),
             const SizedBox(height: 12),
-            Text('Tag-Filter', style: Theme.of(context).textTheme.titleSmall),
+            Text(
+              l10n.formulaVariableTagFilters,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             if (_tags.isNotEmpty)
               Wrap(
                 spacing: 6,
@@ -840,7 +862,7 @@ class _VariableDialogState extends State<_VariableDialog> {
             const SizedBox(height: 8),
             SearchableSchemaPicker(
               fieldKey: const Key('variable_tag_key_input'),
-              label: 'Tag',
+              label: l10n.formulaVariableTag,
               selectedValue: _tagKey,
               options: _tagKeys.map(SchemaPickerOption.fromString).toList(),
               onSelected: (v) {
@@ -851,7 +873,7 @@ class _VariableDialogState extends State<_VariableDialog> {
             const SizedBox(height: 8),
             SearchableSchemaPicker(
               fieldKey: const Key('variable_tag_value_input'),
-              label: 'Wert',
+              label: l10n.formulaVariableTagValue,
               selectedValue: _tagValue,
               options: _tagValues.map(SchemaPickerOption.fromString).toList(),
               onSelected: (v) => _tagValue = v,
@@ -861,7 +883,7 @@ class _VariableDialogState extends State<_VariableDialog> {
               child: TextButton.icon(
                 key: const Key('add_variable_tag_button'),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Tag-Filter hinzufügen'),
+                label: Text(l10n.formulaVariableAddTag),
                 onPressed: _addTag,
               ),
             ),
@@ -869,9 +891,9 @@ class _VariableDialogState extends State<_VariableDialog> {
             TextFormField(
               key: const Key('variable_label_input'),
               controller: _labelController,
-              decoration: const InputDecoration(
-                labelText: 'Bezeichnung (optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.formulaVariableLabel,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -880,12 +902,12 @@ class _VariableDialogState extends State<_VariableDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
+          child: Text(l10n.commonCancel),
         ),
         ElevatedButton(
           key: const Key('apply_variable_button'),
           onPressed: () => Navigator.of(context).pop(_result()),
-          child: const Text('Übernehmen'),
+          child: Text(l10n.commonApply),
         ),
       ],
     );

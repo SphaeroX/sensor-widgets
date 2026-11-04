@@ -98,31 +98,42 @@ class FormulaEvaluator {
   /// Names of all supported functions (used by the in-app help).
   static List<String> get functionNames => _functions.keys.toList();
 
-  /// Validates formula syntax. Returns null if valid, or an error description
-  /// string that includes the 1-based error position where known.
+  /// Validates formula syntax. Returns null if valid, or an English error
+  /// description that includes the 1-based error position where known.
+  /// The UI uses [syntaxError] and translates it.
   static String? validateSyntax(String formula) {
+    final e = syntaxError(formula);
+    if (e == null) return null;
+    final position = formulaErrorPosition(e);
+    return position == null
+        ? e.message
+        : '${e.message} (Position ${position + 1})';
+  }
+
+  /// The syntax error of [formula] (see [formulaErrorPosition]), or null.
+  static FormulaException? syntaxError(String formula) {
     if (formula.trim().isEmpty) {
-      return 'Formel darf nicht leer sein';
+      return const FormulaSyntaxException(FormulaErrorKind.emptyFormula);
     }
     try {
       _parse(formula);
       return null;
     } on FormulaException catch (e) {
-      final position = switch (e) {
-        FormulaSyntaxException(:final position) => position,
-        UnknownFunctionException(:final position) => position,
-        WrongArgumentCountException(:final position) => position,
-        _ => null,
-      };
-      return position == null
-          ? e.message
-          : '${e.message} (Position ${position + 1})';
+      return e;
     }
   }
 
   /// Validates [steps] and the final [formula] without evaluating them.
-  /// Returns null if valid, or the first error message.
+  /// Returns null if valid, or the first error message (English; the UI uses
+  /// [stepsError] and translates it).
   static String? validateSteps(
+    List<FormulaStep> steps,
+    String formula, {
+    required List<String> variableNames,
+  }) => stepsError(steps, formula, variableNames: variableNames)?.message;
+
+  /// The first error of [steps] and the final [formula], or null.
+  static FormulaException? stepsError(
     List<FormulaStep> steps,
     String formula, {
     required List<String> variableNames,
@@ -138,7 +149,7 @@ class FormulaEvaluator {
       _checkReferences(_parse(formula), known, const {}, null);
       return null;
     } on FormulaException catch (e) {
-      return e.message;
+      return e;
     }
   }
 
@@ -164,7 +175,7 @@ class FormulaEvaluator {
     List<FormulaStep> steps = const [],
   }) {
     if (formula.trim().isEmpty) {
-      throw const FormulaSyntaxException('Formel darf nicht leer sein');
+      throw const FormulaSyntaxException(FormulaErrorKind.emptyFormula);
     }
     final scope = Map<String, double>.of(variables);
     final allSteps = steps.map((s) => s.name).toSet();
@@ -179,13 +190,13 @@ class FormulaEvaluator {
 
   static void _checkStepName(String name, Iterable<String> taken) {
     if (!_identPattern.hasMatch(name)) {
-      throw StepReferenceException('Ungültiger Schrittname: "$name"');
+      throw StepReferenceException(FormulaErrorKind.invalidStepName, [name]);
     }
     if (_functions.containsKey(name)) {
-      throw StepReferenceException('Schrittname "$name" ist ein Funktionsname');
+      throw StepReferenceException(FormulaErrorKind.stepNameIsFunction, [name]);
     }
     if (taken.contains(name)) {
-      throw StepReferenceException('Doppelter Name: "$name"');
+      throw StepReferenceException(FormulaErrorKind.duplicateName, [name]);
     }
   }
 
@@ -201,8 +212,9 @@ class FormulaEvaluator {
       if (!known.contains(id) && allSteps.contains(id)) {
         throw StepReferenceException(
           id == current
-              ? 'Schritt "$id" verweist auf sich selbst'
-              : 'Schritt verweist auf später definierten Schritt "$id"',
+              ? FormulaErrorKind.stepSelfReference
+              : FormulaErrorKind.stepForwardReference,
+          [id],
         );
       }
     }
@@ -286,8 +298,9 @@ class FormulaEvaluator {
         case '=':
           if (next != '=') {
             throw FormulaSyntaxException(
-              'Unerwartetes Zeichen: "=" (Vergleich: "==")',
-              position: i,
+              FormulaErrorKind.unexpectedAssign,
+              const [],
+              i,
             );
           }
           tokens.add(_Token(_T.eq, '==', i));
@@ -295,8 +308,9 @@ class FormulaEvaluator {
         case '!':
           if (next != '=') {
             throw FormulaSyntaxException(
-              'Unerwartetes Zeichen: "!"',
-              position: i,
+              FormulaErrorKind.unexpectedCharacter,
+              const ['!'],
+              i,
             );
           }
           tokens.add(_Token(_T.ne, '!=', i));
@@ -313,10 +327,9 @@ class FormulaEvaluator {
             final text = s.substring(start, i);
             final value = double.tryParse(text);
             if (value == null) {
-              throw FormulaSyntaxException(
-                'Ungültige Zahl: $text',
-                position: start,
-              );
+              throw FormulaSyntaxException(FormulaErrorKind.invalidNumber, [
+                text,
+              ], start);
             }
             tokens.add(_Token(_T.number, text, start, value));
           } else if (_isIdentStart(c)) {
@@ -326,10 +339,9 @@ class FormulaEvaluator {
             }
             tokens.add(_Token(_T.identifier, s.substring(start, i), start));
           } else {
-            throw FormulaSyntaxException(
-              'Unerwartetes Zeichen: "$c"',
-              position: i,
-            );
+            throw FormulaSyntaxException(FormulaErrorKind.unexpectedCharacter, [
+              c,
+            ], i);
           }
       }
     }
@@ -377,7 +389,9 @@ class FormulaEvaluator {
           _T.ge => a >= b ? 1.0 : 0.0,
           _T.eq => a == b ? 1.0 : 0.0,
           _T.ne => a != b ? 1.0 : 0.0,
-          _ => throw FormulaSyntaxException('Unbekannter Operator: $op'),
+          _ => throw FormulaSyntaxException(FormulaErrorKind.unknownOperator, [
+            '$op',
+          ]),
         });
       case _Call(:final name, :final args):
         return _call(name, args, scope);
@@ -401,9 +415,7 @@ class FormulaEvaluator {
         return v.reduce(math.max);
       case 'clamp':
         if (v[1] > v[2]) {
-          throw const FormulaDomainException(
-            'clamp: untere Grenze größer als obere Grenze',
-          );
+          throw const FormulaDomainException(FormulaErrorKind.clampBounds);
         }
         return v[0].clamp(v[1], v[2]).toDouble();
       case 'abs':
@@ -412,23 +424,17 @@ class FormulaEvaluator {
         return _finite(math.pow(v[0], v[1]).toDouble(), 'pow');
       case 'sqrt':
         if (v[0] < 0) {
-          throw const FormulaDomainException(
-            'sqrt: Argument darf nicht negativ sein',
-          );
+          throw const FormulaDomainException(FormulaErrorKind.sqrtNegative);
         }
         return math.sqrt(v[0]);
       case 'ln':
         if (v[0] <= 0) {
-          throw const FormulaDomainException(
-            'ln: Argument muss größer als 0 sein',
-          );
+          throw const FormulaDomainException(FormulaErrorKind.lnNonPositive);
         }
         return math.log(v[0]);
       case 'log10':
         if (v[0] <= 0) {
-          throw const FormulaDomainException(
-            'log10: Argument muss größer als 0 sein',
-          );
+          throw const FormulaDomainException(FormulaErrorKind.log10NonPositive);
         }
         return math.log(v[0]) / math.ln10;
       case 'exp':
@@ -443,9 +449,9 @@ class FormulaEvaluator {
     throw UnknownFunctionException(name);
   }
 
-  static double _finite(double value, [String what = 'Ergebnis']) {
+  static double _finite(double value, [String what = '']) {
     if (value.isNaN || value.isInfinite) {
-      throw FormulaDomainException('$what: Ergebnis ist nicht endlich');
+      throw FormulaDomainException(FormulaErrorKind.notFinite, [what]);
     }
     return value;
   }
@@ -472,11 +478,21 @@ class _Parser {
   _Node parseAll() {
     final node = _comparison();
     if (_cur.type != _T.end) {
-      throw FormulaSyntaxException(switch (_cur.type) {
-        _T.rparen => 'Fehlende öffnende Klammer',
-        _T.number || _T.identifier => 'Fehlender Operator zwischen Operanden',
-        _ => 'Unerwartetes Zeichen: "${_cur.text}"',
-      }, position: _cur.pos);
+      throw switch (_cur.type) {
+        _T.rparen => FormulaSyntaxException(
+          FormulaErrorKind.missingOpeningParen,
+          const [],
+          _cur.pos,
+        ),
+        _T.number || _T.identifier => FormulaSyntaxException(
+          FormulaErrorKind.missingOperator,
+          const [],
+          _cur.pos,
+        ),
+        _ => FormulaSyntaxException(FormulaErrorKind.unexpectedCharacter, [
+          _cur.text,
+        ], _cur.pos),
+      };
     }
     return node;
   }
@@ -534,20 +550,24 @@ class _Parser {
         _expectClose();
         return inner;
       case _T.end:
-        throw FormulaSyntaxException('Ausdruck unvollständig', position: t.pos);
-      default:
         throw FormulaSyntaxException(
-          'Unerwartetes Zeichen: "${t.text}"',
-          position: t.pos,
+          FormulaErrorKind.incompleteExpression,
+          const [],
+          t.pos,
         );
+      default:
+        throw FormulaSyntaxException(FormulaErrorKind.unexpectedCharacter, [
+          t.text,
+        ], t.pos);
     }
   }
 
   void _expectClose() {
     if (_cur.type != _T.rparen) {
       throw FormulaSyntaxException(
-        'Nicht geschlossene Klammer',
-        position: _cur.pos,
+        FormulaErrorKind.unclosedParen,
+        const [],
+        _cur.pos,
       );
     }
     _i++;
@@ -571,14 +591,10 @@ class _Parser {
     _expectClose();
     final (minArgs, maxArgs) = arity;
     if (args.length < minArgs || (maxArgs != null && args.length > maxArgs)) {
-      final expected = maxArgs == null
-          ? 'mindestens $minArgs'
-          : minArgs == maxArgs
-          ? '$minArgs'
-          : '$minArgs bis $maxArgs';
       throw WrongArgumentCountException(
         name,
-        expected,
+        minArgs,
+        maxArgs,
         args.length,
         position: nameToken.pos,
       );

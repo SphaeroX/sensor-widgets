@@ -1,6 +1,8 @@
 package io.github.sphaerox.influx_sensor_widgets.glance
 
+import io.github.sphaerox.influx_sensor_widgets.R
 import io.github.sphaerox.influx_sensor_widgets.glance.chart.ChartMathAndFormatter
+import io.github.sphaerox.influx_sensor_widgets.l10n.WidgetTexts
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetDefinition
 import io.github.sphaerox.influx_sensor_widgets.model.WidgetType
 import org.json.JSONObject
@@ -11,11 +13,12 @@ object WidgetUiStateMapper {
         boundWidgetId: String?,
         widget: WidgetDefinition?,
         cacheJson: String?,
+        texts: WidgetTexts,
     ): WidgetUiState {
         if (boundWidgetId == null || widget == null) {
             return WidgetUiState(
                 widgetId = boundWidgetId ?: "",
-                title = "Widget konfigurieren",
+                title = texts.get(R.string.widget_configure),
                 type = WidgetType.SINGLE_VALUE,
                 isConfigured = false,
             )
@@ -42,7 +45,7 @@ object WidgetUiStateMapper {
                     type = widget.type,
                     unit = widget.unit,
                     isConfigured = true,
-                    errorMessage = "Fehler beim Lesen der Cache-Daten",
+                    errorMessage = texts.get(R.string.widget_cache_read_error),
                 )
             }
 
@@ -61,7 +64,7 @@ object WidgetUiStateMapper {
         val timestampStr = if (timestamp > 0L) ChartMathAndFormatter.formatTimestamp(timestamp) else null
 
         val state =
-            mapTypeState(widget, cacheObj, timestampStr)
+            mapTypeState(widget, cacheObj, timestampStr, texts)
         val warning = cacheObj.optString("warning").takeIf { it.isNotEmpty() }
         return state.copy(warningMessage = warning, appearance = widget.appearance)
     }
@@ -70,6 +73,7 @@ object WidgetUiStateMapper {
         widget: WidgetDefinition,
         cacheObj: JSONObject,
         timestampStr: String?,
+        texts: WidgetTexts,
     ): WidgetUiState =
         when (widget.type) {
             WidgetType.SINGLE_VALUE -> {
@@ -196,7 +200,7 @@ object WidgetUiStateMapper {
                     }
                 }
                 val errObj = cacheObj.optJSONObject("valueErrors")
-                errObj?.keys()?.forEach { f -> map[f] = "Fehler: " + errObj.getString(f) }
+                errObj?.keys()?.forEach { f -> map[f] = texts.get(R.string.widget_row_error, errObj.getString(f)) }
                 WidgetUiState(
                     widgetId = widget.id,
                     title = widget.title,

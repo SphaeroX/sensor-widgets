@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/domain/models/alert_rule.dart';
 import 'package:sensor_widgets/domain/models/threshold_rule.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/alert_rules_editor.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   const singleTarget = [AlertTarget(id: 'value', label: 'Berechneter Wert')];
@@ -20,6 +21,8 @@ void main() {
   }) {
     return tester.pumpWidget(
       MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: SingleChildScrollView(
             child: AlertRulesEditor(

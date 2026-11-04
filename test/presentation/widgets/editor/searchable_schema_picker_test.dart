@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 void main() {
   Widget buildTestable(Widget child) {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: Padding(padding: const EdgeInsets.all(16), child: child),

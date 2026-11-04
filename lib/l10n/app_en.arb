@@ -1,0 +1,800 @@
+{
+  "@@locale": "en",
+  "appTitle": "Sensor Widgets",
+  "commonCancel": "Cancel",
+  "commonEdit": "Edit",
+  "commonDuplicate": "Duplicate",
+  "commonDelete": "Delete",
+  "commonSave": "Save",
+  "commonReset": "Reset",
+  "commonErrorDetails": "Error: {error}",
+  "@commonErrorDetails": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "dashboardSyncTooltip": "Sync native widgets",
+  "dashboardSyncDone": "Native widgets updated.",
+  "dashboardHelpTooltip": "Formula help",
+  "dashboardConnectionsTooltip": "InfluxDB connections",
+  "dashboardEmptyTitle": "No widgets configured yet",
+  "dashboardEmptyBody": "Create your first home-screen widget!",
+  "dashboardCreateWidget": "Create widget",
+  "dashboardCardSubtitle": "{measurement} • every {minutes} min",
+  "@dashboardCardSubtitle": {
+    "placeholders": {
+      "measurement": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "dashboardActionsTooltip": "Actions",
+  "connectionsTitle": "InfluxDB Connections",
+  "connectionsEmptyTitle": "No connections configured",
+  "connectionsEmptyHint": "Tap + to add an InfluxDB server",
+  "connectionsSubtitle": "{url} • DB: {database}",
+  "@connectionsSubtitle": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      },
+      "database": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsDeleteTitle": "Delete Connection",
+  "connectionsDeleteConfirm": "Are you sure you want to delete \"{name}\"?",
+  "@connectionsDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionsLoadError": "Error loading connections: {error}",
+  "@connectionsLoadError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionTestSuccess": "Connection successful!",
+  "connectionTestNoResponse": "Connection failed: no response",
+  "connectionTestFailed": "Connection failed: {error}",
+  "@connectionTestFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionSaveFailed": "Failed to save connection: {error}",
+  "@connectionSaveFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "connectionEditTitle": "Edit Connection",
+  "connectionNewTitle": "New Connection",
+  "connectionNameLabel": "Connection Name",
+  "connectionNameHint": "e.g. Home Server",
+  "connectionNameRequired": "Please enter a connection name",
+  "connectionUrlLabel": "Host URL",
+  "connectionUrlRequired": "Please enter host URL",
+  "connectionUrlScheme": "URL must start with http:// or https://",
+  "connectionDatabaseLabel": "Database / Bucket",
+  "connectionDatabaseHint": "e.g. sensors",
+  "connectionDatabaseRequired": "Please enter database name",
+  "connectionOrgLabel": "Organization (optional)",
+  "connectionOrgHint": "e.g. home-org",
+  "connectionTokenLabel": "API Token",
+  "connectionTokenKeepHint": "(Keep current token)",
+  "connectionTokenRequiredHint": "Required for auth",
+  "connectionTokenRequired": "Please enter API token",
+  "connectionTestButton": "Test Connection",
+  "appearanceTitle": "Appearance",
+  "appearanceBackgroundColor": "Background color",
+  "appearanceBackgroundOpacity": "Background opacity",
+  "appearanceTextColor": "Text color",
+  "appearanceAccentColor": "Accent color",
+  "appearanceFontScale": "Font size",
+  "appearanceCornerRadius": "Corner radius",
+  "appearanceIosCornerHint": "Note: on iOS the system decides the corner radius of widgets.",
+  "appearanceColorHint": "#RRGGBB (empty = default)",
+  "colorInvalid": "Invalid color (#RRGGBB)",
+  "chartStyleTitle": "Color gradient & chart style",
+  "chartStyleDescription": "The line is colored by value. Without color stops it keeps the default color.",
+  "chartStylePresetGreenToRed": "Green → Red",
+  "chartStylePresetRedToGreen": "Red → Green",
+  "chartStyleAddStop": "Add color stop",
+  "chartStyleFillArea": "Fill area",
+  "chartStyleGrid": "Grid",
+  "chartStyleAxes": "Axis labels",
+  "chartStyleMarkMinMax": "Mark min/max",
+  "chartStyleLineWidth": "Line width",
+  "chartStyleStopValue": "Value",
+  "chartStyleStopColor": "Color",
+  "chartStyleDeleteStop": "Delete color stop",
+  "alertsTitle": "Notifications",
+  "alertsDescription": "Push notification as soon as a value crosses the threshold. Again only after it has gone back.",
+  "alertsAdd": "Add notification",
+  "alertsAbove": "above",
+  "alertsBelow": "below",
+  "alertsThreshold": "Threshold",
+  "alertsRemove": "Remove notification",
+  "widgetCodeApplied": "Code applied.",
+  "widgetCodePromptCopied": "Prompt copied. Paste it into an AI, then describe the task.",
+  "widgetCodeShareSubject": "Widget prompt for AI",
+  "widgetCodeTitle": "Widget as code",
+  "widgetCodeDescription": "The whole widget (type, formula, intermediate steps, variables, display) as JSON. Let an AI write it, paste it here and tap \"Apply code\".",
+  "widgetCodeCopyPrompt": "Copy prompt for AI",
+  "commonShare": "Share",
+  "widgetCodeFieldLabel": "Widget code (JSON)",
+  "widgetCodeDirty": "Changes not applied",
+  "widgetCodeMirrorsForm": "Mirrors the form",
+  "widgetCodeRegenerate": "Regenerate from form",
+  "widgetCodeApply": "Apply code",
+  "widgetTypeSingleValueDescription": "A current reading",
+  "widgetTypeHistoryChartDescription": "History over time",
+  "widgetTypeIndicatorLampDescription": "Lamp with threshold",
+  "widgetTypeMultiValueDescription": "Several values at a glance",
+  "widgetTypeAggregateDescription": "Min, max and average",
+  "widgetTypeGaugeBarDescription": "Level with color zones",
+  "helpTitle": "Formula help",
+  "helpFunctionsTitle": "Functions and constants",
+  "helpExample": "Example: {example}",
+  "@helpExample": {
+    "placeholders": {
+      "example": {
+        "type": "String"
+      }
+    }
+  },
+  "helpTemplatesTitle": "Templates",
+  "helpTemplateResult": "Result = {formula}",
+  "@helpTemplateResult": {
+    "placeholders": {
+      "formula": {
+        "type": "String"
+      }
+    }
+  },
+  "helpApplyTemplate": "Apply template",
+  "helpVariablesTitle": "Variables",
+  "helpVariablesBody": "Each variable (e.g. A, B or co2) stands for a field from the database. Readings are picked from the schema, optionally with their own measurement and tag filters. In the formula you only use the name of the variable.",
+  "helpOperatorsTitle": "Operators",
+  "helpOperatorsBody": "+ - * / and parentheses. Comparisons (< > <= >= == !=) return 1 (true) or 0 (false). Example: (A + B) / 2 or A > 25.",
+  "helpStepsTitle": "Intermediate steps",
+  "helpStepsBody": "Intermediate steps are named partial formulas. They are calculated from top to bottom and may use variables and earlier steps. The formula at the top is the result and may use all steps.",
+  "helpHistoryTitle": "History and aggregate",
+  "helpHistoryBody": "For the history chart and the aggregate the formula is calculated per time bucket (average per interval). If a value is missing in a bucket, the bucket is skipped or the last value is carried over (gap policy). Aggregate computes min/max/mean over the calculated values.",
+  "helpErrorsTitle": "Errors",
+  "helpErrorsBody": "Syntax errors show the position in the text. \"Division by zero\", \"Unknown function\", a wrong number of arguments, \"Missing variable\" and domain errors (e.g. sqrt of a negative number, ln(0)) are never silently shown as 0, but as a readable error message.",
+  "helpFnMin": "Smallest value (any number of arguments, at least one).",
+  "helpFnMax": "Largest value (any number of arguments, at least one).",
+  "helpFnClampSignature": "clamp(x, low, high)",
+  "helpFnClamp": "Limits x to the range low to high.",
+  "helpFnAbs": "Absolute value (without sign).",
+  "helpFnPowSignature": "pow(base, exponent)",
+  "helpFnPow": "Power.",
+  "helpFnSqrt": "Square root (x must not be negative).",
+  "helpFnLn": "Natural logarithm (x must be greater than 0).",
+  "helpFnLog10": "Base-10 logarithm (x must be greater than 0).",
+  "helpFnExp": "e to the power of x.",
+  "helpFnRound": "Rounds to the nearest whole number (.5 away from 0).",
+  "helpFnFloor": "Rounds down.",
+  "helpFnCeil": "Rounds up.",
+  "helpFnIfSignature": "if(condition, then, else)",
+  "helpFnIf": "Picks one of two values depending on the condition (not 0 = true). Only the chosen branch is calculated, e.g. if(B == 0, 0, A / B).",
+  "helpConstPi": "Pi 3.14159…",
+  "helpConstE": "Euler's number 2.71828…",
+  "templateIaqDescription": "Air quality index 0 to 100. Each partial score is a linear ramp (CO₂ 600 ppm = 100, 2000 ppm = 0; VOC index 100 = 100, 250 = 0; PM2.5 5 µg/m³ = 100, 35 = 0; humidity 50 % = 100, 20 % or 80 % = 0). The worst partial score determines the result. Thresholds can be adjusted in the intermediate steps.",
+  "templateIaqVocLabel": "VOC index",
+  "templateIaqRhLabel": "Rel. humidity (%)",
+  "templateFahrenheitTitle": "Celsius to Fahrenheit",
+  "templateFahrenheitDescription": "Converts a temperature from °C to °F.",
+  "templateFahrenheitTempLabel": "Temperature",
+  "templateAverageTitle": "Average of two sensors",
+  "templateAverageDescription": "Average of two readings.",
+  "templateAverageSensorLabel": "Sensor {number}",
+  "@templateAverageSensorLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "schemaLoadingFromDb": "Loading from database...",
+  "commonReload": "Reload",
+  "schemaPickFromList": "Pick from list",
+  "schemaPickTitle": "Select {title}",
+  "@schemaPickTitle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "commonSearchHint": "Search...",
+  "schemaNumericOnly": "Numeric fields only",
+  "schemaNoMatches": "No matches found",
+  "tagFilterTitle": "Tag filters (optional)",
+  "tagFilterReloadTags": "Reload tags",
+  "tagFilterNone": "No tag filters active (fetch data for all tags)",
+  "tagFilterAdd": "Add filter",
+  "tagFilterPickKey": "Select tag key",
+  "tagFilterPickValue": "Select tag value for \"{key}\"",
+  "@tagFilterPickValue": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      }
+    }
+  },
+  "schemaPickFromDb": "Pick from database:",
+  "schemaOrEnterManually": "Or enter manually:",
+  "tagFilterKeyHint": "Tag key (e.g. room)",
+  "commonNext": "Next",
+  "tagFilterLoadingValues": "Loading values from database...",
+  "tagFilterValueHint": "Tag value (e.g. living_room)",
+  "commonAdd": "Add",
+  "multiFieldTitle": "Fields (multi value) ({count} selected)",
+  "@multiFieldTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "multiFieldReload": "Reload fields",
+  "multiFieldNone": "No fields selected (at least 1 field required)",
+  "multiFieldRemove": "Remove field",
+  "multiFieldSelect": "Select fields",
+  "multiFieldAddManual": "Add field manually",
+  "multiFieldPickTitle": "Select fields from database",
+  "multiFieldSearchHint": "Search fields...",
+  "multiFieldNoneFound": "No fields found",
+  "multiFieldConfirm": "Apply ({count})",
+  "@multiFieldConfirm": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "multiFieldNameLabel": "Field name (e.g. temperature)",
+  "multiFieldLabelLabel": "Display name / label (optional)",
+  "multiFieldUnitLabel": "Unit (optional, e.g. °C)",
+  "formulaErrorEmpty": "Formula must not be empty",
+  "formulaErrorUnexpectedCharacter": "Unexpected character: \"{char}\"",
+  "@formulaErrorUnexpectedCharacter": {
+    "placeholders": {
+      "char": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorUnexpectedAssign": "Unexpected character: \"=\" (comparison: \"==\")",
+  "formulaErrorInvalidNumber": "Invalid number: {text}",
+  "@formulaErrorInvalidNumber": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorUnknownOperator": "Unknown operator: {op}",
+  "@formulaErrorUnknownOperator": {
+    "placeholders": {
+      "op": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorMissingOpeningParen": "Missing opening parenthesis",
+  "formulaErrorMissingOperator": "Missing operator between operands",
+  "formulaErrorIncomplete": "Incomplete expression",
+  "formulaErrorUnclosedParen": "Unclosed parenthesis",
+  "formulaErrorInvalidStepName": "Invalid step name: \"{name}\"",
+  "@formulaErrorInvalidStepName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorStepNameIsFunction": "Step name \"{name}\" is a function name",
+  "@formulaErrorStepNameIsFunction": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorDuplicateName": "Duplicate name: \"{name}\"",
+  "@formulaErrorDuplicateName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorStepSelfReference": "Step \"{name}\" refers to itself",
+  "@formulaErrorStepSelfReference": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorStepForwardReference": "Step refers to a later step \"{name}\"",
+  "@formulaErrorStepForwardReference": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorDivisionByZero": "Division by zero",
+  "formulaErrorMissingVariable": "Missing variable: {name}",
+  "@formulaErrorMissingVariable": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorUnknownFunction": "Unknown function: {name}",
+  "@formulaErrorUnknownFunction": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorWrongArgumentCount": "Function {name} expects {expected} argument(s), got: {actual}",
+  "@formulaErrorWrongArgumentCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "expected": {
+        "type": "String"
+      },
+      "actual": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaArityAtLeast": "at least {min}",
+  "@formulaArityAtLeast": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaArityRange": "{min} to {max}",
+  "@formulaArityRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorClampBounds": "clamp: lower bound greater than upper bound",
+  "formulaErrorSqrtNegative": "sqrt: argument must not be negative",
+  "formulaErrorLnNonPositive": "ln: argument must be greater than 0",
+  "formulaErrorLog10NonPositive": "log10: argument must be greater than 0",
+  "formulaErrorNotFinite": "{function}: result is not finite",
+  "@formulaErrorNotFinite": {
+    "placeholders": {
+      "function": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaErrorResultNotFinite": "Result is not finite",
+  "formulaErrorNoFormula": "Widget has no formula",
+  "formulaErrorNoVariables": "No variables defined for the formula",
+  "formulaErrorAtPosition": "{message} (position {position})",
+  "@formulaErrorAtPosition": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "position": {
+        "type": "int"
+      }
+    }
+  },
+  "influxErrorAuth": "Authentication error (401): please check the API token and the read permissions for the database or bucket.",
+  "influxErrorDatabaseNotFound": "Database or bucket not found: in InfluxDB v2 the bucket needs a v1 DBRP mapping, or the bucket name must match the database name exactly.",
+  "influxErrorQuery": "Query error: {detail}",
+  "@influxErrorQuery": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "influxErrorEndpointNotFound": "Endpoint not found (404): please check the base URL and port of the InfluxDB instance.",
+  "influxErrorNetwork": "Network connection failed ({detail}): the InfluxDB instance could not be reached. Please check the network connection, host and port.",
+  "@influxErrorNetwork": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "influxErrorParse": "Unexpected response format ({detail}): the InfluxDB response could not be processed.",
+  "@influxErrorParse": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "influxErrorUnexpected": "Unexpected error: {detail}",
+  "@influxErrorUnexpected": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "schemaConnectionNotFound": "Connection not found.",
+  "schemaTokenNotFound": "API token for this connection not found.",
+  "schemaNoConnectionSelected": "No connection selected.",
+  "schemaConnectionOrTokenNotFound": "Connection or token not found.",
+  "widgetCopySuffix": "{title} (copy)",
+  "@widgetCopySuffix": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "previewBucketErrors": "{count, plural, =1{1 time bucket could not be calculated: {error}} other{{count} time buckets could not be calculated: {error}}}",
+  "@previewBucketErrors": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "previewNoToken": "No authentication token available.",
+  "previewNoField": "No field given.",
+  "previewNoFields": "No sensor fields configured.",
+  "formulaSyntaxError": "Syntax error: {error}",
+  "@formulaSyntaxError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaUndefinedVariables": "Undefined variable: {names}",
+  "@formulaUndefinedVariables": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaStepError": "Step error: {error}",
+  "@formulaStepError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaTemplateApplied": "Template \"{title}\" applied. Please map the variables.",
+  "@formulaTemplateApplied": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaShareSubject": "Formula prompt for AI",
+  "formulaDefaultStepName": "step",
+  "@formulaDefaultStepName": {
+    "description": "Prefix of new step names (a number is appended). Must be a valid formula identifier: letters, digits and _, no spaces."
+  },
+  "formulaEnableTitle": "Use calculation formula",
+  "formulaEnableSubtitle": "Calculate values from InfluxDB locally before display",
+  "formulaTitle": "Mathematical formula",
+  "formulaHelpTooltip": "Help and templates",
+  "formulaInputLabel": "Formula (e.g. (A + B) / 2 or min(A, B))",
+  "formulaInputHelper": "Supports + - * /, parentheses, comparisons, functions and if(...)",
+  "formulaVariablesTitle": "Variable mapping",
+  "formulaAddVariable": "Add variable",
+  "formulaNoVariables": "No variables yet. Add at least one variable.",
+  "formulaStepsTitle": "Intermediate steps",
+  "formulaAddStep": "Add step",
+  "formulaStepsHint": "Optional: named partial formulas that are used in the formula above. The formula above is the result.",
+  "formulaStepName": "Name",
+  "formulaStepExpression": "Expression",
+  "formulaDeleteStep": "Delete step",
+  "formulaVariableTitle": "Variable {name}",
+  "@formulaVariableTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaNoFieldAssigned": "No field assigned",
+  "formulaEditField": "Edit field",
+  "formulaDeleteVariable": "Delete variable",
+  "formulaVariableDialogTitle": "Edit variable {name}",
+  "@formulaVariableDialogTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "formulaVariableMeasurement": "Different measurement (optional)",
+  "formulaVariableTagFilters": "Tag filters",
+  "formulaVariableTag": "Tag",
+  "formulaVariableTagValue": "Value",
+  "formulaVariableAddTag": "Add tag filter",
+  "formulaVariableLabel": "Label (optional)",
+  "commonApply": "Apply",
+  "previewDefaultTitle": "Widget preview",
+  "previewNotLoaded": "No preview loaded yet.\nTap \"Load preview\".",
+  "previewNoPoints": "No data points found in the selected time range.",
+  "previewHistorySummary": "Current: {latest} {unit}  (min: {min}, max: {max})",
+  "@previewHistorySummary": {
+    "placeholders": {
+      "latest": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      },
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "previewLampCondition": "Condition: {op} {value} ({state})",
+  "@previewLampCondition": {
+    "placeholders": {
+      "op": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "previewLampActive": "Active",
+  "previewLampInactive": "Inactive",
+  "previewNoThreshold": "No threshold configured",
+  "previewNoMultiPoints": "No multi-value data points loaded.",
+  "codeErrorInvalidJson": "Invalid JSON: {detail}",
+  "@codeErrorInvalidJson": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorNotObject": "The code must be a JSON object.",
+  "codeErrorUnknownType": "Unknown widget type \"{type}\" ({detail}).",
+  "@codeErrorUnknownType": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorWrongType": "A value has the wrong type: {detail}",
+  "@codeErrorWrongType": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorMeasurementMissing": "Measurement is missing.",
+  "codeErrorGapPolicy": "gapPolicy must be \"skip\" or \"previous\".",
+  "codeErrorChartStyle": "chartStyle is invalid (colors as #RRGGBB, lineWidth > 0).",
+  "codeErrorAppearance": "appearance is invalid (colors as #RRGGBB, values within range).",
+  "codeFormulaMain": "Formula",
+  "codeFormulaRow": "Formula of row \"{row}\"",
+  "@codeFormulaRow": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorIncomplete": "The widget is incomplete: without a formula a \"field\" (or \"items\" for multi_value) is required.",
+  "codeErrorFormulaSyntax": "{what}: syntax error: {error}",
+  "@codeErrorFormulaSyntax": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorNoVariable": "{what}: no variable is defined.",
+  "@codeErrorNoVariable": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorVariableNoField": "{what}: variable {name} has no field.",
+  "@codeErrorVariableNoField": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "codeErrorFormula": "{what}: {error}",
+  "@codeErrorFormula": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "alertTargetMean": "Average",
+  "alertTargetMin": "Minimum",
+  "alertTargetMax": "Maximum",
+  "alertTargetLatest": "Latest value",
+  "alertTargetCalculated": "Calculated value",
+  "alertTargetValue": "Value",
+  "gapPolicyTitle": "Gaps in the history",
+  "gapPolicyQuestion": "What happens when a formula value is missing in a time bucket?",
+  "gapPolicySkip": "Skip bucket",
+  "gapPolicyPrevious": "Carry over last value",
+  "formulaRowDefaultLabel": "Calculation {number}",
+  "@formulaRowDefaultLabel": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "formulaRowsTitle": "Calculated rows (formula)",
+  "formulaRowsAdd": "Formula row",
+  "formulaRowsHint": "Optional: rows whose value is calculated from their own formula.",
+  "formulaRowLabel": "Row label",
+  "formulaRowDelete": "Delete row",
+  "editorEnterFormula": "Please enter a calculation formula.",
+  "editorInvalidFormula": "Invalid formula: {error}",
+  "@editorInvalidFormula": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editorAddVariable": "Please add at least one variable.",
+  "editorAssignFields": "Please assign a field to every variable.",
+  "editorInvalidSteps": "Invalid intermediate steps: {error}",
+  "@editorInvalidSteps": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editorNoVariable": "No variable defined",
+  "editorFormulaRowError": "Formula row \"{row}\": {error}",
+  "@editorFormulaRowError": {
+    "placeholders": {
+      "row": {
+        "type": "String"
+      },
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "editorTitleNew": "Configure widget",
+  "editorTitleEdit": "Edit widget",
+  "editorNoConnection": "No InfluxDB connection yet.\nPlease create a connection first.",
+  "commonBack": "Back",
+  "editorLoadPreview": "Load preview",
+  "editorBasicSettings": "Basic settings",
+  "editorWidgetTitle": "Widget title",
+  "editorTitleRequired": "Please enter a title",
+  "editorConnection": "InfluxDB connection",
+  "editorConnectionItem": "{name} ({database})",
+  "@editorConnectionItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "database": {
+        "type": "String"
+      }
+    }
+  },
+  "editorWidgetType": "Widget type",
+  "editorDataSource": "Data source (InfluxQL)",
+  "editorMeasurementHint": "e.g. climate, home_sensors",
+  "editorMeasurementRequired": "Please enter a measurement",
+  "editorFieldsRequired": "Select at least 1 field",
+  "editorField": "Field",
+  "editorFieldHint": "e.g. temperature, power",
+  "editorFieldRequired": "Please enter a field",
+  "editorUnit": "Unit (optional)",
+  "editorDecimals": "Decimal places",
+  "editorDecimalsHint": "Max. 2 (e.g. 1 or 2)",
+  "editorSaveWidget": "Save widget",
+  "editorHistorySettings": "History settings",
+  "editorTimeRange": "Time range",
+  "editorInterval": "Aggregation interval",
+  "editorThresholdCondition": "Threshold condition",
+  "editorOperator": "Op",
+  "editorScale": "Scale & limits",
+  "editorAggregateRange": "Aggregate time range",
+  "durationMinutes": "{count, plural, =1{1 minute} other{{count} minutes}}",
+  "@durationMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationHours": "{count, plural, =1{1 hour} other{{count} hours}}",
+  "@durationHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "durationDays": "{count, plural, =1{1 day} other{{count} days}}",
+  "@durationDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
+}

@@ -272,7 +272,7 @@ public struct SensorTimelineProvider: AppIntentTimelineProvider {
                         widget: widget, item: item, connection: connection, token: token, httpClient: httpClient
                     )
                 } catch let error as FormulaError {
-                    rowErrors[item.field] = error.errorDescription ?? "Formelfehler"
+                    rowErrors[item.field] = error.errorDescription ?? WidgetTexts.current.text(.formulaError)
                 }
             }
             return CachedSensorData(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/presentation/widgets/widget_type_visuals.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Grid of selectable tiles (icon, name, short description), one per widget type.
 class WidgetTypeSelector extends StatelessWidget {
@@ -62,12 +63,16 @@ class _TypeTile extends StatelessWidget {
     final foreground = isSelected
         ? scheme.onPrimaryContainer
         : scheme.onSurfaceVariant;
+    final description = WidgetTypeVisuals.description(
+      type,
+      AppLocalizations.of(context),
+    );
 
     return Semantics(
       key: Key('type_tile_${type.wireName}'),
       button: true,
       selected: isSelected,
-      label: '${type.label}. ${WidgetTypeVisuals.description(type)}',
+      label: '${type.label}. $description',
       excludeSemantics: true,
       onTap: onTap,
       child: Material(
@@ -97,7 +102,7 @@ class _TypeTile extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          WidgetTypeVisuals.description(type),
+                          description,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: foreground,
                           ),

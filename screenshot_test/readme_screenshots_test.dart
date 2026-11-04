@@ -21,6 +21,8 @@ import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_
 
 import 'support/screenshot_harness.dart';
 
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
+
 final _now = DateTime.utc(2026, 11, 3, 14);
 
 SensorDataPoint _point(String field, double value, [DateTime? at]) =>
@@ -167,6 +169,8 @@ void main() {
 
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             debugShowCheckedModeBanner: false,
             theme: AppTheme.dark(),
             home: Scaffold(

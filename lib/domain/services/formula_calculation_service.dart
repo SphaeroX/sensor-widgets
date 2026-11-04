@@ -229,13 +229,11 @@ class FormulaCalculationService {
   String _requireFormula(WidgetDefinition widget) {
     final formula = widget.formula;
     if (formula == null || formula.trim().isEmpty) {
-      throw const FormulaSyntaxException('Widget besitzt keine Formel');
+      throw const FormulaSyntaxException(FormulaErrorKind.noFormula);
     }
     final variables = widget.formulaVariables;
     if (variables == null || variables.isEmpty) {
-      throw const FormulaSyntaxException(
-        'Keine Variablen für die Formel definiert',
-      );
+      throw const FormulaSyntaxException(FormulaErrorKind.noVariables);
     }
     return formula;
   }

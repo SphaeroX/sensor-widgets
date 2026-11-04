@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/chart/chart_color.dart';
 import 'package:sensor_widgets/domain/models/chart_style.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Editor card for the history chart style: color stops (value -> color),
 /// presets and display options.
@@ -102,6 +103,7 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final stops = _style.colorStops;
+    final l10n = AppLocalizations.of(context);
 
     return Card(
       key: const Key('chart_style_editor'),
@@ -114,7 +116,7 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
               children: [
                 Expanded(
                   child: Text(
-                    'Farbverlauf & Chart-Stil',
+                    l10n.chartStyleTitle,
                     style: theme.textTheme.titleSmall,
                   ),
                 ),
@@ -122,15 +124,12 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
                   TextButton(
                     key: const Key('reset_chart_style_button'),
                     onPressed: () => widget.onChanged(null),
-                    child: const Text('Zurücksetzen'),
+                    child: Text(l10n.commonReset),
                   ),
               ],
             ),
             const SizedBox(height: 4),
-            Text(
-              'Die Linie wird nach Wert eingefärbt. Ohne Farbstopps bleibt die Standardfarbe.',
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(l10n.chartStyleDescription, style: theme.textTheme.bodySmall),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -139,13 +138,13 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
                   key: const Key('preset_green_to_red'),
                   onPressed: () =>
                       _setStops(List.of(ChartStyle.greenToRedStops)),
-                  child: const Text('Grün → Rot'),
+                  child: Text(l10n.chartStylePresetGreenToRed),
                 ),
                 OutlinedButton(
                   key: const Key('preset_red_to_green'),
                   onPressed: () =>
                       _setStops(List.of(ChartStyle.redToGreenStops)),
-                  child: const Text('Rot → Grün'),
+                  child: Text(l10n.chartStylePresetRedToGreen),
                 ),
               ],
             ),
@@ -156,7 +155,7 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
               child: TextButton.icon(
                 key: const Key('add_color_stop_button'),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Farbstopp hinzufügen'),
+                label: Text(l10n.chartStyleAddStop),
                 onPressed: _addStop,
               ),
             ),
@@ -164,28 +163,28 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
             SwitchListTile(
               key: const Key('chart_fill_switch'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Fläche füllen'),
+              title: Text(l10n.chartStyleFillArea),
               value: _style.fillArea,
               onChanged: (v) => _emit(_style.copyWith(fillArea: v)),
             ),
             SwitchListTile(
               key: const Key('chart_grid_switch'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Gitter'),
+              title: Text(l10n.chartStyleGrid),
               value: _style.showGrid,
               onChanged: (v) => _emit(_style.copyWith(showGrid: v)),
             ),
             SwitchListTile(
               key: const Key('chart_axes_switch'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Achsenbeschriftung'),
+              title: Text(l10n.chartStyleAxes),
               value: _style.showAxes,
               onChanged: (v) => _emit(_style.copyWith(showAxes: v)),
             ),
             SwitchListTile(
               key: const Key('chart_minmax_switch'),
               contentPadding: EdgeInsets.zero,
-              title: const Text('Min/Max markieren'),
+              title: Text(l10n.chartStyleMarkMinMax),
               value: _style.markMinMax,
               onChanged: (v) => _emit(_style.copyWith(markMinMax: v)),
             ),
@@ -196,9 +195,9 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Linienstärke',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.chartStyleLineWidth,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: (text) {
@@ -216,6 +215,7 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
 
   Widget _buildStopRow(int index, ColorStop stop) {
     final argb = parseHexColor(stop.color);
+    final l10n = AppLocalizations.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -240,9 +240,9 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
                 decimal: true,
                 signed: true,
               ),
-              decoration: const InputDecoration(
-                labelText: 'Wert',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.chartStyleStopValue,
+                border: const OutlineInputBorder(),
                 isDense: true,
               ),
               onChanged: (text) {
@@ -257,11 +257,11 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
               key: Key('color_stop_color_$index'),
               controller: _colorControllers[index],
               decoration: InputDecoration(
-                labelText: 'Farbe',
+                labelText: l10n.chartStyleStopColor,
                 hintText: '#RRGGBB',
                 border: const OutlineInputBorder(),
                 isDense: true,
-                errorText: argb == null ? 'Ungültige Farbe (#RRGGBB)' : null,
+                errorText: argb == null ? l10n.colorInvalid : null,
               ),
               onChanged: (text) => _updateStop(index, color: text.trim()),
             ),
@@ -269,7 +269,7 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
           IconButton(
             key: Key('delete_color_stop_$index'),
             icon: const Icon(Icons.delete_outline, size: 20),
-            tooltip: 'Farbstopp löschen',
+            tooltip: l10n.chartStyleDeleteStop,
             onPressed: () {
               final stops = List<ColorStop>.of(_style.colorStops)
                 ..removeAt(index);

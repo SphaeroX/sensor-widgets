@@ -56,7 +56,7 @@ public enum FormulaSeriesCalculator {
         byVariable: [String: [Int64: Double]]
     ) throws -> SeriesResult {
         guard let formula = widget.formula else {
-            throw FormulaError.syntaxError("Widget besitzt keine Formel")
+            throw FormulaError.syntaxError(WidgetTexts.current.text(.noFormula))
         }
         // Stable order independent of dictionary hashing.
         let names = (widget.formulaVariables ?? []).map { $0.name }.filter { byVariable[$0] != nil }
@@ -168,14 +168,14 @@ public enum FormulaSeriesCalculator {
         return ["min": minValue, "max": maxValue, "mean": round(mean, widget: widget)]
     }
 
-    /// Short German summary of failed buckets, or nil if all buckets succeeded.
+    /// Short summary of failed buckets in the device language, or nil if all buckets succeeded.
     public static func summarizeErrors(_ errors: [BucketError]) -> String? {
         guard let first = errors.first else { return nil }
-        let message = first.error.errorDescription ?? "Fehler"
+        let message = first.error.errorDescription ?? WidgetTexts.current.text(.genericError)
         if errors.count == 1 {
-            return "1 Zeit-Bucket nicht berechenbar: \(message)"
+            return WidgetTexts.current.text(.bucketErrorOne, message)
         }
-        return "\(errors.count) Zeit-Buckets nicht berechenbar: \(message)"
+        return WidgetTexts.current.text(.bucketErrors, errors.count, message)
     }
 
     private static func groupVariables(_ widget: WidgetDefinition) -> [VariableGroup] {

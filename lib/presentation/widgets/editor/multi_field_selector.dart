@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/domain/models/sensor_query_item.dart';
 import 'package:sensor_widgets/presentation/controllers/schema_discovery_state.dart';
+import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Component for multi-select field configuration in multi-value widgets.
 class MultiFieldSelector extends StatefulWidget {
@@ -75,7 +76,8 @@ class _MultiFieldSelectorState extends State<MultiFieldSelector> {
           children: [
             Expanded(
               child: Text(
-                'Felder (Multi-Value) (${widget.items.length} ausgewählt)',
+                AppLocalizations.of(context)
+                    .multiFieldTitle(widget.items.length),
                 style: theme.textTheme.titleSmall,
               ),
             ),
@@ -88,7 +90,7 @@ class _MultiFieldSelectorState extends State<MultiFieldSelector> {
             if (hasError && widget.onReload != null)
               IconButton(
                 icon: const Icon(Icons.refresh, size: 20),
-                tooltip: 'Felder neu laden',
+                tooltip: AppLocalizations.of(context).multiFieldReload,
                 onPressed: widget.onReload,
               ),
           ],
@@ -103,7 +105,7 @@ class _MultiFieldSelectorState extends State<MultiFieldSelector> {
         const SizedBox(height: 6),
         if (!hasItems)
           Text(
-            'Keine Felder ausgewählt (mindestens 1 Feld erforderlich)',
+            AppLocalizations.of(context).multiFieldNone,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -149,7 +151,7 @@ class _MultiFieldSelectorState extends State<MultiFieldSelector> {
                       : null,
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline, size: 20),
-                    tooltip: 'Feld entfernen',
+                    tooltip: AppLocalizations.of(context).multiFieldRemove,
                     onPressed: widget.enabled ? () => _removeItem(index) : null,
                   ),
                 ),
@@ -163,13 +165,13 @@ class _MultiFieldSelectorState extends State<MultiFieldSelector> {
             OutlinedButton.icon(
               key: const Key('select_multi_fields_button'),
               icon: const Icon(Icons.checklist, size: 18),
-              label: const Text('Felder auswählen'),
+              label: Text(AppLocalizations.of(context).multiFieldSelect),
               onPressed: widget.enabled ? _openSelectionSheet : null,
             ),
             TextButton.icon(
               key: const Key('add_manual_multi_field_button'),
               icon: const Icon(Icons.add, size: 18),
-              label: const Text('Manuelles Feld hinzufügen'),
+              label: Text(AppLocalizations.of(context).multiFieldAddManual),
               onPressed: widget.enabled ? _openManualAddSheet : null,
             ),
           ],
@@ -256,7 +258,7 @@ class _MultiFieldBottomSheetState extends State<_MultiFieldBottomSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Felder aus Datenbank auswählen',
+                      AppLocalizations.of(context).multiFieldPickTitle,
                       style: theme.textTheme.titleMedium,
                     ),
                   ),
@@ -271,7 +273,7 @@ class _MultiFieldBottomSheetState extends State<_MultiFieldBottomSheet> {
                 controller: _searchController,
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.search),
-                  hintText: 'Felder suchen...',
+                  hintText: AppLocalizations.of(context).multiFieldSearchHint,
                   border: const OutlineInputBorder(),
                   isDense: true,
                   suffixIcon: _searchQuery.isNotEmpty
@@ -289,7 +291,11 @@ class _MultiFieldBottomSheetState extends State<_MultiFieldBottomSheet> {
               const Divider(),
               Expanded(
                 child: filtered.isEmpty
-                    ? const Center(child: Text('Keine Felder gefunden'))
+                    ? Center(
+                        child: Text(
+                          AppLocalizations.of(context).multiFieldNoneFound,
+                        ),
+                      )
                     : ListView.builder(
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
@@ -334,7 +340,10 @@ class _MultiFieldBottomSheetState extends State<_MultiFieldBottomSheet> {
               FilledButton(
                 key: const Key('confirm_multi_fields_button'),
                 onPressed: _confirm,
-                child: Text('Übernehmen (${_selectedFieldKeys.length})'),
+                child: Text(
+                  AppLocalizations.of(context)
+                      .multiFieldConfirm(_selectedFieldKeys.length),
+                ),
               ),
             ],
           ),
@@ -401,10 +410,13 @@ class _ManualAddFieldBottomSheetState
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Manuelles Feld hinzufügen',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  AppLocalizations.of(context).multiFieldAddManual,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(
@@ -417,32 +429,32 @@ class _ManualAddFieldBottomSheetState
           TextField(
             key: const Key('manual_field_name_input'),
             controller: _fieldController,
-            decoration: const InputDecoration(
-              labelText: 'Feldname (z. B. temperature)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context).multiFieldNameLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _labelController,
-            decoration: const InputDecoration(
-              labelText: 'Anzeigename / Label (Optional)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context).multiFieldLabelLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _unitController,
-            decoration: const InputDecoration(
-              labelText: 'Einheit (Optional, z. B. °C)',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context).multiFieldUnitLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 16),
           FilledButton(
             key: const Key('confirm_manual_field_button'),
             onPressed: _submit,
-            child: const Text('Hinzufügen'),
+            child: Text(AppLocalizations.of(context).commonAdd),
           ),
         ],
       ),

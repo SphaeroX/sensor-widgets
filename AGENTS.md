@@ -18,6 +18,7 @@ Verified locally (Windows 11, Flutter 3.47.9 / Dart 3.13.7, OpenJDK 17, Android 
 
 ```bash
 flutter pub get
+flutter gen-l10n
 flutter test
 flutter test test/path/to/file_test.dart
 flutter analyze
