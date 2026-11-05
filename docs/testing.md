@@ -59,7 +59,7 @@ Agents cannot run iOS tests locally. Push and read the GitHub Actions result.
 
 ## README screenshots
 - `screenshot_test/` (outside `test/`, so plain `flutter test` skips it and runs with the default English locale) renders the README images into `docs/screenshots/*.png`: one image per widget type (`WidgetLivePreviewCard` with fixed demo data) and app screens (dashboard, add connection, widget editor with live preview, formula templates, formula editor, formula preview) driven by taps like the e2e tests.
-- Run: `flutter test screenshot_test`. CI: `.github/workflows/screenshots.yml` (manual `workflow_dispatch`) runs the same command on Ubuntu and commits changed PNGs.
+- Run: `flutter test screenshot_test`. CI: `.github/workflows/screenshots.yml` (manual `workflow_dispatch`) runs the same command on Ubuntu and commits changed PNGs. It re-downloads the SDK's Material fonts first (`flutter precache --universal` after removing `material_fonts`), because the cached Flutter SDK on the runner can lack Roboto.
 - `support/screenshot_harness.dart`: loads Roboto and the Material icons from the Flutter SDK (`bin/cache/artifacts/material_fonts`, found via `FLUTTER_ROOT` or the `flutter_tester` path; Roboto also stands in for `monospace`), fakes storage, token store and `InfluxApiClient` (deterministic SEN66-like data), and installs `WriteOnlyGoldenComparator`, which only writes images and never compares them (font rendering differs between machines). These are not regression tests.
 - The SDK Roboto lacks subscript digits (e.g. `₂`), which render as boxes in screenshots only; demo titles use `CO2`.
 

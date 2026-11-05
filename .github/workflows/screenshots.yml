@@ -26,6 +26,15 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      # The harness loads Roboto from the SDK cache; the restored cache can lack
+      # it, so download the Material fonts again and fail early if still missing.
+      - name: Download Material fonts
+        run: |
+          root="$(dirname "$(dirname "$(which flutter)")")"
+          rm -rf "$root/bin/cache/artifacts/material_fonts" "$root/bin/cache/material_fonts.stamp"
+          flutter precache --universal
+          test -f "$root/bin/cache/artifacts/material_fonts/roboto-regular.ttf"
+
       - name: Generate screenshots
         run: flutter test screenshot_test
 
