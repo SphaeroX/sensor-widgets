@@ -33,6 +33,8 @@ jobs:
           root="$(dirname "$(dirname "$(which flutter)")")"
           rm -rf "$root/bin/cache/artifacts/material_fonts" "$root/bin/cache/material_fonts.stamp"
           flutter precache --universal
+          ls -la "$root/bin/cache/artifacts/material_fonts"
+          find "$root" -iname 'roboto*' | head -20
           test -f "$root/bin/cache/artifacts/material_fonts/roboto-regular.ttf"
 
       - name: Generate screenshots
