@@ -42,15 +42,23 @@ Future<void> loadScreenshotFonts() async {
       'roboto-bold.ttf',
       'roboto-light.ttf',
     ]) {
-      loader.addFont(_fontBytes(File('${fontsDir.path}/$name')));
+      loader.addFont(_fontBytes(_fontFile(fontsDir, name)));
     }
     await loader.load();
   }
 
   final icons = FontLoader('MaterialIcons')
-    ..addFont(_fontBytes(File('${fontsDir.path}/materialicons-regular.otf')));
+    ..addFont(_fontBytes(_fontFile(fontsDir, 'materialicons-regular.otf')));
   await icons.load();
 }
+
+/// The SDK names the files `Roboto-Regular.ttf` etc.; match case-insensitively
+/// because Linux (CI) has a case-sensitive file system and Windows does not.
+File _fontFile(Directory dir, String lowerCaseName) =>
+    dir.listSync().whereType<File>().firstWhere(
+      (f) => f.uri.pathSegments.last.toLowerCase() == lowerCaseName,
+      orElse: () => throw StateError('$lowerCaseName not in ${dir.path}'),
+    );
 
 Future<ByteData> _fontBytes(File file) async =>
     ByteData.sublistView(await file.readAsBytes());
