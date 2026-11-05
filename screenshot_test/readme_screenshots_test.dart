@@ -43,7 +43,7 @@ final _typeExamples = <String, (WidgetDefinition, WidgetPreviewData)>{
     const WidgetDefinition(
       id: 'temp',
       type: WidgetType.singleValue,
-      title: 'Wohnzimmer',
+      title: 'Living Room',
       connectionId: 'demo',
       measurement: 'sen66',
       field: 'temperature',
@@ -79,7 +79,7 @@ final _typeExamples = <String, (WidgetDefinition, WidgetPreviewData)>{
     const WidgetDefinition(
       id: 'window',
       type: WidgetType.indicatorLamp,
-      title: 'Lüften?',
+      title: 'Ventilate?',
       connectionId: 'demo',
       measurement: 'sen66',
       field: 'co2',
@@ -96,7 +96,7 @@ final _typeExamples = <String, (WidgetDefinition, WidgetPreviewData)>{
     const WidgetDefinition(
       id: 'humidity',
       type: WidgetType.gaugeBar,
-      title: 'Luftfeuchte',
+      title: 'Humidity',
       connectionId: 'demo',
       measurement: 'sen66',
       field: 'humidity',
@@ -111,7 +111,7 @@ final _typeExamples = <String, (WidgetDefinition, WidgetPreviewData)>{
     const WidgetDefinition(
       id: 'co2-day',
       type: WidgetType.aggregate,
-      title: 'CO2 heute',
+      title: 'CO2 Today',
       connectionId: 'demo',
       measurement: 'sen66',
       field: 'co2',
@@ -242,7 +242,7 @@ void main() {
     await tapKey(tester, 'add_widget_fab');
     await tester.enterText(
       find.byKey(const Key('widget_title_field')),
-      'CO2 Wohnzimmer',
+      'CO2 Living Room',
     );
     await tapKey(tester, 'type_tile_history_chart');
     await tester.enterText(
