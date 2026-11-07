@@ -153,5 +153,44 @@ void main() {
 
       expect(updated, equals({'custom_key': 'custom_value'}));
     });
+
+    testWidgets('long tag value list scrolls inside the sheet', (tester) async {
+      tester.view.physicalSize = const Size(400, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      Map<String, String>? updated;
+      final values = List.generate(60, (i) => 'sensor_${i}_temperature');
+
+      await tester.pumpWidget(
+        buildTestable(
+          TagFilterEditor(
+            tagFilters: const {},
+            tagKeysState: const SchemaListState.loaded(['entity_id']),
+            tagValuesByKey: {'entity_id': SchemaListState.loaded(values)},
+            onTagFiltersChanged: (map) => updated = map,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const Key('add_tag_filter_button')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('entity_id'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+
+      final sheetScrollable = find.descendant(
+        of: find.byKey(const Key('tag_filter_sheet_body')),
+        matching: find.byType(Scrollable),
+      );
+      await tester.scrollUntilVisible(
+        find.text('sensor_59_temperature'),
+        300,
+        scrollable: sheetScrollable.first,
+      );
+      await tester.tap(find.text('sensor_59_temperature'));
+      await tester.pumpAndSettle();
+
+      expect(updated, equals({'entity_id': 'sensor_59_temperature'}));
+    });
   });
 }

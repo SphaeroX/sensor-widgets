@@ -232,88 +232,15 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                 ],
               ),
               const Divider(),
-              if (isStepKey) ...[
-                if (widget.tagKeys.isNotEmpty) ...[
-                  Text(
-                    AppLocalizations.of(context).schemaPickFromDb,
-                    style: theme.textTheme.labelMedium,
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    children: widget.tagKeys.map((k) {
-                      return ActionChip(
-                        label: Text(k),
-                        onPressed: () => _onKeyChosen(k),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 12),
-                ],
-                Text(
-                  AppLocalizations.of(context).schemaOrEnterManually,
-                  style: theme.textTheme.labelMedium,
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('manual_tag_key_input'),
-                        controller: _manualKeyController,
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)
-                              .tagFilterKeyHint,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      key: const Key('confirm_tag_key_button'),
-                      onPressed: () {
-                        final k = _manualKeyController.text.trim();
-                        if (k.isNotEmpty) _onKeyChosen(k);
-                      },
-                      child: Text(AppLocalizations.of(context).commonNext),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                ValueListenableBuilder<Map<String, SchemaListState<String>>>(
-                  valueListenable: widget.tagValuesListenable,
-                  builder: (context, valuesByKey, _) {
-                    final valuesState = _selectedKey != null
-                        ? valuesByKey[_selectedKey!]
-                        : null;
-                    final availableValues =
-                        valuesState?.items ?? const <String>[];
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (valuesState?.isLoading == true)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            child: Row(
-                              children: [
-                                const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  AppLocalizations.of(context)
-                                      .tagFilterLoadingValues,
-                                ),
-                              ],
-                            ),
-                          ),
-                        if (availableValues.isNotEmpty) ...[
+              Flexible(
+                child: SingleChildScrollView(
+                  key: const Key('tag_filter_sheet_body'),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (isStepKey) ...[
+                        if (widget.tagKeys.isNotEmpty) ...[
                           Text(
                             AppLocalizations.of(context).schemaPickFromDb,
                             style: theme.textTheme.labelMedium,
@@ -321,50 +248,143 @@ class _AddTagFilterBottomSheetState extends State<_AddTagFilterBottomSheet> {
                           const SizedBox(height: 6),
                           Wrap(
                             spacing: 8,
-                            children: availableValues.map((v) {
+                            children: widget.tagKeys.map((k) {
                               return ActionChip(
-                                label: Text(v),
-                                onPressed: () => _onValueChosen(v),
+                                label: Text(k),
+                                onPressed: () => _onKeyChosen(k),
                               );
                             }).toList(),
                           ),
                           const SizedBox(height: 12),
                         ],
-                      ],
-                    );
-                  },
-                ),
-                Text(
-                  AppLocalizations.of(context).schemaOrEnterManually,
-                  style: theme.textTheme.labelMedium,
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        key: const Key('manual_tag_value_input'),
-                        controller: _manualValueController,
-                        decoration: InputDecoration(
-                          hintText: AppLocalizations.of(context)
-                              .tagFilterValueHint,
-                          border: const OutlineInputBorder(),
-                          isDense: true,
+                        Text(
+                          AppLocalizations.of(context).schemaOrEnterManually,
+                          style: theme.textTheme.labelMedium,
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    FilledButton(
-                      key: const Key('confirm_tag_value_button'),
-                      onPressed: () {
-                        final v = _manualValueController.text.trim();
-                        if (v.isNotEmpty) _onValueChosen(v);
-                      },
-                      child: Text(AppLocalizations.of(context).commonAdd),
-                    ),
-                  ],
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                key: const Key('manual_tag_key_input'),
+                                controller: _manualKeyController,
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)
+                                      .tagFilterKeyHint,
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              key: const Key('confirm_tag_key_button'),
+                              onPressed: () {
+                                final k = _manualKeyController.text.trim();
+                                if (k.isNotEmpty) _onKeyChosen(k);
+                              },
+                              child: Text(
+                                AppLocalizations.of(context).commonNext,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        ValueListenableBuilder<
+                          Map<String, SchemaListState<String>>
+                        >(
+                          valueListenable: widget.tagValuesListenable,
+                          builder: (context, valuesByKey, _) {
+                            final valuesState = _selectedKey != null
+                                ? valuesByKey[_selectedKey!]
+                                : null;
+                            final availableValues =
+                                valuesState?.items ?? const <String>[];
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (valuesState?.isLoading == true)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 14,
+                                          height: 14,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          AppLocalizations.of(context)
+                                              .tagFilterLoadingValues,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                if (availableValues.isNotEmpty) ...[
+                                  Text(
+                                    AppLocalizations.of(context)
+                                        .schemaPickFromDb,
+                                    style: theme.textTheme.labelMedium,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: availableValues.map((v) {
+                                      return ActionChip(
+                                        label: Text(v),
+                                        onPressed: () => _onValueChosen(v),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                              ],
+                            );
+                          },
+                        ),
+                        Text(
+                          AppLocalizations.of(context).schemaOrEnterManually,
+                          style: theme.textTheme.labelMedium,
+                        ),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                key: const Key('manual_tag_value_input'),
+                                controller: _manualValueController,
+                                decoration: InputDecoration(
+                                  hintText: AppLocalizations.of(context)
+                                      .tagFilterValueHint,
+                                  border: const OutlineInputBorder(),
+                                  isDense: true,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton(
+                              key: const Key('confirm_tag_value_button'),
+                              onPressed: () {
+                                final v = _manualValueController.text.trim();
+                                if (v.isNotEmpty) _onValueChosen(v);
+                              },
+                              child: Text(
+                                AppLocalizations.of(context).commonAdd,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ],
           ),
         ),
