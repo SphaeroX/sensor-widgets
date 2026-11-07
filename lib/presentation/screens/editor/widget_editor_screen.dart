@@ -269,9 +269,6 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
     );
   }
 
-  /// The "widget as code" area belongs to the calculation formula feature.
-  bool get _showCodeSection => _isFormulaEnabled || _formulaRows.isNotEmpty;
-
   /// Parses [code] and, if valid, moves the whole widget into the editor state.
   List<String> _applyWidgetCode(String code) {
     final result = WidgetCodeCodec.decode(
@@ -1022,18 +1019,16 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  if (_showCodeSection) ...[
-                    WidgetCodeSection(
-                      generatedCode: WidgetCodeCodec.encode(
-                        _buildCurrentDefinition(),
-                      ),
-                      onApply: _applyWidgetCode,
-                      measurement: _measurementController.text.trim(),
-                      availableMeasurements: schemaState.measurements.items,
-                      availableFields: schemaState.fields.items,
+                  WidgetCodeSection(
+                    generatedCode: WidgetCodeCodec.encode(
+                      _buildCurrentDefinition(),
                     ),
-                    const SizedBox(height: 16),
-                  ],
+                    onApply: _applyWidgetCode,
+                    measurement: _measurementController.text.trim(),
+                    availableMeasurements: schemaState.measurements.items,
+                    availableFields: schemaState.fields.items,
+                  ),
+                  const SizedBox(height: 16),
 
                   // Type-Specific Configuration
                   _buildTypeSpecificSettings(context),

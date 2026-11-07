@@ -127,12 +127,10 @@ void main() {
       .controller!
       .text;
 
-  testWidgets('code area only appears once the formula is enabled', (
-    tester,
-  ) async {
+  testWidgets('code area is shown without a formula', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('widget_code_field')), findsNothing);
+    expect(find.byKey(const Key('widget_code_field')), findsOneWidget);
 
     await tester.ensureVisible(find.byType(Switch));
     await tester.tap(find.byType(Switch));
