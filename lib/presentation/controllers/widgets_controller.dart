@@ -48,6 +48,14 @@ class WidgetPreviewData {
   bool get hasError => errorMessage != null;
 }
 
+/// Live data of one saved widget for its dashboard card (same query as the
+/// editor preview). Keyed by the definition, so a saved change loads anew.
+final dashboardPreviewProvider = FutureProvider.autoDispose
+    .family<WidgetPreviewData, WidgetDefinition>(
+      (ref, def) =>
+          ref.read(widgetsControllerProvider.notifier).fetchPreviewData(def),
+    );
+
 /// Provider for managing configured widgets list and operations.
 final widgetsControllerProvider =
     AsyncNotifierProvider<WidgetsController, List<WidgetDefinition>>(

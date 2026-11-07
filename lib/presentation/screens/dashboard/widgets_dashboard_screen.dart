@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sensor_widgets/core/utils/number_formatter.dart';
+import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
 import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
@@ -7,6 +9,7 @@ import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart'
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
+import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
 import 'package:sensor_widgets/presentation/widgets/widget_type_visuals.dart';
 
 /// Dashboard overview screen showing all configured sensor widgets.
@@ -27,6 +30,7 @@ class WidgetsDashboardScreen extends ConsumerWidget {
             icon: const Icon(Icons.sync),
             tooltip: l10n.dashboardSyncTooltip,
             onPressed: () async {
+              ref.invalidate(dashboardPreviewProvider);
               await ref
                   .read(widgetsControllerProvider.notifier)
                   .triggerNativeRefresh();
@@ -227,9 +231,9 @@ class _WidgetCardItem extends ConsumerWidget {
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(right: 12),
-                child: _MiniPreview(
+                child: _LiveCardPreview(
                   key: Key('dashboard_card_preview_${widgetDef.id}'),
-                  type: widgetDef.type,
+                  widgetDef: widgetDef,
                 ),
               ),
             ],
@@ -300,10 +304,110 @@ class _WidgetCardItem extends ConsumerWidget {
 }
 
 /// Decorative placeholder that hints at what the widget type looks like.
+/// Real data of the widget; the type placeholder while loading or on errors.
+class _LiveCardPreview extends ConsumerWidget {
+  final WidgetDefinition widgetDef;
+
+  const _LiveCardPreview({super.key, required this.widgetDef});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(dashboardPreviewProvider(widgetDef)).value;
+    final live = data == null || data.hasError ? null : _live(context, data);
+    return live ?? _MiniPreview(type: widgetDef.type);
+  }
+
+  String _fmt(double? v) {
+    final text = NumberFormatter.format(
+      v,
+      decimalPlaces: widgetDef.decimalPlaces,
+    );
+    final unit = widgetDef.unit;
+    return unit == null || unit.isEmpty ? text : '$text $unit';
+  }
+
+  Widget? _live(BuildContext context, WidgetPreviewData data) {
+    final theme = Theme.of(context);
+    final valueStyle = theme.textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+    );
+    final key = Key('dashboard_card_live_${widgetDef.id}');
+    switch (widgetDef.type) {
+      case WidgetType.historyChart:
+        final values = (data.historyPoints ?? const [])
+            .map((p) => p.value)
+            .toList();
+        if (values.length < 2) return null;
+        return SizedBox(
+          key: key,
+          height: 40,
+          child: Row(
+            children: [
+              Text(_fmt(values.last), style: valueStyle),
+              const SizedBox(width: 12),
+              Expanded(
+                child: CustomPaint(
+                  size: Size.infinite,
+                  painter: HistoryChartPainter(
+                    values: values,
+                    style: (widgetDef.chartStyle ?? const ChartStyle())
+                        .copyWith(showAxes: false, showGrid: false),
+                    lineColor: theme.colorScheme.primary,
+                    labelColor: theme.colorScheme.onSurfaceVariant,
+                    gridColor: Colors.transparent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      case WidgetType.singleValue:
+      case WidgetType.indicatorLamp:
+      case WidgetType.gaugeBar:
+        final point = data.singleValue;
+        if (point == null) return null;
+        return Text(_fmt(point.value), key: key, style: valueStyle);
+      case WidgetType.aggregate:
+        final agg = data.aggregateValues;
+        if (agg == null || agg.isEmpty) return null;
+        return Row(
+          key: key,
+          children: [
+            for (final k in ['min', 'mean', 'max'])
+              Expanded(
+                child: Text(
+                  '${k == 'mean' ? 'Ø' : k.toUpperCase()} ${_fmt(agg[k])}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+          ],
+        );
+      case WidgetType.multiValue:
+        final multi = data.multiValues;
+        if (multi == null || multi.isEmpty) return null;
+        final labels = {
+          for (final i in widgetDef.items ?? const []) i.field: i.label,
+        };
+        return Wrap(
+          key: key,
+          spacing: 16,
+          children: [
+            for (final e in multi.entries.take(4))
+              Text(
+                '${labels[e.key] ?? e.key}: '
+                '${NumberFormatter.format(e.value.value, decimalPlaces: widgetDef.decimalPlaces)}',
+                style: theme.textTheme.bodyMedium,
+              ),
+          ],
+        );
+    }
+  }
+}
+
 class _MiniPreview extends StatelessWidget {
   final WidgetType type;
 
-  const _MiniPreview({super.key, required this.type});
+  const _MiniPreview({required this.type});
 
   @override
   Widget build(BuildContext context) {
