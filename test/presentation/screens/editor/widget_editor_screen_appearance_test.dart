@@ -15,6 +15,8 @@ import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.
 import 'package:sensor_widgets/presentation/widgets/editor/appearance_editor.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -106,6 +108,7 @@ void main() {
     await tester.pumpWidget(app(base));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'appearance');
     await tester.ensureVisible(find.byKey(const Key('appearance_editor')));
     await tester.ensureVisible(find.byKey(const Key('palette_accent_3')));
     await tester.tap(find.byKey(const Key('palette_accent_3')));

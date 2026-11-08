@@ -14,6 +14,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -113,6 +115,7 @@ void main() {
     await tester.pumpWidget(app(history));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'type_settings');
     await tester.ensureVisible(find.byKey(const Key('chart_style_editor')));
     expect(find.byKey(const Key('chart_style_editor')), findsOneWidget);
 
@@ -141,6 +144,7 @@ void main() {
       app(history.copyWith(chartStyle: const ChartStyle(fillArea: true))),
     );
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'type_settings');
     expect(find.byKey(const Key('chart_style_editor')), findsOneWidget);
 
     await tester.pumpWidget(
@@ -156,6 +160,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('chart_style_editor')), findsNothing);
+    expect(
+      find.byKey(const Key('chart_style_editor'), skipOffstage: false),
+      findsNothing,
+    );
   });
 }

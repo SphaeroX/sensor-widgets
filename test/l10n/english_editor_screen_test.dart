@@ -17,6 +17,8 @@ import 'package:sensor_widgets/presentation/widgets/preview/widget_live_preview_
 
 import 'english_locale.dart';
 
+import '../helpers/editor_sections.dart';
+
 class _MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class _MockConnectionRepo extends Mock implements ConnectionRepository {}
@@ -78,6 +80,7 @@ void main() {
     expect(find.text('Load preview'), findsOneWidget);
     expect(find.textContaining('No preview loaded yet.'), findsOneWidget);
     // The connection lookup fails, so schema discovery reports it in English.
+    await openEditorSection(tester, 'data_source');
     expect(find.textContaining('Connection not found.'), findsWidgets);
     expect(find.textContaining('Verbindung'), findsNothing);
   });
@@ -101,6 +104,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'type_settings');
     expect(find.text('History settings'), findsOneWidget);
     expect(find.text('24 hours'), findsOneWidget);
     expect(find.text('1 hour'), findsOneWidget);

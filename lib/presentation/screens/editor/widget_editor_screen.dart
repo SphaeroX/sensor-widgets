@@ -23,6 +23,7 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/alert_rules_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/appearance_editor.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/chart_style_editor.dart';
+import 'package:sensor_widgets/presentation/widgets/editor/editor_accordion_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/formula_editor_section.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/multi_field_selector.dart';
 import 'package:sensor_widgets/presentation/widgets/editor/searchable_schema_picker.dart';
@@ -75,6 +76,10 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
 
   /// Gap handling of time buckets: null = skip (default) or 'previous'.
   String? _gapPolicy;
+
+  /// The accordion section that is open (null = all closed); see
+  /// [EditorAccordionSection]. The editor starts with the basics.
+  String? _openSection = 'basics';
 
   /// Multi-value rows that are calculated by their own formula.
   List<SensorQueryItem> _formulaRows = [];
@@ -370,43 +375,38 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           _selectedType == WidgetType.aggregate);
 
   Widget _buildGapPolicyCard() {
-    return Card(
+    return Column(
       key: const Key('gap_policy_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          AppLocalizations.of(context).gapPolicyTitle,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          AppLocalizations.of(context).gapPolicyQuestion,
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
           children: [
-            Text(
-              AppLocalizations.of(context).gapPolicyTitle,
-              style: Theme.of(context).textTheme.titleSmall,
+            ChoiceChip(
+              key: const Key('gap_policy_skip'),
+              label: Text(AppLocalizations.of(context).gapPolicySkip),
+              selected: _gapPolicy != 'previous',
+              onSelected: (_) => setState(() => _gapPolicy = null),
             ),
-            const SizedBox(height: 4),
-            Text(
-              AppLocalizations.of(context).gapPolicyQuestion,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                ChoiceChip(
-                  key: const Key('gap_policy_skip'),
-                  label: Text(AppLocalizations.of(context).gapPolicySkip),
-                  selected: _gapPolicy != 'previous',
-                  onSelected: (_) => setState(() => _gapPolicy = null),
-                ),
-                ChoiceChip(
-                  key: const Key('gap_policy_previous'),
-                  label: Text(AppLocalizations.of(context).gapPolicyPrevious),
-                  selected: _gapPolicy == 'previous',
-                  onSelected: (_) => setState(() => _gapPolicy = 'previous'),
-                ),
-              ],
+            ChoiceChip(
+              key: const Key('gap_policy_previous'),
+              label: Text(AppLocalizations.of(context).gapPolicyPrevious),
+              selected: _gapPolicy == 'previous',
+              onSelected: (_) => setState(() => _gapPolicy = 'previous'),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
@@ -657,7 +657,16 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
       }
     }
 
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      // Fields of closed sections are validated too; open the one with the
+      // error so the message is visible.
+      setState(() {
+        _openSection = _titleController.text.trim().isEmpty
+            ? 'basics'
+            : 'data_source';
+      });
+      return;
+    }
     final def = _buildCurrentDefinition();
     await ref.read(widgetsControllerProvider.notifier).saveWidget(def);
     if (mounted) {
@@ -780,281 +789,283 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
                   const SizedBox(height: 16),
 
                   // Base Settings
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.editorBasicSettings,
-                            style: Theme.of(context).textTheme.titleSmall,
+                  _section(
+                    id: 'basics',
+                    title: l10n.editorBasicSettings,
+                    icon: Icons.tune,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextFormField(
+                          key: const Key('widget_title_field'),
+                          controller: _titleController,
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)
+                                .editorWidgetTitle,
+                            border: const OutlineInputBorder(),
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            key: const Key('widget_title_field'),
-                            controller: _titleController,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)
-                                  .editorWidgetTitle,
-                              border: const OutlineInputBorder(),
-                            ),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? l10n.editorTitleRequired
-                                : null,
-                            onChanged: (_) => setState(() {}),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? l10n.editorTitleRequired
+                              : null,
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String>(
+                          key: const Key('widget_connection_dropdown'),
+                          initialValue: _selectedConnectionId,
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context)
+                                .editorConnection,
+                            border: const OutlineInputBorder(),
                           ),
-                          const SizedBox(height: 12),
-                          DropdownButtonFormField<String>(
-                            key: const Key('widget_connection_dropdown'),
-                            initialValue: _selectedConnectionId,
-                            decoration: InputDecoration(
-                              labelText: AppLocalizations.of(context)
-                                  .editorConnection,
-                              border: const OutlineInputBorder(),
-                            ),
-                            items: connections.map((c) {
-                              return DropdownMenuItem(
-                                value: c.id,
-                                child: Text(
-                                  l10n.editorConnectionItem(c.name, c.database),
-                                ),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) {
-                                setState(() {
-                                  _selectedConnectionId = val;
-                                });
-                                schemaNotifier.selectConnection(val);
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          const SizedBox(height: 16),
-                          Text(
-                            l10n.editorWidgetType,
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 8),
-                          WidgetTypeSelector(
-                            key: const Key('widget_type_selector'),
-                            selected: _selectedType,
-                            onSelected: (t) =>
-                                setState(() => _selectedType = t),
-                          ),
-                        ],
-                      ),
+                          items: connections.map((c) {
+                            return DropdownMenuItem(
+                              value: c.id,
+                              child: Text(
+                                l10n.editorConnectionItem(c.name, c.database),
+                              ),
+                            );
+                          }).toList(),
+                          onChanged: (val) {
+                            if (val != null) {
+                              setState(() {
+                                _selectedConnectionId = val;
+                              });
+                              schemaNotifier.selectConnection(val);
+                            }
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
+                        Text(
+                          l10n.editorWidgetType,
+                          style: Theme.of(context).textTheme.titleSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        WidgetTypeSelector(
+                          key: const Key('widget_type_selector'),
+                          selected: _selectedType,
+                          onSelected: (t) => setState(() => _selectedType = t),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
                   // Influx Schema & Queries
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.editorDataSource,
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 12),
+                  _section(
+                    id: 'data_source',
+                    title: l10n.editorDataSource,
+                    icon: Icons.storage_outlined,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Measurement Searchable Picker
+                        SearchableSchemaPicker(
+                          fieldKey: const Key('widget_measurement_field'),
+                          label: 'Measurement',
+                          hintText: l10n.editorMeasurementHint,
+                          selectedValue: _measurementController.text,
+                          options: schemaState.measurements.items
+                              .map(SchemaPickerOption.fromString)
+                              .toList(),
+                          status: schemaState.measurements.status,
+                          errorMessage: schemaState.measurements.errorMessage,
+                          onSelected: (val) {
+                            _measurementController.text = val;
+                            schemaNotifier.selectMeasurement(val);
+                            setState(() {});
+                          },
+                          onReload: () => schemaNotifier.reloadMeasurements(),
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? l10n.editorMeasurementRequired
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
 
-                          // Measurement Searchable Picker
-                          SearchableSchemaPicker(
-                            fieldKey: const Key('widget_measurement_field'),
-                            label: 'Measurement',
-                            hintText: l10n.editorMeasurementHint,
-                            selectedValue: _measurementController.text,
-                            options: schemaState.measurements.items
-                                .map(SchemaPickerOption.fromString)
-                                .toList(),
-                            status: schemaState.measurements.status,
-                            errorMessage: schemaState.measurements.errorMessage,
-                            onSelected: (val) {
-                              _measurementController.text = val;
-                              schemaNotifier.selectMeasurement(val);
-                              setState(() {});
+                        // Field or Multi-fields
+                        if (_selectedType == WidgetType.multiValue) ...[
+                          MultiFieldSelector(
+                            items: _multiItems,
+                            fieldsState: schemaState.fields,
+                            onItemsChanged: (items) {
+                              setState(() {
+                                _multiItems = items;
+                                _multiFieldsController.text = items
+                                    .map((i) => i.field)
+                                    .join(', ');
+                              });
                             },
-                            onReload: () => schemaNotifier.reloadMeasurements(),
-                            validator: (v) => (v == null || v.trim().isEmpty)
-                                ? l10n.editorMeasurementRequired
+                            onReload: () =>
+                                schemaNotifier.reloadFieldsAndTags(),
+                            validator: (items) =>
+                                ((items == null || items.isEmpty) &&
+                                    _formulaRows.isEmpty)
+                                ? l10n.editorFieldsRequired
                                 : null,
                           ),
                           const SizedBox(height: 12),
-
-                          // Field or Multi-fields
-                          if (_selectedType == WidgetType.multiValue) ...[
-                            MultiFieldSelector(
-                              items: _multiItems,
-                              fieldsState: schemaState.fields,
-                              onItemsChanged: (items) {
-                                setState(() {
-                                  _multiItems = items;
-                                  _multiFieldsController.text = items
-                                      .map((i) => i.field)
-                                      .join(', ');
-                                });
-                              },
-                              onReload: () =>
-                                  schemaNotifier.reloadFieldsAndTags(),
-                              validator: (items) =>
-                                  ((items == null || items.isEmpty) &&
-                                      _formulaRows.isEmpty)
-                                  ? l10n.editorFieldsRequired
-                                  : null,
-                            ),
-                            const SizedBox(height: 12),
-                            _buildFormulaRowsSection(schemaState),
-                          ] else ...[
-                            SearchableSchemaPicker(
-                              fieldKey: const Key('widget_field_field'),
-                              label: l10n.editorField,
-                              hintText: l10n.editorFieldHint,
-                              selectedValue: _fieldController.text,
-                              options: schemaState.fields.items
-                                  .map(SchemaPickerOption.fromFieldInfo)
-                                  .toList(),
-                              status: schemaState.fields.status,
-                              errorMessage: schemaState.fields.errorMessage,
-                              requireNumericHint:
-                                  _selectedType == WidgetType.historyChart ||
-                                  _selectedType == WidgetType.indicatorLamp ||
-                                  _selectedType == WidgetType.aggregate ||
-                                  _selectedType == WidgetType.gaugeBar,
-                              onSelected: (val) {
-                                _fieldController.text = val;
-                                setState(() {});
-                              },
-                              onReload: () =>
-                                  schemaNotifier.reloadFieldsAndTags(),
-                              validator: (v) =>
-                                  (!_isFormulaEnabled &&
-                                      (v == null || v.trim().isEmpty))
-                                  ? l10n.editorFieldRequired
-                                  : null,
-                            ),
-                          ],
-                          const SizedBox(height: 12),
-
-                          // Tag Filter Editor
-                          TagFilterEditor(
-                            tagFilters: _tagFilters,
-                            tagKeysState: schemaState.tagKeys,
-                            tagValuesByKey: schemaState.tagValuesByKey,
-                            onTagFiltersChanged: (map) =>
-                                setState(() => _tagFilters = map),
-                            onLoadTagValues: (key) =>
-                                schemaNotifier.loadTagValues(key),
-                            onReloadTagKeys: () =>
+                          _buildFormulaRowsSection(schemaState),
+                        ] else ...[
+                          SearchableSchemaPicker(
+                            fieldKey: const Key('widget_field_field'),
+                            label: l10n.editorField,
+                            hintText: l10n.editorFieldHint,
+                            selectedValue: _fieldController.text,
+                            options: schemaState.fields.items
+                                .map(SchemaPickerOption.fromFieldInfo)
+                                .toList(),
+                            status: schemaState.fields.status,
+                            errorMessage: schemaState.fields.errorMessage,
+                            requireNumericHint:
+                                _selectedType == WidgetType.historyChart ||
+                                _selectedType == WidgetType.indicatorLamp ||
+                                _selectedType == WidgetType.aggregate ||
+                                _selectedType == WidgetType.gaugeBar,
+                            onSelected: (val) {
+                              _fieldController.text = val;
+                              setState(() {});
+                            },
+                            onReload: () =>
                                 schemaNotifier.reloadFieldsAndTags(),
-                          ),
-                          const SizedBox(height: 12),
-
-                          // Formula & Calculation Section
-                          if (_selectedType != WidgetType.multiValue) ...[
-                            FormulaEditorSection(
-                              showPromptButtons: false,
-                              steps: _formulaSteps,
-                              onStepsChanged: (steps) =>
-                                  setState(() => _formulaSteps = steps),
-                              defaultMeasurement: _measurementController.text
-                                  .trim(),
-                              fieldLoader: _loadFieldInfos,
-                              tagKeyLoader: _loadTagKeys,
-                              tagValueLoader: _loadTagValues,
-                              isEnabled: _isFormulaEnabled,
-                              onEnabledChanged: (val) =>
-                                  setState(() => _isFormulaEnabled = val),
-                              formula: _formula,
-                              onFormulaChanged: (val) =>
-                                  setState(() => _formula = val),
-                              variables: _formulaVariables,
-                              onVariablesChanged: (vars) =>
-                                  setState(() => _formulaVariables = vars),
-                              availableFields: schemaState.fields.items,
-                              availableMeasurements:
-                                  schemaState.measurements.items,
-                            ),
-                            const SizedBox(height: 12),
-                          ],
-
-                          // Unit and Decimals
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextFormField(
-                                  key: const Key('widget_unit_field'),
-                                  controller: _unitController,
-                                  decoration: InputDecoration(
-                                    labelText: AppLocalizations.of(context)
-                                        .editorUnit,
-                                    hintText: '°C, %, W',
-                                    border: const OutlineInputBorder(),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: TextFormField(
-                                  key: const Key('widget_decimals_field'),
-                                  controller: _decimalPlacesController,
-                                  keyboardType: TextInputType.number,
-                                  decoration: InputDecoration(
-                                    labelText: AppLocalizations.of(context)
-                                        .editorDecimals,
-                                    hintText: AppLocalizations.of(context)
-                                        .editorDecimalsHint,
-                                    border: const OutlineInputBorder(),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            validator: (v) =>
+                                (!_isFormulaEnabled &&
+                                    (v == null || v.trim().isEmpty))
+                                ? l10n.editorFieldRequired
+                                : null,
                           ),
                         ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+                        const SizedBox(height: 12),
 
-                  WidgetCodeSection(
-                    generatedCode: WidgetCodeCodec.encode(
-                      _buildCurrentDefinition(),
+                        // Tag Filter Editor
+                        TagFilterEditor(
+                          tagFilters: _tagFilters,
+                          tagKeysState: schemaState.tagKeys,
+                          tagValuesByKey: schemaState.tagValuesByKey,
+                          onTagFiltersChanged: (map) =>
+                              setState(() => _tagFilters = map),
+                          onLoadTagValues: (key) =>
+                              schemaNotifier.loadTagValues(key),
+                          onReloadTagKeys: () =>
+                              schemaNotifier.reloadFieldsAndTags(),
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Formula & Calculation Section
+                        if (_selectedType != WidgetType.multiValue) ...[
+                          FormulaEditorSection(
+                            showPromptButtons: false,
+                            steps: _formulaSteps,
+                            onStepsChanged: (steps) =>
+                                setState(() => _formulaSteps = steps),
+                            defaultMeasurement: _measurementController.text
+                                .trim(),
+                            fieldLoader: _loadFieldInfos,
+                            tagKeyLoader: _loadTagKeys,
+                            tagValueLoader: _loadTagValues,
+                            isEnabled: _isFormulaEnabled,
+                            onEnabledChanged: (val) =>
+                                setState(() => _isFormulaEnabled = val),
+                            formula: _formula,
+                            onFormulaChanged: (val) =>
+                                setState(() => _formula = val),
+                            variables: _formulaVariables,
+                            onVariablesChanged: (vars) =>
+                                setState(() => _formulaVariables = vars),
+                            availableFields: schemaState.fields.items,
+                            availableMeasurements:
+                                schemaState.measurements.items,
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        // Unit and Decimals
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                key: const Key('widget_unit_field'),
+                                controller: _unitController,
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)
+                                      .editorUnit,
+                                  hintText: '°C, %, W',
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                key: const Key('widget_decimals_field'),
+                                controller: _decimalPlacesController,
+                                keyboardType: TextInputType.number,
+                                decoration: InputDecoration(
+                                  labelText: AppLocalizations.of(context)
+                                      .editorDecimals,
+                                  hintText: AppLocalizations.of(context)
+                                      .editorDecimalsHint,
+                                  border: const OutlineInputBorder(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    onApply: _applyWidgetCode,
-                    measurement: _measurementController.text.trim(),
-                    availableMeasurements: schemaState.measurements.items,
-                    availableFields: schemaState.fields.items,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
+
+                  _section(
+                    id: 'code',
+                    title: l10n.widgetCodeTitle,
+                    icon: Icons.data_object,
+                    child: WidgetCodeSection(
+                      embedded: true,
+                      generatedCode: WidgetCodeCodec.encode(
+                        _buildCurrentDefinition(),
+                      ),
+                      onApply: _applyWidgetCode,
+                      measurement: _measurementController.text.trim(),
+                      availableMeasurements: schemaState.measurements.items,
+                      availableFields: schemaState.fields.items,
+                    ),
+                  ),
 
                   // Type-Specific Configuration
-                  _buildTypeSpecificSettings(context),
-                  if (_usesTimeBuckets) ...[
-                    const SizedBox(height: 16),
-                    _buildGapPolicyCard(),
-                  ],
-                  if (_selectedType == WidgetType.historyChart) ...[
-                    const SizedBox(height: 16),
-                    ChartStyleEditor(
-                      style: _chartStyle,
-                      onChanged: (style) => setState(() => _chartStyle = style),
+                  if (_hasTypeSettings) ...[
+                    const SizedBox(height: 12),
+                    _section(
+                      id: 'type_settings',
+                      title: l10n.editorSectionTypeSettings,
+                      icon: Icons.insights_outlined,
+                      child: _buildTypeSettingsBody(context),
                     ),
                   ],
-                  const SizedBox(height: 16),
-                  AppearanceEditor(
-                    appearance: _appearance,
-                    onChanged: (a) => setState(() => _appearance = a),
+                  const SizedBox(height: 12),
+                  _section(
+                    id: 'appearance',
+                    title: l10n.appearanceTitle,
+                    icon: Icons.palette_outlined,
+                    child: AppearanceEditor(
+                      embedded: true,
+                      appearance: _appearance,
+                      onChanged: (a) => setState(() => _appearance = a),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  AlertRulesEditor(
-                    rules: _alerts,
-                    targets: _alertTargets,
-                    onChanged: (rules) => setState(() => _alerts = rules),
-                    onRuleAdded: () =>
-                        ref.read(notificationPermissionProvider).request(),
+                  const SizedBox(height: 12),
+                  _section(
+                    id: 'alerts',
+                    title: l10n.alertsTitle,
+                    icon: Icons.notifications_outlined,
+                    child: AlertRulesEditor(
+                      embedded: true,
+                      rules: _alerts,
+                      targets: _alertTargets,
+                      onChanged: (rules) => setState(() => _alerts = rules),
+                      onRuleAdded: () =>
+                          ref.read(notificationPermissionProvider).request(),
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -1072,6 +1083,50 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _section({
+    required String id,
+    required String title,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return EditorAccordionSection(
+      id: id,
+      title: title,
+      icon: icon,
+      expanded: _openSection == id,
+      onToggle: () =>
+          setState(() => _openSection = _openSection == id ? null : id),
+      child: child,
+    );
+  }
+
+  /// Single and multi values have no type-specific block (the gap policy
+  /// only applies to history charts and aggregates).
+  bool get _hasTypeSettings =>
+      _selectedType != WidgetType.singleValue &&
+      _selectedType != WidgetType.multiValue;
+
+  Widget _buildTypeSettingsBody(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildTypeSpecificSettings(context),
+        if (_usesTimeBuckets) ...[
+          const Divider(height: 32),
+          _buildGapPolicyCard(),
+        ],
+        if (_selectedType == WidgetType.historyChart) ...[
+          const Divider(height: 32),
+          ChartStyleEditor(
+            embedded: true,
+            style: _chartStyle,
+            onChanged: (style) => setState(() => _chartStyle = style),
+          ),
+        ],
+      ],
     );
   }
 
@@ -1100,183 +1155,159 @@ class _WidgetEditorScreenState extends ConsumerState<WidgetEditorScreen> {
   Widget _buildTypeSpecificSettings(BuildContext context) {
     switch (_selectedType) {
       case WidgetType.historyChart:
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).editorHistorySettings,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: const Key('history_timerange_field'),
-                  initialValue: _historyTimeRangeController.text,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).editorTimeRange,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: _timeRangeItems(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      _historyTimeRangeController.text = val;
-                      setState(() {});
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  key: const Key('history_interval_field'),
-                  initialValue: _historyIntervalController.text,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).editorInterval,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: _intervalItems(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      _historyIntervalController.text = val;
-                      setState(() {});
-                    }
-                  },
-                ),
-              ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context).editorHistorySettings,
+              style: Theme.of(context).textTheme.titleSmall,
             ),
-          ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: const Key('history_timerange_field'),
+              initialValue: _historyTimeRangeController.text,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).editorTimeRange,
+                border: const OutlineInputBorder(),
+              ),
+              items: _timeRangeItems(),
+              onChanged: (val) {
+                if (val != null) {
+                  _historyTimeRangeController.text = val;
+                  setState(() {});
+                }
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              key: const Key('history_interval_field'),
+              initialValue: _historyIntervalController.text,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).editorInterval,
+                border: const OutlineInputBorder(),
+              ),
+              items: _intervalItems(),
+              onChanged: (val) {
+                if (val != null) {
+                  _historyIntervalController.text = val;
+                  setState(() {});
+                }
+              },
+            ),
+          ],
         );
 
       case WidgetType.indicatorLamp:
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context).editorThresholdCondition,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 12),
+            Row(
               children: [
-                Text(
-                  AppLocalizations.of(context).editorThresholdCondition,
-                  style: Theme.of(context).textTheme.titleSmall,
+                SizedBox(
+                  width: 90,
+                  child: DropdownButtonFormField<String>(
+                    initialValue: _indicatorOperator,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).editorOperator,
+                      border: const OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: '>', child: Text('>')),
+                      DropdownMenuItem(value: '<', child: Text('<')),
+                      DropdownMenuItem(value: '==', child: Text('==')),
+                    ],
+                    onChanged: (v) {
+                      if (v != null) {
+                        setState(() => _indicatorOperator = v);
+                      }
+                    },
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    SizedBox(
-                      width: 90,
-                      child: DropdownButtonFormField<String>(
-                        initialValue: _indicatorOperator,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)
-                              .editorOperator,
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: const [
-                          DropdownMenuItem(value: '>', child: Text('>')),
-                          DropdownMenuItem(value: '<', child: Text('<')),
-                          DropdownMenuItem(value: '==', child: Text('==')),
-                        ],
-                        onChanged: (v) {
-                          if (v != null) {
-                            setState(() => _indicatorOperator = v);
-                          }
-                        },
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    key: const Key('indicator_threshold_field'),
+                    controller: _indicatorThresholdController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).alertsThreshold,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('indicator_threshold_field'),
-                        controller: _indicatorThresholdController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)
-                              .alertsThreshold,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         );
 
       case WidgetType.gaugeBar:
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context).editorScale,
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 12),
+            Row(
               children: [
-                Text(
-                  AppLocalizations.of(context).editorScale,
-                  style: Theme.of(context).textTheme.titleSmall,
+                Expanded(
+                  child: TextFormField(
+                    key: const Key('gauge_min_field'),
+                    controller: _gaugeMinController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).alertTargetMin,
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('gauge_min_field'),
-                        controller: _gaugeMinController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)
-                              .alertTargetMin,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextFormField(
+                    key: const Key('gauge_max_field'),
+                    controller: _gaugeMaxController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: AppLocalizations.of(context).alertTargetMax,
+                      border: const OutlineInputBorder(),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        key: const Key('gauge_max_field'),
-                        controller: _gaugeMaxController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: AppLocalizations.of(context)
-                              .alertTargetMax,
-                          border: const OutlineInputBorder(),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
+          ],
         );
 
       case WidgetType.aggregate:
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppLocalizations.of(context).editorAggregateRange,
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  initialValue: _historyTimeRangeController.text,
-                  decoration: InputDecoration(
-                    labelText: AppLocalizations.of(context).editorTimeRange,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: _timeRangeItems(),
-                  onChanged: (val) {
-                    if (val != null) {
-                      _historyTimeRangeController.text = val;
-                      setState(() {});
-                    }
-                  },
-                ),
-              ],
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context).editorAggregateRange,
+              style: Theme.of(context).textTheme.titleSmall,
             ),
-          ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _historyTimeRangeController.text,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context).editorTimeRange,
+                border: const OutlineInputBorder(),
+              ),
+              items: _timeRangeItems(),
+              onChanged: (val) {
+                if (val != null) {
+                  _historyTimeRangeController.text = val;
+                  setState(() {});
+                }
+              },
+            ),
+          ],
         );
 
       case WidgetType.singleValue:

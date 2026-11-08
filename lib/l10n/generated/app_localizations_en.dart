@@ -262,14 +262,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prompt copied. Paste it into an AI, then describe the task.';
 
   @override
-  String get widgetCodeShareSubject => 'Widget prompt for AI';
-
-  @override
   String get widgetCodeTitle => 'Widget as code';
 
   @override
   String get widgetCodeDescription =>
-      'The whole widget (type, formula, intermediate steps, variables, display) as JSON. Let an AI write it, paste it here and tap \"Apply code\".';
+      'The whole widget (type, formula, intermediate steps, variables, display) as JSON. Let an AI write it, copy the answer and tap \"Paste\".';
 
   @override
   String get widgetCodeCopyPrompt => 'Copy prompt for AI';
@@ -291,6 +288,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get widgetCodeApply => 'Apply code';
+
+  @override
+  String get widgetCodePromptShort => 'AI prompt';
+
+  @override
+  String get widgetCodeCopyCode => 'Copy';
+
+  @override
+  String get widgetCodePasteCode => 'Paste';
+
+  @override
+  String get widgetCodeCopyCodeTooltip => 'Copy the current widget code';
+
+  @override
+  String get widgetCodePasteCodeTooltip =>
+      'Paste code from the clipboard and apply it';
+
+  @override
+  String get widgetCodeCopied => 'Code copied.';
+
+  @override
+  String get widgetCodeClipboardEmpty => 'The clipboard is empty.';
+
+  @override
+  String get editorSectionTypeSettings => 'Type settings';
 
   @override
   String get widgetTypeSingleValueDescription => 'A current reading';

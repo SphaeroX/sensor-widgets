@@ -11,6 +11,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -60,13 +62,16 @@ void main() {
     );
     await tester.tap(find.byKey(const Key('type_tile_history_chart')));
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'type_settings');
     expect(find.byKey(const Key('history_timerange_field')), findsOneWidget);
 
+    await openEditorSection(tester, 'basics');
     await tester.ensureVisible(
       find.byKey(const Key('type_tile_indicator_lamp')),
     );
     await tester.tap(find.byKey(const Key('type_tile_indicator_lamp')));
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'type_settings');
     expect(find.byKey(const Key('indicator_threshold_field')), findsOneWidget);
   });
 

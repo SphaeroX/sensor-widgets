@@ -14,6 +14,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetDefinitionRepository extends Mock
     implements WidgetDefinitionRepository {}
 
@@ -94,6 +96,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byKey(const Key('widget_type_selector')), findsOneWidget);
+      await openEditorSection(tester, 'data_source');
       expect(find.byKey(const Key('widget_measurement_field')), findsOneWidget);
       expect(find.byKey(const Key('widget_field_field')), findsOneWidget);
     });
@@ -111,30 +114,35 @@ void main() {
         await tester.tap(find.byKey(const Key('type_tile_history_chart')));
         await tester.pumpAndSettle();
 
+        await openEditorSection(tester, 'type_settings');
         expect(
           find.byKey(const Key('history_timerange_field')),
           findsOneWidget,
         );
 
         // Switch to Indicator Lamp
+        await openEditorSection(tester, 'basics');
         await tester.ensureVisible(
           find.byKey(const Key('type_tile_indicator_lamp')),
         );
         await tester.tap(find.byKey(const Key('type_tile_indicator_lamp')));
         await tester.pumpAndSettle();
 
+        await openEditorSection(tester, 'type_settings');
         expect(
           find.byKey(const Key('indicator_threshold_field')),
           findsOneWidget,
         );
 
         // Switch to Gauge Bar
+        await openEditorSection(tester, 'basics');
         await tester.ensureVisible(
           find.byKey(const Key('type_tile_gauge_bar')),
         );
         await tester.tap(find.byKey(const Key('type_tile_gauge_bar')));
         await tester.pumpAndSettle();
 
+        await openEditorSection(tester, 'type_settings');
         expect(find.byKey(const Key('gauge_min_field')), findsOneWidget);
         expect(find.byKey(const Key('gauge_max_field')), findsOneWidget);
       },
@@ -150,6 +158,7 @@ void main() {
         find.byKey(const Key('widget_title_field')),
         'Living Room Temp',
       );
+      await openEditorSection(tester, 'data_source');
       await tester.enterText(
         find.byKey(const Key('widget_measurement_field')),
         'climate',
@@ -215,6 +224,7 @@ void main() {
         );
 
         // Open measurement picker bottom sheet
+        await openEditorSection(tester, 'data_source');
         await tester.ensureVisible(
           find.byKey(const Key('widget_measurement_field')),
         );
@@ -315,6 +325,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Set measurement
+        await openEditorSection(tester, 'data_source');
         await tester.ensureVisible(
           find.byKey(const Key('widget_measurement_field')),
         );
@@ -402,6 +413,7 @@ void main() {
 
         expect(find.text('Widget bearbeiten'), findsOneWidget);
         expect(find.text('Existing Widget'), findsWidgets);
+        await openEditorSection(tester, 'data_source');
         expect(find.text('climate'), findsWidgets);
         expect(find.text('temperature'), findsWidgets);
         expect(find.text('room = office'), findsOneWidget);
@@ -441,6 +453,7 @@ void main() {
           'Formula Widget',
         );
 
+        await openEditorSection(tester, 'data_source');
         await tester.ensureVisible(
           find.byKey(const Key('widget_measurement_field')),
         );

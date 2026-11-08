@@ -267,14 +267,11 @@ class AppLocalizationsDe extends AppLocalizations {
       'Prompt kopiert. In eine KI einfügen, dann die Aufgabe beschreiben.';
 
   @override
-  String get widgetCodeShareSubject => 'Widget-Prompt für KI';
-
-  @override
   String get widgetCodeTitle => 'Widget als Code';
 
   @override
   String get widgetCodeDescription =>
-      'Das ganze Widget (Typ, Formel, Zwischenschritte, Variablen, Darstellung) als JSON. Lass es von einer KI schreiben, füge es hier ein und tippe auf \"Code übernehmen\".';
+      'Das ganze Widget (Typ, Formel, Zwischenschritte, Variablen, Darstellung) als JSON. Lass es von einer KI schreiben, kopiere die Antwort und tippe auf \"Einfügen\".';
 
   @override
   String get widgetCodeCopyPrompt => 'Prompt für KI kopieren';
@@ -296,6 +293,31 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get widgetCodeApply => 'Code übernehmen';
+
+  @override
+  String get widgetCodePromptShort => 'KI-Prompt';
+
+  @override
+  String get widgetCodeCopyCode => 'Kopieren';
+
+  @override
+  String get widgetCodePasteCode => 'Einfügen';
+
+  @override
+  String get widgetCodeCopyCodeTooltip => 'Aktuellen Widget-Code kopieren';
+
+  @override
+  String get widgetCodePasteCodeTooltip =>
+      'Code aus der Zwischenablage einfügen und übernehmen';
+
+  @override
+  String get widgetCodeCopied => 'Code kopiert.';
+
+  @override
+  String get widgetCodeClipboardEmpty => 'Die Zwischenablage ist leer.';
+
+  @override
+  String get editorSectionTypeSettings => 'Typ-Einstellungen';
 
   @override
   String get widgetTypeSingleValueDescription => 'Ein aktueller Messwert';

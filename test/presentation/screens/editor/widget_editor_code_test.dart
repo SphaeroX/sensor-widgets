@@ -15,6 +15,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class _MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class _MockConnRepo extends Mock implements ConnectionRepository {}
@@ -110,12 +112,14 @@ void main() {
   Future<void> enableFormula(WidgetTester tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'data_source');
     await tester.ensureVisible(find.byType(Switch));
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
   }
 
   Future<void> enterCode(WidgetTester tester, String code) async {
+    await openEditorSection(tester, 'code');
     final field = find.byKey(const Key('widget_code_field'));
     await tester.ensureVisible(field);
     await tester.enterText(field, code);
@@ -130,11 +134,14 @@ void main() {
   testWidgets('code area is shown without a formula', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'code');
     expect(find.byKey(const Key('widget_code_field')), findsOneWidget);
 
+    await openEditorSection(tester, 'data_source');
     await tester.ensureVisible(find.byType(Switch));
     await tester.tap(find.byType(Switch));
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'code');
     expect(find.byKey(const Key('widget_code_field')), findsOneWidget);
   });
 
@@ -142,6 +149,7 @@ void main() {
     tester,
   ) async {
     await enableFormula(tester);
+    await openEditorSection(tester, 'code');
     final field = tester.widget<TextField>(
       find.byKey(const Key('widget_code_field')),
     );
@@ -160,6 +168,7 @@ void main() {
     await tester.tap(apply);
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'data_source');
     expect(find.text('Variable t1'), findsOneWidget);
     expect(find.text('Variable t2'), findsOneWidget);
     expect(formulaText(tester), 'min(s_a, s_b)');
@@ -196,6 +205,7 @@ void main() {
 
     expect(find.byKey(const Key('widget_code_errors')), findsOneWidget);
     expect(find.textContaining('Syntaxfehler'), findsWidgets);
+    await openEditorSection(tester, 'data_source');
     expect(formulaText(tester), isEmpty);
   });
 
@@ -220,6 +230,7 @@ void main() {
     );
 
     await enableFormula(tester);
+    await openEditorSection(tester, 'code');
     final button = find.byKey(const Key('copy_widget_prompt_button'));
     await tester.ensureVisible(button);
     await tester.tap(button);
@@ -238,10 +249,11 @@ void main() {
     addTearDown(tester.view.reset);
 
     await enableFormula(tester);
-    for (final key in [
-      'add_formula_variable_button',
-      'widget_code_apply_button',
+    for (final (section, key) in [
+      ('data_source', 'add_formula_variable_button'),
+      ('code', 'widget_code_apply_button'),
     ]) {
+      await openEditorSection(tester, section);
       await tester.ensureVisible(find.byKey(Key(key)));
       await tester.pumpAndSettle();
     }

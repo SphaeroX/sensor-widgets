@@ -23,6 +23,8 @@ import 'support/screenshot_harness.dart';
 
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../test/helpers/editor_sections.dart';
+
 final _now = DateTime.utc(2026, 11, 3, 14);
 
 SensorDataPoint _point(String field, double value, [DateTime? at]) =>
@@ -245,6 +247,7 @@ void main() {
       'CO2 Living Room',
     );
     await tapKey(tester, 'type_tile_history_chart');
+    await openEditorSection(tester, 'data_source');
     await tester.enterText(
       find.byKey(const Key('widget_measurement_field')),
       'sen66',
@@ -255,6 +258,7 @@ void main() {
     await tester.pumpAndSettle();
     await tapKey(tester, 'preview_data_button');
 
+    await openEditorSection(tester, 'basics');
     await tester.ensureVisible(find.byKey(const Key('widget_type_selector')));
     await tester.pumpAndSettle();
     await tester.drag(find.byType(Scrollable).first, const Offset(0, 2000));
@@ -275,6 +279,7 @@ void main() {
       'IAQ Index',
     );
     await tapKey(tester, 'type_tile_history_chart');
+    await openEditorSection(tester, 'data_source');
     await tester.enterText(
       find.byKey(const Key('widget_measurement_field')),
       'sen66',
@@ -306,9 +311,11 @@ void main() {
       await tester.tap(find.byKey(const Key('apply_variable_button')));
       await tester.pumpAndSettle();
     }
+    await openEditorSection(tester, 'type_settings');
     await tapKey(tester, 'preset_red_to_green');
     await tapKey(tester, 'chart_fill_switch');
 
+    await openEditorSection(tester, 'data_source');
     await tester.ensureVisible(find.byKey(const Key('formula_enabled_switch')));
     await tester.pumpAndSettle();
     await captureScreen('app_formula_editor');

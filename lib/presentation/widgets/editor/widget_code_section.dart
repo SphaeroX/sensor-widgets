@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sensor_widgets/domain/models/influx_field_info.dart';
 import 'package:sensor_widgets/presentation/help/formula_llm_prompt.dart';
-import 'package:share_plus/share_plus.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
 /// Card with a large text area in which the whole widget is defined as code
-/// (JSON), plus buttons to copy or share a prompt that makes an LLM write it.
+/// (JSON). One toolbar row copies a prompt that makes an LLM write it, copies
+/// the current code, and pastes code from the clipboard (replacing the text
+/// and applying it right away).
 ///
 /// [generatedCode] is the code of the current editor state. The text area
 /// follows it until the user edits the text; [onApply] then parses the text
@@ -18,8 +19,9 @@ class WidgetCodeSection extends StatefulWidget {
   final List<String> availableMeasurements;
   final List<InfluxFieldInfo> availableFields;
 
-  /// Shares the LLM prompt; defaults to the system share sheet.
-  final Future<void> Function(String text)? onSharePrompt;
+  /// Inside the editor accordion: no own card and no title (the section
+  /// header shows it).
+  final bool embedded;
 
   const WidgetCodeSection({
     super.key,
@@ -28,7 +30,7 @@ class WidgetCodeSection extends StatefulWidget {
     this.measurement,
     this.availableMeasurements = const [],
     this.availableFields = const [],
-    this.onSharePrompt,
+    this.embedded = false,
   });
 
   @override
@@ -101,105 +103,156 @@ class _WidgetCodeSectionState extends State<WidgetCodeSection> {
     );
   }
 
-  Future<void> _sharePrompt() async {
-    final share = widget.onSharePrompt ?? _shareViaSystem;
-    await share(_prompt());
+  Future<void> _copyCode() async {
+    await Clipboard.setData(ClipboardData(text: _controller.text));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context).widgetCodeCopied)),
+    );
   }
 
-  Future<void> _shareViaSystem(String text) async {
-    final subject = AppLocalizations.of(context).widgetCodeShareSubject;
-    await SharePlus.instance.share(ShareParams(text: text, subject: subject));
+  /// Replaces the code with the clipboard text and applies it, so an LLM
+  /// answer goes in with one tap. Errors keep the pasted text for fixing.
+  Future<void> _pasteCode() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (!mounted) return;
+    final text = data?.text ?? '';
+    if (text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).widgetCodeClipboardEmpty),
+        ),
+      );
+      return;
+    }
+    setState(() {
+      _dirty = true;
+      _controller.text = text;
+    });
+    _apply();
+  }
+
+  Widget _toolButton({
+    required String keyName,
+    required IconData icon,
+    required String label,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: Tooltip(
+        message: tooltip,
+        child: TextButton.icon(
+          key: Key(keyName),
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+          icon: Icon(icon, size: 18),
+          label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+          onPressed: onPressed,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
-    return Card(
-      key: const Key('widget_code_card'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.embedded) ...[
+          Text(l10n.widgetCodeTitle, style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+        ],
+        Text(l10n.widgetCodeDescription, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Row(
           children: [
-            Text(l10n.widgetCodeTitle, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Text(l10n.widgetCodeDescription, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 8),
-            Wrap(
-              children: [
-                TextButton.icon(
-                  key: const Key('copy_widget_prompt_button'),
-                  icon: const Icon(Icons.copy_all_outlined, size: 18),
-                  label: Text(l10n.widgetCodeCopyPrompt),
-                  onPressed: _copyPrompt,
-                ),
-                TextButton.icon(
-                  key: const Key('share_widget_prompt_button'),
-                  icon: const Icon(Icons.share_outlined, size: 18),
-                  label: Text(l10n.commonShare),
-                  onPressed: _sharePrompt,
-                ),
-              ],
+            _toolButton(
+              keyName: 'copy_widget_prompt_button',
+              icon: Icons.auto_awesome_outlined,
+              label: l10n.widgetCodePromptShort,
+              tooltip: l10n.widgetCodeCopyPrompt,
+              onPressed: _copyPrompt,
             ),
-            const SizedBox(height: 4),
-            TextField(
-              key: const Key('widget_code_field'),
-              controller: _controller,
-              minLines: 10,
-              maxLines: 24,
-              keyboardType: TextInputType.multiline,
-              autocorrect: false,
-              enableSuggestions: false,
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
-                alignLabelWithHint: true,
-                labelText: l10n.widgetCodeFieldLabel,
-                helperText: _dirty
-                    ? l10n.widgetCodeDirty
-                    : l10n.widgetCodeMirrorsForm,
-              ),
-              onChanged: (_) {
-                if (!_dirty) setState(() => _dirty = true);
-              },
+            _toolButton(
+              keyName: 'copy_widget_code_button',
+              icon: Icons.copy_outlined,
+              label: l10n.widgetCodeCopyCode,
+              tooltip: l10n.widgetCodeCopyCodeTooltip,
+              onPressed: _copyCode,
             ),
-            if (_errors.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Column(
-                key: const Key('widget_code_errors'),
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  for (final e in _errors)
-                    Text(
-                      '• $e',
-                      style: TextStyle(color: theme.colorScheme.error),
-                    ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 8),
-            Wrap(
-              alignment: WrapAlignment.end,
-              spacing: 8,
-              runSpacing: 4,
-              children: [
-                TextButton(
-                  key: const Key('widget_code_reset_button'),
-                  onPressed: _reset,
-                  child: Text(l10n.widgetCodeRegenerate),
-                ),
-                FilledButton.icon(
-                  key: const Key('widget_code_apply_button'),
-                  icon: const Icon(Icons.check, size: 18),
-                  label: Text(l10n.widgetCodeApply),
-                  onPressed: _apply,
-                ),
-              ],
+            _toolButton(
+              keyName: 'paste_widget_code_button',
+              icon: Icons.content_paste_go_outlined,
+              label: l10n.widgetCodePasteCode,
+              tooltip: l10n.widgetCodePasteCodeTooltip,
+              onPressed: _pasteCode,
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 4),
+        TextField(
+          key: const Key('widget_code_field'),
+          controller: _controller,
+          minLines: 10,
+          maxLines: 24,
+          keyboardType: TextInputType.multiline,
+          autocorrect: false,
+          enableSuggestions: false,
+          style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
+          decoration: InputDecoration(
+            border: const OutlineInputBorder(),
+            alignLabelWithHint: true,
+            labelText: l10n.widgetCodeFieldLabel,
+            helperText: _dirty
+                ? l10n.widgetCodeDirty
+                : l10n.widgetCodeMirrorsForm,
+          ),
+          onChanged: (_) {
+            if (!_dirty) setState(() => _dirty = true);
+          },
+        ),
+        if (_errors.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Column(
+            key: const Key('widget_code_errors'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (final e in _errors)
+                Text('• $e', style: TextStyle(color: theme.colorScheme.error)),
+            ],
+          ),
+        ],
+        const SizedBox(height: 8),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            TextButton(
+              key: const Key('widget_code_reset_button'),
+              onPressed: _reset,
+              child: Text(l10n.widgetCodeRegenerate),
+            ),
+            FilledButton.icon(
+              key: const Key('widget_code_apply_button'),
+              icon: const Icon(Icons.check, size: 18),
+              label: Text(l10n.widgetCodeApply),
+              onPressed: _apply,
+            ),
+          ],
+        ),
+      ],
+    );
+    if (widget.embedded) {
+      return KeyedSubtree(key: const Key('widget_code_card'), child: content);
+    }
+    return Card(
+      key: const Key('widget_code_card'),
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 }

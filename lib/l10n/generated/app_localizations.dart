@@ -566,12 +566,6 @@ abstract class AppLocalizations {
   /// **'Prompt copied. Paste it into an AI, then describe the task.'**
   String get widgetCodePromptCopied;
 
-  /// No description provided for @widgetCodeShareSubject.
-  ///
-  /// In en, this message translates to:
-  /// **'Widget prompt for AI'**
-  String get widgetCodeShareSubject;
-
   /// No description provided for @widgetCodeTitle.
   ///
   /// In en, this message translates to:
@@ -581,7 +575,7 @@ abstract class AppLocalizations {
   /// No description provided for @widgetCodeDescription.
   ///
   /// In en, this message translates to:
-  /// **'The whole widget (type, formula, intermediate steps, variables, display) as JSON. Let an AI write it, paste it here and tap \"Apply code\".'**
+  /// **'The whole widget (type, formula, intermediate steps, variables, display) as JSON. Let an AI write it, copy the answer and tap \"Paste\".'**
   String get widgetCodeDescription;
 
   /// No description provided for @widgetCodeCopyPrompt.
@@ -625,6 +619,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Apply code'**
   String get widgetCodeApply;
+
+  /// No description provided for @widgetCodePromptShort.
+  ///
+  /// In en, this message translates to:
+  /// **'AI prompt'**
+  String get widgetCodePromptShort;
+
+  /// No description provided for @widgetCodeCopyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get widgetCodeCopyCode;
+
+  /// No description provided for @widgetCodePasteCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste'**
+  String get widgetCodePasteCode;
+
+  /// No description provided for @widgetCodeCopyCodeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the current widget code'**
+  String get widgetCodeCopyCodeTooltip;
+
+  /// No description provided for @widgetCodePasteCodeTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste code from the clipboard and apply it'**
+  String get widgetCodePasteCodeTooltip;
+
+  /// No description provided for @widgetCodeCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Code copied.'**
+  String get widgetCodeCopied;
+
+  /// No description provided for @widgetCodeClipboardEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The clipboard is empty.'**
+  String get widgetCodeClipboardEmpty;
+
+  /// No description provided for @editorSectionTypeSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Type settings'**
+  String get editorSectionTypeSettings;
 
   /// No description provided for @widgetTypeSingleValueDescription.
   ///

@@ -17,6 +17,8 @@ import 'package:sensor_widgets/presentation/screens/dashboard/widgets_dashboard_
 import 'package:sensor_widgets/presentation/widgets/editor/appearance_editor.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import 'helpers/editor_sections.dart';
+
 class MockSharedWidgetStore extends Mock implements SharedWidgetStore {}
 
 class MockSecureTokenStore extends Mock implements SecureTokenStore {}
@@ -131,6 +133,7 @@ void main() {
       'IAQ Verlauf',
     );
     await tapKey('type_tile_history_chart');
+    await openEditorSection(tester, 'data_source');
     await tester.enterText(
       find.byKey(const Key('widget_measurement_field')),
       'sen66',
@@ -166,6 +169,7 @@ void main() {
     }
 
     // --- Time buckets: carry the last value over gaps ----------------------
+    await openEditorSection(tester, 'type_settings');
     await tapKey('gap_policy_previous');
 
     // --- Value gradient and area fill --------------------------------------
@@ -173,6 +177,7 @@ void main() {
     await tapKey('chart_fill_switch');
 
     // --- Appearance ---------------------------------------------------------
+    await openEditorSection(tester, 'appearance');
     await tapKey('palette_accent_3');
 
     // --- Save and inspect the bridge storage --------------------------------

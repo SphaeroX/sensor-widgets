@@ -17,6 +17,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -122,6 +124,7 @@ void main() {
     await tester.pumpWidget(app(base));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'alerts');
     await tester.ensureVisible(find.byKey(const Key('alert_add_button')));
     await tester.tap(find.byKey(const Key('alert_add_button')));
     await tester.pumpAndSettle();
@@ -170,6 +173,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'alerts');
     await tester.ensureVisible(find.byKey(const Key('alert_add_button')));
     await tester.tap(find.byKey(const Key('alert_add_button')));
     await tester.pumpAndSettle();

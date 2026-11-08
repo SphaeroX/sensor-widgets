@@ -82,7 +82,7 @@ void main() {
       _host(WidgetCodeSection(generatedCode: '{}', onApply: (_) => const [])),
     );
     expect(find.text('Widget as code'), findsOneWidget);
-    expect(find.text('Copy prompt for AI'), findsOneWidget);
+    expect(find.text('AI prompt'), findsOneWidget);
     expect(find.text('Apply code'), findsOneWidget);
     await tester.tap(find.byKey(const Key('widget_code_apply_button')));
     await tester.pump();

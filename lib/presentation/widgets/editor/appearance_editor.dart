@@ -21,10 +21,15 @@ class AppearanceEditor extends StatefulWidget {
   final WidgetAppearance? appearance;
   final ValueChanged<WidgetAppearance?> onChanged;
 
+  /// Inside the editor accordion: no own card and no title (the section
+  /// header shows it).
+  final bool embedded;
+
   const AppearanceEditor({
     super.key,
     required this.appearance,
     required this.onChanged,
+    this.embedded = false,
   });
 
   @override
@@ -81,90 +86,90 @@ class _AppearanceEditorState extends State<AppearanceEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.embedded || widget.appearance != null)
+          Row(
+            children: [
+              Expanded(
+                child: widget.embedded
+                    ? const SizedBox.shrink()
+                    : Text(
+                        l10n.appearanceTitle,
+                        style: theme.textTheme.titleSmall,
+                      ),
+              ),
+              if (widget.appearance != null)
+                TextButton(
+                  key: const Key('reset_appearance_button'),
+                  onPressed: () {
+                    _background.clear();
+                    _text.clear();
+                    _accent.clear();
+                    widget.onChanged(null);
+                  },
+                  child: Text(l10n.commonReset),
+                ),
+            ],
+          ),
+        const SizedBox(height: 8),
+        _colorField(
+          label: l10n.appearanceBackgroundColor,
+          field: 'background',
+          keyName: 'appearance_background_color',
+          controller: _background,
+        ),
+        _slider(
+          keyName: 'appearance_opacity_slider',
+          label: l10n.appearanceBackgroundOpacity,
+          value:
+              _value.backgroundOpacity ??
+              WidgetAppearance.defaultBackgroundOpacity,
+          min: 0,
+          max: 1,
+          display: (v) => '${(v * 100).round()} %',
+          onChanged: (v) => _emit(_value.copyWith(backgroundOpacity: v)),
+        ),
+        _colorField(
+          label: l10n.appearanceTextColor,
+          field: 'text',
+          keyName: 'appearance_text_color',
+          controller: _text,
+        ),
+        _colorField(
+          label: l10n.appearanceAccentColor,
+          field: 'accent',
+          keyName: 'appearance_accent_color',
+          controller: _accent,
+        ),
+        _slider(
+          keyName: 'appearance_font_scale_slider',
+          label: l10n.appearanceFontScale,
+          value: _value.fontScale ?? WidgetAppearance.defaultFontScale,
+          min: WidgetAppearance.minFontScale,
+          max: WidgetAppearance.maxFontScale,
+          display: (v) => '${(v * 100).round()} %',
+          onChanged: (v) => _emit(_value.copyWith(fontScale: v)),
+        ),
+        _slider(
+          keyName: 'appearance_corner_radius_slider',
+          label: l10n.appearanceCornerRadius,
+          value: _value.cornerRadius ?? WidgetAppearance.defaultCornerRadius,
+          min: 0,
+          max: WidgetAppearance.maxCornerRadius,
+          display: (v) => '${v.round()} dp',
+          onChanged: (v) => _emit(_value.copyWith(cornerRadius: v)),
+        ),
+        Text(l10n.appearanceIosCornerHint, style: theme.textTheme.bodySmall),
+      ],
+    );
+    if (widget.embedded) {
+      return KeyedSubtree(key: const Key('appearance_editor'), child: content);
+    }
     return Card(
       key: const Key('appearance_editor'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.appearanceTitle,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                ),
-                if (widget.appearance != null)
-                  TextButton(
-                    key: const Key('reset_appearance_button'),
-                    onPressed: () {
-                      _background.clear();
-                      _text.clear();
-                      _accent.clear();
-                      widget.onChanged(null);
-                    },
-                    child: Text(l10n.commonReset),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            _colorField(
-              label: l10n.appearanceBackgroundColor,
-              field: 'background',
-              keyName: 'appearance_background_color',
-              controller: _background,
-            ),
-            _slider(
-              keyName: 'appearance_opacity_slider',
-              label: l10n.appearanceBackgroundOpacity,
-              value:
-                  _value.backgroundOpacity ??
-                  WidgetAppearance.defaultBackgroundOpacity,
-              min: 0,
-              max: 1,
-              display: (v) => '${(v * 100).round()} %',
-              onChanged: (v) => _emit(_value.copyWith(backgroundOpacity: v)),
-            ),
-            _colorField(
-              label: l10n.appearanceTextColor,
-              field: 'text',
-              keyName: 'appearance_text_color',
-              controller: _text,
-            ),
-            _colorField(
-              label: l10n.appearanceAccentColor,
-              field: 'accent',
-              keyName: 'appearance_accent_color',
-              controller: _accent,
-            ),
-            _slider(
-              keyName: 'appearance_font_scale_slider',
-              label: l10n.appearanceFontScale,
-              value: _value.fontScale ?? WidgetAppearance.defaultFontScale,
-              min: WidgetAppearance.minFontScale,
-              max: WidgetAppearance.maxFontScale,
-              display: (v) => '${(v * 100).round()} %',
-              onChanged: (v) => _emit(_value.copyWith(fontScale: v)),
-            ),
-            _slider(
-              keyName: 'appearance_corner_radius_slider',
-              label: l10n.appearanceCornerRadius,
-              value:
-                  _value.cornerRadius ?? WidgetAppearance.defaultCornerRadius,
-              min: 0,
-              max: WidgetAppearance.maxCornerRadius,
-              display: (v) => '${v.round()} dp',
-              onChanged: (v) => _emit(_value.copyWith(cornerRadius: v)),
-            ),
-            Text(
-              l10n.appearanceIosCornerHint,
-              style: theme.textTheme.bodySmall,
-            ),
-          ],
-        ),
-      ),
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 

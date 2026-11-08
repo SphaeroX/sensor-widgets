@@ -14,6 +14,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -116,6 +118,7 @@ void main() {
     await tester.pumpWidget(app(history));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'type_settings');
     await tester.ensureVisible(find.byKey(const Key('gap_policy_previous')));
     await tester.tap(find.byKey(const Key('gap_policy_previous')));
     await tester.pumpAndSettle();
@@ -128,6 +131,7 @@ void main() {
   ) async {
     await tester.pumpWidget(app(history));
     await tester.pumpAndSettle();
+    await openEditorSection(tester, 'type_settings');
     expect(find.byKey(const Key('gap_policy_skip')), findsOneWidget);
 
     expect((await saveAndCapture(tester)).gapPolicy, isNull);
@@ -137,6 +141,7 @@ void main() {
     await tester.pumpWidget(app(history.copyWith(gapPolicy: 'previous')));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'type_settings');
     final chip = tester.widget<ChoiceChip>(
       find.byKey(const Key('gap_policy_previous')),
     );
@@ -160,12 +165,18 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('gap_policy_previous')), findsNothing);
+    expect(
+      find.byKey(const Key('gap_policy_previous'), skipOffstage: false),
+      findsNothing,
+    );
 
     await tester.pumpWidget(
       app(history.copyWith(formula: '', formulaVariables: const []).copyWith()),
     );
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('gap_policy_previous')), findsNothing);
+    expect(
+      find.byKey(const Key('gap_policy_previous'), skipOffstage: false),
+      findsNothing,
+    );
   });
 }

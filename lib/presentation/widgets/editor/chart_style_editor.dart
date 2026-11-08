@@ -9,10 +9,15 @@ class ChartStyleEditor extends StatefulWidget {
   final ChartStyle? style;
   final ValueChanged<ChartStyle?> onChanged;
 
+  /// Inside the editor accordion: no own card (the title stays, because the
+  /// section holds several blocks).
+  final bool embedded;
+
   const ChartStyleEditor({
     super.key,
     required this.style,
     required this.onChanged,
+    this.embedded = false,
   });
 
   @override
@@ -105,111 +110,108 @@ class _ChartStyleEditorState extends State<ChartStyleEditor> {
     final stops = _style.colorStops;
     final l10n = AppLocalizations.of(context);
 
-    return Card(
-      key: const Key('chart_style_editor'),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.chartStyleTitle,
-                    style: theme.textTheme.titleSmall,
-                  ),
-                ),
-                if (widget.style != null)
-                  TextButton(
-                    key: const Key('reset_chart_style_button'),
-                    onPressed: () => widget.onChanged(null),
-                    child: Text(l10n.commonReset),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(l10n.chartStyleDescription, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: [
-                OutlinedButton(
-                  key: const Key('preset_green_to_red'),
-                  onPressed: () =>
-                      _setStops(List.of(ChartStyle.greenToRedStops)),
-                  child: Text(l10n.chartStylePresetGreenToRed),
-                ),
-                OutlinedButton(
-                  key: const Key('preset_red_to_green'),
-                  onPressed: () =>
-                      _setStops(List.of(ChartStyle.redToGreenStops)),
-                  child: Text(l10n.chartStylePresetRedToGreen),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            for (var i = 0; i < stops.length; i++) _buildStopRow(i, stops[i]),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                key: const Key('add_color_stop_button'),
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(l10n.chartStyleAddStop),
-                onPressed: _addStop,
+            Expanded(
+              child: Text(
+                l10n.chartStyleTitle,
+                style: theme.textTheme.titleSmall,
               ),
             ),
-            const Divider(),
-            SwitchListTile(
-              key: const Key('chart_fill_switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.chartStyleFillArea),
-              value: _style.fillArea,
-              onChanged: (v) => _emit(_style.copyWith(fillArea: v)),
-            ),
-            SwitchListTile(
-              key: const Key('chart_grid_switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.chartStyleGrid),
-              value: _style.showGrid,
-              onChanged: (v) => _emit(_style.copyWith(showGrid: v)),
-            ),
-            SwitchListTile(
-              key: const Key('chart_axes_switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.chartStyleAxes),
-              value: _style.showAxes,
-              onChanged: (v) => _emit(_style.copyWith(showAxes: v)),
-            ),
-            SwitchListTile(
-              key: const Key('chart_minmax_switch'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.chartStyleMarkMinMax),
-              value: _style.markMinMax,
-              onChanged: (v) => _emit(_style.copyWith(markMinMax: v)),
-            ),
-            const SizedBox(height: 8),
-            TextFormField(
-              key: const Key('chart_line_width_field'),
-              controller: _lineWidthController,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
+            if (widget.style != null)
+              TextButton(
+                key: const Key('reset_chart_style_button'),
+                onPressed: () => widget.onChanged(null),
+                child: Text(l10n.commonReset),
               ),
-              decoration: InputDecoration(
-                labelText: l10n.chartStyleLineWidth,
-                border: const OutlineInputBorder(),
-                isDense: true,
-              ),
-              onChanged: (text) {
-                final parsed = double.tryParse(text.replaceAll(',', '.'));
-                if (parsed != null && parsed > 0) {
-                  _emit(_style.copyWith(lineWidth: parsed));
-                }
-              },
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(l10n.chartStyleDescription, style: theme.textTheme.bodySmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: [
+            OutlinedButton(
+              key: const Key('preset_green_to_red'),
+              onPressed: () => _setStops(List.of(ChartStyle.greenToRedStops)),
+              child: Text(l10n.chartStylePresetGreenToRed),
+            ),
+            OutlinedButton(
+              key: const Key('preset_red_to_green'),
+              onPressed: () => _setStops(List.of(ChartStyle.redToGreenStops)),
+              child: Text(l10n.chartStylePresetRedToGreen),
             ),
           ],
         ),
-      ),
+        const SizedBox(height: 8),
+        for (var i = 0; i < stops.length; i++) _buildStopRow(i, stops[i]),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: TextButton.icon(
+            key: const Key('add_color_stop_button'),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(l10n.chartStyleAddStop),
+            onPressed: _addStop,
+          ),
+        ),
+        const Divider(),
+        SwitchListTile(
+          key: const Key('chart_fill_switch'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.chartStyleFillArea),
+          value: _style.fillArea,
+          onChanged: (v) => _emit(_style.copyWith(fillArea: v)),
+        ),
+        SwitchListTile(
+          key: const Key('chart_grid_switch'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.chartStyleGrid),
+          value: _style.showGrid,
+          onChanged: (v) => _emit(_style.copyWith(showGrid: v)),
+        ),
+        SwitchListTile(
+          key: const Key('chart_axes_switch'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.chartStyleAxes),
+          value: _style.showAxes,
+          onChanged: (v) => _emit(_style.copyWith(showAxes: v)),
+        ),
+        SwitchListTile(
+          key: const Key('chart_minmax_switch'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.chartStyleMarkMinMax),
+          value: _style.markMinMax,
+          onChanged: (v) => _emit(_style.copyWith(markMinMax: v)),
+        ),
+        const SizedBox(height: 8),
+        TextFormField(
+          key: const Key('chart_line_width_field'),
+          controller: _lineWidthController,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(
+            labelText: l10n.chartStyleLineWidth,
+            border: const OutlineInputBorder(),
+            isDense: true,
+          ),
+          onChanged: (text) {
+            final parsed = double.tryParse(text.replaceAll(',', '.'));
+            if (parsed != null && parsed > 0) {
+              _emit(_style.copyWith(lineWidth: parsed));
+            }
+          },
+        ),
+      ],
+    );
+    if (widget.embedded) {
+      return KeyedSubtree(key: const Key('chart_style_editor'), child: content);
+    }
+    return Card(
+      key: const Key('chart_style_editor'),
+      child: Padding(padding: const EdgeInsets.all(16), child: content),
     );
   }
 

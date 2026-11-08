@@ -15,6 +15,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/dashboard/widgets_dashboard_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import 'helpers/editor_sections.dart';
+
 class MockSharedWidgetStore extends Mock implements SharedWidgetStore {}
 
 class MockSecureTokenStore extends Mock implements SecureTokenStore {}
@@ -251,6 +253,7 @@ void main() {
           find.byKey(const Key('widget_title_field')),
           'Living Room Temp',
         );
+        await openEditorSection(tester, 'data_source');
         await tester.enterText(
           find.byKey(const Key('widget_measurement_field')),
           'temperature',
@@ -287,6 +290,7 @@ void main() {
         await tester.tap(find.byKey(const Key('type_tile_history_chart')));
         await tester.pumpAndSettle();
 
+        await openEditorSection(tester, 'data_source');
         await tester.enterText(
           find.byKey(const Key('widget_measurement_field')),
           'temperature',

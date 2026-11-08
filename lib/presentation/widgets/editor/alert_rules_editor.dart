@@ -21,12 +21,17 @@ class AlertRulesEditor extends StatefulWidget {
   /// Called after the user added a rule, e.g. to ask for the OS permission.
   final VoidCallback onRuleAdded;
 
+  /// Inside the editor accordion: no own card and no title (the section
+  /// header shows it).
+  final bool embedded;
+
   const AlertRulesEditor({
     super.key,
     required this.rules,
     required this.targets,
     required this.onChanged,
     required this.onRuleAdded,
+    this.embedded = false,
   });
 
   @override
@@ -100,27 +105,30 @@ class _AlertRulesEditorState extends State<AlertRulesEditor> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (!widget.embedded) ...[
+          Text(l10n.alertsTitle, style: theme.textTheme.titleSmall),
+          const SizedBox(height: 4),
+        ],
+        Text(l10n.alertsDescription, style: theme.textTheme.bodySmall),
+        for (var i = 0; i < widget.rules.length; i++) _buildRow(i),
+        const SizedBox(height: 8),
+        OutlinedButton.icon(
+          key: const Key('alert_add_button'),
+          icon: const Icon(Icons.notifications_active_outlined),
+          label: Text(l10n.alertsAdd),
+          onPressed: _add,
+        ),
+      ],
+    );
+    if (widget.embedded) {
+      return KeyedSubtree(key: const Key('alert_rules_editor'), child: content);
+    }
     return Card(
       key: const Key('alert_rules_editor'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.alertsTitle, style: theme.textTheme.titleSmall),
-            const SizedBox(height: 4),
-            Text(l10n.alertsDescription, style: theme.textTheme.bodySmall),
-            for (var i = 0; i < widget.rules.length; i++) _buildRow(i),
-            const SizedBox(height: 8),
-            OutlinedButton.icon(
-              key: const Key('alert_add_button'),
-              icon: const Icon(Icons.notifications_active_outlined),
-              label: Text(l10n.alertsAdd),
-              onPressed: _add,
-            ),
-          ],
-        ),
-      ),
+      child: Padding(padding: const EdgeInsets.all(12), child: content),
     );
   }
 

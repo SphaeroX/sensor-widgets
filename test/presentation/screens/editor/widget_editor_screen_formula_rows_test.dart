@@ -17,6 +17,8 @@ import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 
+import '../../../helpers/editor_sections.dart';
+
 class MockWidgetRepo extends Mock implements WidgetDefinitionRepository {}
 
 class MockConnRepo extends Mock implements ConnectionRepository {}
@@ -126,6 +128,7 @@ void main() {
     await tester.pumpWidget(app(multi));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'data_source');
     await tester.ensureVisible(
       find.byKey(const Key('multi_formula_rows_section')),
     );
@@ -140,6 +143,7 @@ void main() {
     await tester.pumpWidget(app(multi));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'data_source');
     await tester.ensureVisible(find.byKey(const Key('add_formula_row_button')));
     await tester.tap(find.byKey(const Key('add_formula_row_button')));
     await tester.pumpAndSettle();
@@ -192,6 +196,7 @@ void main() {
     await tester.pumpWidget(app(gauge));
     await tester.pumpAndSettle();
 
+    await openEditorSection(tester, 'data_source');
     expect(find.byKey(const Key('formula_enabled_switch')), findsOneWidget);
   });
 }
