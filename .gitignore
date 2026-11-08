@@ -52,3 +52,8 @@ Thumbs.db
 # Local agent files
 CLAUDE.local.md
 .claude/settings.local.json
+
+# fastlane (runs in CI only)
+android/fastlane/report.xml
+android/fastlane/README.md
+android/vendor/

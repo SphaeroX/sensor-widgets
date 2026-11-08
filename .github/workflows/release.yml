@@ -36,8 +36,19 @@ jobs:
       - name: Run verification tests
         run: flutter test
 
+      - name: Prepare upload key
+        uses: ./.github/actions/android-upload-key
+        with:
+          keystore-base64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          key-password: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          key-alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+
       - name: Build Android Release APK
         run: flutter build apk --release
+
+      - name: Verify the APK is signed with the upload key
+        run: dart run tool/verify_release_signing.dart build/app/outputs/flutter-apk/app-release.apk android/upload-cert.sha256
 
       - name: Rename APK with Tag or Run Number
         run: |

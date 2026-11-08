@@ -1,0 +1,4 @@
+source "https://rubygems.org"
+
+# Used only by .github/workflows/play-internal.yml (see docs/architecture.md).
+gem "fastlane", ">= 2.220", "< 3"

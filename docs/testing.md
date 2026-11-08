@@ -51,6 +51,10 @@ Agents cannot run iOS tests locally. Push and read the GitHub Actions result.
 - Windows tip: if `./gradlew test` fails with "Unable to delete directory" or "AccessDeniedException" (directories under `build/` can carry the ReadOnly attribute; clearing it with PowerShell `Attributes -band -bnot ReadOnly` also works), remove `build/app/intermediates/assets/debug` and `build/app/test-results` (and clear ReadOnly under `build/app`, e.g. `tmp/kotlin-classes`) and run again; `./gradlew :app:ktlintFormat` fixes ktlint findings.
 - Not automatable here (documented manual checks): gradient and appearance in a real Android widget (Glance bitmap/background, corner radius below Android 12) and in WidgetKit (needs a device or Mac).
 
+## Release tooling
+- `test/tool/verify_release_signing_test.dart` covers the fingerprint parsing of `tool/verify_release_signing.dart` with keytool output (German locale) and apksigner output: upload key, debug key, unsigned. Manual check against real files: `dart run tool/verify_release_signing.dart <file> android/upload-cert.sha256` (for APKs set `ANDROID_HOME`).
+- The fastlane lane and the Play upload (`.github/workflows/play-internal.yml`) are not testable locally (no Ruby, needs the Play service account); they are verified only by a real workflow run.
+
 ## Localization
 - `test/flutter_test_config.dart` simulates a German device (`localesTestValue = [de_DE]`) before every Dart test, because most widget tests assert the German texts. Test `MaterialApp`s pass `AppLocalizations.localizationsDelegates` and `supportedLocales`. Tests of the English UI call `useEnglishDeviceLocale()` (`test/l10n/english_locale.dart`); the connection screen tests run in English.
 - Pure Dart tests that need texts use `lookupAppLocalizations(const Locale('de'))` (or `'en'`).
