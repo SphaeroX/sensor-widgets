@@ -54,6 +54,15 @@ void main() {
       });
     });
 
+    test('reads the "V2 Signer:" format of newer apksigner (CI runner)', () {
+      const output = '''
+V2 Signer: certificate DN: CN=Example, O=Sensor Widgets
+V2 Signer: certificate SHA-256 digest: 55a091f490945439c60483e7d8339359d66dc3dab9f2cc609acf5d72c332f0bf
+V2 Signer: certificate SHA-1 digest: 2409313e9693033fdc3426f051d744420f97375c
+''';
+      expect(signerSha256s(output), {normalizeFingerprint(_uploadSha256)});
+    });
+
     test('does not mistake the SHA1 line for SHA-256', () {
       expect(
         signerSha256s('\t SHA1: 24:09:31:3E:96:93:03:3F:DC:34:26:F0'),

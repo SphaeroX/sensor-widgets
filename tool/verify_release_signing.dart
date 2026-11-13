@@ -14,8 +14,11 @@ String normalizeFingerprint(String fingerprint) =>
     fingerprint.replaceAll(RegExp(r'[\s:]'), '').toLowerCase();
 
 final _keytoolSha256 = RegExp(r'^\s*SHA-?256:\s*([0-9A-Fa-f:]+)\s*$');
+// apksigner prints "Signer #1 certificate ..." (build-tools 34-36) or
+// "V2 Signer: certificate ..." (newer build-tools on the GitHub runner).
 final _apksignerSha256 = RegExp(
-  r'^Signer #\d+ certificate SHA-256 digest:\s*([0-9a-fA-F]+)\s*$',
+  r'^(?:Signer #\d+|V\d+ Signer:) certificate SHA-256 digest:\s*'
+  r'([0-9a-fA-F]+)\s*$',
 );
 
 /// SHA-256 fingerprints of all signer certificates in keytool or apksigner
