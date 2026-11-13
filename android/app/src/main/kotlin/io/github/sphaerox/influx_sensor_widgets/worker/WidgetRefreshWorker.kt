@@ -5,6 +5,7 @@ import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -54,13 +55,22 @@ class WidgetRefreshWorker(
                 },
                 notifyWidgets = { SensorGlanceAppWidget.refreshAll(applicationContext) },
             )
-        return if (outcome == WidgetRefreshRunner.Outcome.SUCCESS) Result.success() else Result.retry()
+        val decision =
+            RefreshRetryPolicy.decide(
+                outcome = outcome,
+                isOneTime = inputData.getBoolean(KEY_ONE_TIME, false),
+                runAttemptCount = runAttemptCount,
+            )
+        return if (decision == RefreshRetryPolicy.Decision.SUCCESS) Result.success() else Result.retry()
     }
 
     companion object {
         const val TAG = "WidgetRefreshWorker"
         const val WORK_NAME_PERIODIC = "sensor_widgets_periodic_refresh"
         const val KEY_WIDGET_ID = "target_widget_id"
+
+        /** Set on one-time requests only; periodic requests (also ones enqueued by older versions) lack it. */
+        const val KEY_ONE_TIME = "one_time"
 
         /** Like [refreshWidgets], but throws [TransientRefreshException] when a server was unreachable. */
         fun refreshWidgetsOrThrowOnNetworkFailure(
@@ -393,11 +403,21 @@ class WidgetRefreshWorker(
             context: Context,
             targetWidgetId: String? = null,
         ) {
-            val builder = OneTimeWorkRequestBuilder<WidgetRefreshWorker>().addTag(TAG).setConstraints(refreshConstraints())
-            if (targetWidgetId != null) {
-                builder.setInputData(Data.Builder().putString(KEY_WIDGET_ID, targetWidgetId).build())
-            }
-            WorkManager.getInstance(context).enqueue(builder.build())
+            val input = Data.Builder().putBoolean(KEY_ONE_TIME, true)
+            if (targetWidgetId != null) input.putString(KEY_WIDGET_ID, targetWidgetId)
+            val request =
+                OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+                    .addTag(TAG)
+                    .setConstraints(refreshConstraints())
+                    .setInputData(input.build())
+                    .build()
+            // REPLACE: a fresh request (e.g. the system update after waking up) supersedes one
+            // that is still waiting in backoff, and requests do not pile up.
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                RefreshRetryPolicy.oneTimeWorkName(targetWidgetId),
+                ExistingWorkPolicy.REPLACE,
+                request,
+            )
         }
     }
 }
