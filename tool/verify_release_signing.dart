@@ -44,7 +44,11 @@ SigningCheck checkSigning(String toolOutput, String expectedSha256) {
   }
   final found = signerSha256s(toolOutput);
   if (found.isEmpty) {
-    return const SigningCheck(false, 'no signer certificate found (unsigned?)');
+    return SigningCheck(
+      false,
+      'no signer certificate found (unsigned, or the tool failed). '
+      'Tool output:\n${toolOutput.trim()}',
+    );
   }
   if (found.contains(expected)) {
     return const SigningCheck(true, 'signed with the upload key');

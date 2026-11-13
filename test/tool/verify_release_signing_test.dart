@@ -89,6 +89,17 @@ void main() {
       expect(result.message, contains('no signer'));
     });
 
+    test('shows the tool output when no signer was found', () {
+      // apksigner errors (wrong Java, missing build-tools) end up here; without
+      // the output the CI log only said "unsigned?".
+      final result = checkSigning(
+        'Exception in thread "main" java.lang.UnsupportedClassVersionError',
+        _uploadSha256,
+      );
+      expect(result.ok, isFalse);
+      expect(result.message, contains('UnsupportedClassVersionError'));
+    });
+
     test('fails when the expected fingerprint is empty', () {
       final result = checkSigning(_keytoolUploadSigned, '  ');
       expect(result.ok, isFalse);
