@@ -1,35 +1,31 @@
-# Flutter rules
--keep class io.flutter.** { *; }
--keep class io.flutter.app.** { *; }
--keep class io.flutter.plugin.** { *; }
--keep class io.flutter.util.** { *; }
--keep class io.flutter.view.** { *; }
--keep class io.flutter.embedding.** { *; }
--dontwarn io.flutter.**
+# R8 rules for the release build (isMinifyEnabled = true).
+#
+# Keep this file small: every -keep lowers the DEX optimization and
+# obfuscation score Google Play reports. Flutter (via the Flutter Gradle
+# plugin), AndroidX (Glance, Compose, WorkManager, security-crypto), OkHttp
+# and Tink ship their own consumer rules. Manifest components (MainActivity,
+# widget receiver, config activity) are kept by AAPT automatically.
 
-# Jetpack Glance & Compose rules
--keep class androidx.glance.** { *; }
--keep class androidx.compose.** { *; }
--dontwarn androidx.glance.**
--dontwarn androidx.compose.**
+# Glance creates ActionCallbacks by class name (actionRunCallback<T>()).
+-keep class * implements androidx.glance.appwidget.action.ActionCallback {
+    <init>();
+}
 
-# WorkManager
--keep class androidx.work.** { *; }
--keep class * extends androidx.work.Worker { *; }
--keep class * extends androidx.work.ListenableWorker { *; }
+# Room (used by WorkManager) loads "<Database>_Impl" by class name. Without
+# this rule the release build crashed at startup in
+# androidx.startup.InitializationProvider ("Failed to create an instance of
+# class androidx.work.impl.WorkDatabase"), see commit 827330b.
+-keep class * extends androidx.room.RoomDatabase {
+    <init>();
+}
 
-# App Native Code & Widgets
--keep class io.github.sphaerox.influx_sensor_widgets.** { *; }
--keep class * extends android.appwidget.AppWidgetProvider { *; }
--keep class * extends android.content.BroadcastReceiver { *; }
+# WorkManager creates InputMergers by class name. Without this rule work
+# (including Glance's session worker) failed with "Could not create Input
+# Merger androidx.work.OverwritingInputMerger".
+-keep class * extends androidx.work.InputMerger {
+    public <init>();
+}
 
-# Plugins
--keep class es.antonborri.home_widget.** { *; }
--keep class com.it_nomads.fluttersecurestorage.** { *; }
--keep class com.google.crypto.tink.** { *; }
--keep class androidx.security.crypto.** { *; }
-
-# OkHttp & Okio
--dontwarn okhttp3.**
--dontwarn okio.**
--keep class okhttp3.** { *; }
+# The Flutter embedding references Play Core deferred components, which this
+# app does not use or bundle.
+-dontwarn com.google.android.play.core.**

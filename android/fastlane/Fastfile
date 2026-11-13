@@ -27,6 +27,8 @@ platform :android do
       sh("flutter", "build", "appbundle", "--release", "--build-number=#{version_code}")
     end
     aab = File.join(root, "build/app/outputs/bundle/release/app-release.aab")
+    # R8 deobfuscation file, so Play shows readable crash stack traces.
+    mapping = File.join(root, "build/app/outputs/mapping/release/mapping.txt")
 
     Dir.chdir(root) do
       sh("dart", "run", "tool/verify_release_signing.dart", aab, "android/upload-cert.sha256")
@@ -37,6 +39,7 @@ platform :android do
       track: track,
       release_status: release_status,
       aab: aab,
+      mapping: mapping,
       skip_upload_apk: true,
       skip_upload_metadata: true,
       skip_upload_changelogs: true,

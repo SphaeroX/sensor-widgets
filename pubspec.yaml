@@ -1,7 +1,7 @@
 name: sensor_widgets
 description: "Settings dashboard and native home-screen widgets for InfluxDB."
 publish_to: 'none'
-version: 1.0.4+6
+version: 1.0.5+7
 
 environment:
   sdk: ^3.13.7

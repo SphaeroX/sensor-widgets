@@ -54,8 +54,10 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 shrinks, optimizes and obfuscates (Play's DEX optimization check).
+            // Keep rules: proguard-rules.pro, smoke-tested on a release build.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
