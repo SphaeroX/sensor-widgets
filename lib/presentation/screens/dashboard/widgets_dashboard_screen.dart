@@ -15,11 +15,46 @@ import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painte
 import 'package:sensor_widgets/presentation/widgets/widget_type_visuals.dart';
 
 /// Dashboard overview screen showing all configured sensor widgets.
-class WidgetsDashboardScreen extends ConsumerWidget {
+class WidgetsDashboardScreen extends ConsumerStatefulWidget {
   const WidgetsDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WidgetsDashboardScreen> createState() =>
+      _WidgetsDashboardScreenState();
+}
+
+class _WidgetsDashboardScreenState
+    extends ConsumerState<WidgetsDashboardScreen> {
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    // The app often stays in memory overnight: coming back must not show the
+    // values of the evening, and it pokes the home-screen widgets, whose
+    // background refresh the system may have postponed.
+    _lifecycle = AppLifecycleListener(onResume: _reloadLiveData);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  Future<void> _reloadLiveData() async {
+    ref.invalidate(dashboardPreviewProvider);
+    try {
+      await ref.read(widgetsControllerProvider.future);
+      if (!mounted) return;
+      await ref.read(widgetsControllerProvider.notifier).triggerNativeRefresh();
+    } catch (_) {
+      // Widgets not loaded or no platform channel: the next resume tries again.
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final widgetsAsync = ref.watch(widgetsControllerProvider);
     final l10n = AppLocalizations.of(context);
 
