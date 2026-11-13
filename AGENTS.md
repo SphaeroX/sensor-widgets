@@ -23,7 +23,7 @@ flutter test
 flutter test test/path/to/file_test.dart
 flutter analyze
 dart format --set-exit-if-changed .
-cd android && ./gradlew test
+cd android && ./gradlew :app:test
 cd android && ./gradlew :app:ktlintCheck
 ```
 

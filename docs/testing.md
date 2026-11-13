@@ -23,7 +23,8 @@ flutter test                                                    # all Dart tests
 flutter test test/path/to/file_test.dart                        # one file
 flutter test --plain-name "<test name>"                         # one test
 flutter test integration_test                                   # needs an emulator or device (wraps the headless flows of test/)
-cd android && ./gradlew test                                    # all Android unit tests
+cd android && ./gradlew :app:test                                # all app unit tests (not the plugins' own tests)
+# `./gradlew test` would also run the unit tests that Flutter plugins ship (url_launcher_android's UrlLauncherTest fails in CI); they are not ours, so CI runs `:app:test`.
 cd android && ./gradlew :app:testDebugUnitTest --tests "<fully.qualified.Class>"  # one Android test class
 cd android && ./gradlew :app:ktlintCheck                        # ktlint check
 ```
@@ -49,7 +50,7 @@ Agents cannot run iOS tests locally. Push and read the GitHub Actions result.
 - Tag filter sheet: `tag_filter_editor_test.dart` covers scrolling a long tag-value list (`tag_filter_sheet_body`).
 - Network error grace: `worker/NetworkErrorGraceTest.kt`, `worker/WidgetRefreshWorkerNetworkTest.kt` (server started and shut down, so connecting fails), Swift `AlertTests` (grace section). Manual check: flight mode, tap ↻, the last values must stay.
 - Android widget sizing, picker insets and refresh notification: `glance/WidgetSizingTest.kt` (incl. the ↻ tap target size), `glance/ConfigScreenInsetsTest.kt`, `worker/WidgetRefreshRunnerTest.kt`, `worker/RefreshRetryPolicyTest.kt` (periodic work never retries, one-time work retries a bounded number of times; JVM unit tests). App resume: `test/presentation/screens/dashboard/widgets_dashboard_resume_test.dart`. The Glance/WorkManager wiring itself (receiver scheduling, `refreshAll`, `SizeMode.Exact` recomposition on resize) needs a device: place a history chart widget, resize it (chart must grow), tap ↻ (timestamp must change within seconds), add a widget via the picker (title and first entry must not sit under the status bar).
-- Windows tip: if `./gradlew test` fails with "Unable to delete directory" or "AccessDeniedException" (directories under `build/` can carry the ReadOnly attribute; clearing it with PowerShell `Attributes -band -bnot ReadOnly` also works), remove `build/app/intermediates/assets/debug` and `build/app/test-results` (and clear ReadOnly under `build/app`, e.g. `tmp/kotlin-classes`) and run again; `./gradlew :app:ktlintFormat` fixes ktlint findings.
+- Windows tip: if `./gradlew :app:test` fails with "Unable to delete directory" or "AccessDeniedException" (directories under `build/` can carry the ReadOnly attribute; clearing it with PowerShell `Attributes -band -bnot ReadOnly` also works), remove `build/app/intermediates/assets/debug` and `build/app/test-results` (and clear ReadOnly under `build/app`, e.g. `tmp/kotlin-classes`) and run again; `./gradlew :app:ktlintFormat` fixes ktlint findings.
 - Not automatable here (documented manual checks): gradient and appearance in a real Android widget (Glance bitmap/background, corner radius below Android 12) and in WidgetKit (needs a device or Mac).
 
 ## Release tooling

@@ -63,7 +63,7 @@ jobs:
         run: cd android && ./gradlew :app:ktlintCheck
 
       - name: Run Android unit tests
-        run: cd android && ./gradlew test
+        run: cd android && ./gradlew :app:test
 
       - name: Build Android APK (Release check)
         run: flutter build apk --release
