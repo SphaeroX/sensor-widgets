@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sensor_widgets/core/constants/app_links.dart';
 import 'package:sensor_widgets/core/utils/number_formatter.dart';
 import 'package:sensor_widgets/domain/models/chart_style.dart';
 import 'package:sensor_widgets/domain/models/widget_definition.dart';
@@ -7,6 +8,7 @@ import 'package:sensor_widgets/domain/models/widget_type.dart';
 import 'package:sensor_widgets/l10n/generated/app_localizations.dart';
 import 'package:sensor_widgets/presentation/controllers/widgets_controller.dart';
 import 'package:sensor_widgets/presentation/help/formula_help_screen.dart';
+import 'package:sensor_widgets/presentation/providers/storage_providers.dart';
 import 'package:sensor_widgets/presentation/screens/connections/connections_list_screen.dart';
 import 'package:sensor_widgets/presentation/screens/editor/widget_editor_screen.dart';
 import 'package:sensor_widgets/presentation/widgets/preview/history_chart_painter.dart';
@@ -54,6 +56,27 @@ class WidgetsDashboardScreen extends ConsumerWidget {
                   builder: (_) => const FormulaHelpScreen(),
                 ),
               );
+            },
+          ),
+          IconButton(
+            key: const Key('open_github_repo_btn'),
+            icon: const Icon(Icons.code),
+            tooltip: l10n.dashboardGithubTooltip,
+            onPressed: () async {
+              final opened = await ref
+                  .read(externalLinkLauncherProvider)
+                  .open(AppLinks.repository);
+              if (!opened && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      l10n.dashboardGithubOpenFailed(
+                        AppLinks.repository.toString(),
+                      ),
+                    ),
+                  ),
+                );
+              }
             },
           ),
           IconButton(

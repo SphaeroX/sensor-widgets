@@ -11,6 +11,8 @@
   "dashboardSyncTooltip": "Native Widgets synchronisieren",
   "dashboardSyncDone": "Native Widgets aktualisiert.",
   "dashboardHelpTooltip": "Formel-Hilfe",
+  "dashboardGithubTooltip": "GitHub",
+  "dashboardGithubOpenFailed": "Link konnte nicht geöffnet werden: {url}",
   "dashboardConnectionsTooltip": "InfluxDB Verbindungen",
   "dashboardEmptyTitle": "Noch keine Widgets konfiguriert",
   "dashboardEmptyBody": "Erstelle dein erstes Widget für den Homescreen!",

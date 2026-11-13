@@ -18,6 +18,15 @@
   "dashboardSyncTooltip": "Sync native widgets",
   "dashboardSyncDone": "Native widgets updated.",
   "dashboardHelpTooltip": "Formula help",
+  "dashboardGithubTooltip": "GitHub",
+  "dashboardGithubOpenFailed": "Could not open the link: {url}",
+  "@dashboardGithubOpenFailed": {
+    "placeholders": {
+      "url": {
+        "type": "String"
+      }
+    }
+  },
   "dashboardConnectionsTooltip": "InfluxDB connections",
   "dashboardEmptyTitle": "No widgets configured yet",
   "dashboardEmptyBody": "Create your first home-screen widget!",

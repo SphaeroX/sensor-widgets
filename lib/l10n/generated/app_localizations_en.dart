@@ -45,6 +45,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboardHelpTooltip => 'Formula help';
 
   @override
+  String get dashboardGithubTooltip => 'GitHub';
+
+  @override
+  String dashboardGithubOpenFailed(String url) {
+    return 'Could not open the link: $url';
+  }
+
+  @override
   String get dashboardConnectionsTooltip => 'InfluxDB connections';
 
   @override

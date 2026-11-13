@@ -164,6 +164,18 @@ abstract class AppLocalizations {
   /// **'Formula help'**
   String get dashboardHelpTooltip;
 
+  /// No description provided for @dashboardGithubTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub'**
+  String get dashboardGithubTooltip;
+
+  /// No description provided for @dashboardGithubOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the link: {url}'**
+  String dashboardGithubOpenFailed(String url);
+
   /// No description provided for @dashboardConnectionsTooltip.
   ///
   /// In en, this message translates to:

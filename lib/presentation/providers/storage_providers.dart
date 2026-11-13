@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sensor_widgets/data/influx/influx_api_client.dart';
+import 'package:sensor_widgets/data/platform/external_link_launcher.dart';
 import 'package:sensor_widgets/data/platform/notification_permission.dart';
 import 'package:sensor_widgets/data/repositories/connection_repository.dart';
 import 'package:sensor_widgets/data/repositories/widget_definition_repository.dart';
@@ -26,6 +27,11 @@ final influxApiClientProvider = Provider<InfluxApiClient>((ref) {
 /// Provider for the notification permission request (platform channel).
 final notificationPermissionProvider = Provider<NotificationPermission>((ref) {
   return NotificationPermission();
+});
+
+/// Provider for opening external links (system browser).
+final externalLinkLauncherProvider = Provider<ExternalLinkLauncher>((ref) {
+  return ExternalLinkLauncher();
 });
 
 /// Provider for the ConnectionRepository.
