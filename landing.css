@@ -286,6 +286,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   .hero-grid, .split, .privacy { grid-template-columns: 1fr; }
   .hero { padding-top: 48px; }
   .hero-visual { margin-top: 8px; }
+  .float-a { left: calc(50% - 280px); }
+  .float-b { right: calc(50% - 280px); }
   .widget-grid, .features { grid-template-columns: repeat(2, 1fr); }
   .steps { grid-template-columns: 1fr; gap: 64px; }
   .intro-grid { grid-template-columns: repeat(2, 1fr); }
