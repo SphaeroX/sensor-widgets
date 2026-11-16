@@ -4,6 +4,8 @@
 [![Build & Release APK](https://github.com/mgasc/InfluxDBWidget/actions/workflows/release.yml/badge.svg)](https://github.com/mgasc/InfluxDBWidget/actions/workflows/release.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**Website:** [sphaerox.github.io/sensor-widgets](https://sphaerox.github.io/sensor-widgets/) (German / English landing page and privacy policy, served from the `gh-pages` branch; screenshots there are copies of `docs/screenshots/`).
+
 **Sensor Widgets** is a privacy-first, open-source mobile app for Android and iOS that serves as a settings and configuration dashboard for native home-screen widgets directly querying InfluxDB.
 
 Unlike generic widget frameworks that require the main app to run in the background, native widgets in **Sensor Widgets** query InfluxDB directly over its v1-compatible HTTP API (`/query`) using lightweight background execution (Android Jetpack Glance with WorkManager, and iOS WidgetKit with AppIntents).
