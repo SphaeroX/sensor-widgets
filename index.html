@@ -3,19 +3,445 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sensor Widgets</title>
-<link rel="stylesheet" href="style.css">
+<title>Sensor Widgets – InfluxDB-Messwerte als Widgets auf dem Startbildschirm</title>
+<meta name="description" content="Sensor Widgets: native Startbildschirm-Widgets für Messwerte aus deiner eigenen InfluxDB. Open Source, kein Server, kein Tracking. / Native home-screen widgets for readings from your own InfluxDB. Open source, no backend, no tracking.">
+<meta name="theme-color" content="#0b1513">
+<meta property="og:title" content="Sensor Widgets">
+<meta property="og:description" content="Native home-screen widgets for readings from your own InfluxDB. Open source, no backend, no tracking.">
+<meta property="og:image" content="https://sphaerox.github.io/sensor-widgets/assets/icon.png">
+<meta property="og:url" content="https://sphaerox.github.io/sensor-widgets/">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<link rel="stylesheet" href="landing.css">
+<script>
+  // Pick the language before first paint: ?lang= > saved choice > browser language.
+  (function () {
+    var lang = null;
+    try { lang = new URLSearchParams(location.search).get('lang'); } catch (e) {}
+    if (lang !== 'de' && lang !== 'en') {
+      try { lang = localStorage.getItem('sw-lang'); } catch (e) {}
+    }
+    if (lang !== 'de' && lang !== 'en') {
+      lang = /^de\b/i.test(navigator.language || '') ? 'de' : 'en';
+    }
+    document.documentElement.lang = lang;
+  })();
+</script>
 </head>
 <body>
-<main>
-<h1>Sensor Widgets</h1>
-<p>Native Startbildschirm-Widgets für Messwerte aus deiner eigenen InfluxDB. Kein Server, kein Konto, keine Werbung.<br>
-<span lang="en">Native home-screen widgets for readings from your own InfluxDB. No backend, no account, no ads.</span></p>
-<ul>
-<li><a href="privacy.html">Datenschutzerklärung / Privacy Policy</a></li>
-<li><a href="https://github.com/SphaeroX/sensor-widgets">Quellcode / Source code (GitHub)</a></li>
-</ul>
-<p class="meta">InfluxDB ist eine Marke von InfluxData Inc. Diese App ist ein unabhängiges Projekt. / InfluxDB is a trademark of InfluxData Inc. This app is an independent project.</p>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <img src="assets/icon.png" alt="" width="32" height="32">
+      <span>Sensor Widgets</span>
+    </a>
+    <nav class="nav-links" aria-label="Navigation">
+      <a href="#widgets"><span data-l="de">Widgets</span><span data-l="en">Widgets</span></a>
+      <a href="#how"><span data-l="de">So geht's</span><span data-l="en">How it works</span></a>
+      <a href="#formulas"><span data-l="de">Formeln</span><span data-l="en">Formulas</span></a>
+      <a href="#privacy"><span data-l="de">Datenschutz</span><span data-l="en">Privacy</span></a>
+    </nav>
+    <div class="lang-switch" role="group" aria-label="Sprache / Language">
+      <button type="button" data-set-lang="de" aria-label="Deutsch">DE</button>
+      <button type="button" data-set-lang="en" aria-label="English">EN</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">
+          <span data-l="de">Open Source · Android &amp; iOS</span>
+          <span data-l="en">Open source · Android &amp; iOS</span>
+        </p>
+        <h1>
+          <span data-l="de">Deine Sensoren.<br><em>Direkt auf dem Startbildschirm.</em></span>
+          <span data-l="en">Your sensors.<br><em>Right on your home screen.</em></span>
+        </h1>
+        <p class="lead">
+          <span data-l="de">Sensor Widgets zeigt Temperatur, CO₂, Luftfeuchte, Stromverbrauch und jeden anderen Messwert aus deiner eigenen InfluxDB als native Widgets an. Die Widgets holen ihre Daten selbst – ohne Server dazwischen, ohne Konto, ohne Tracking.</span>
+          <span data-l="en">Sensor Widgets shows temperature, CO₂, humidity, power usage and any other reading from your own InfluxDB as native home-screen widgets. The widgets fetch their data themselves – no server in between, no account, no tracking.</span>
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="https://github.com/SphaeroX/sensor-widgets/releases/latest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+            <span data-l="de">APK für Android laden</span>
+            <span data-l="en">Get the Android APK</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/SphaeroX/sensor-widgets">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
+            <span data-l="de">Quellcode auf GitHub</span>
+            <span data-l="en">Source on GitHub</span>
+          </a>
+        </div>
+        <ul class="chips">
+          <li><span data-l="de">Kein Server</span><span data-l="en">No backend</span></li>
+          <li><span data-l="de">Keine Werbung</span><span data-l="en">No ads</span></li>
+          <li><span data-l="de">Nur lesend</span><span data-l="en">Read-only</span></li>
+          <li>MIT</li>
+        </ul>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="glow"></div>
+        <div class="phone">
+          <img src="assets/app_new_widget.png" alt="" width="780" height="1688">
+        </div>
+        <img class="float float-a" src="assets/widget_single_value.png" alt="" width="360" height="172">
+        <img class="float float-b" src="assets/widget_indicator_lamp.png" alt="" width="360" height="156">
+      </div>
+    </div>
+  </section>
+
+  <!-- What it is -->
+  <section class="intro">
+    <div class="wrap intro-grid">
+      <div class="stat">
+        <strong>6</strong>
+        <span data-l="de">native Widget-Typen</span>
+        <span data-l="en">native widget types</span>
+      </div>
+      <div class="stat">
+        <strong>0</strong>
+        <span data-l="de">Server zwischen dir und deinen Daten</span>
+        <span data-l="en">servers between you and your data</span>
+      </div>
+      <div class="stat">
+        <strong>v1–v3</strong>
+        <span data-l="de">InfluxDB Cloud &amp; selbst gehostet</span>
+        <span data-l="en">InfluxDB Cloud &amp; self-hosted</span>
+      </div>
+      <div class="stat">
+        <strong>~15 min</strong>
+        <span data-l="de">Aktualisierung im Hintergrund</span>
+        <span data-l="en">background refresh</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Widgets -->
+  <section id="widgets" class="section">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow"><span data-l="de">Widgets</span><span data-l="en">Widgets</span></p>
+        <h2>
+          <span data-l="de">Sechs Widgets für jeden Messwert</span>
+          <span data-l="en">Six widgets for every reading</span>
+        </h2>
+        <p>
+          <span data-l="de">Vom einzelnen Wert bis zum ganzen Raumsensor. Jedes Widget ist frei skalierbar und lässt sich in Farbe, Transparenz, Schrift und Eckenradius anpassen.</span>
+          <span data-l="en">From a single value to a whole room sensor. Every widget resizes freely and can be styled: color, opacity, font size and corner radius.</span>
+        </p>
+      </header>
+
+      <div class="widget-grid">
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_single_value.png" alt="Single Value widget" width="360" height="172" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Einzelwert</span><span data-l="en">Single value</span></h3>
+            <p><span data-l="de">Der aktuelle Messwert mit Einheit, Nachkommastellen und Statusfarben.</span><span data-l="en">The latest reading with unit, decimals and status colors.</span></p>
+          </figcaption>
+        </figure>
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_history_chart.png" alt="History Chart widget" width="360" height="218" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Verlauf</span><span data-l="en">History chart</span></h3>
+            <p><span data-l="de">Diagramm über 1 Stunde bis 30 Tage, mit Farbverlauf, Fläche und Achsen.</span><span data-l="en">1 hour up to 30 days, with color gradient, area fill and axes.</span></p>
+          </figcaption>
+        </figure>
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_indicator_lamp.png" alt="Indicator Lamp widget" width="360" height="156" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Anzeigelampe</span><span data-l="en">Indicator lamp</span></h3>
+            <p><span data-l="de">Leuchtet, sobald ein Schwellenwert über- oder unterschritten wird.</span><span data-l="en">Lights up as soon as a threshold is crossed.</span></p>
+          </figcaption>
+        </figure>
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_gauge_bar.png" alt="Gauge Bar widget" width="360" height="156" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Balken / Pegel</span><span data-l="en">Gauge bar</span></h3>
+            <p><span data-l="de">Der Wert zwischen Minimum und Maximum, mit Farbzonen.</span><span data-l="en">The value between a minimum and maximum, with color zones.</span></p>
+          </figcaption>
+        </figure>
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_aggregate.png" alt="Aggregate widget" width="360" height="172" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Aggregat</span><span data-l="en">Aggregate</span></h3>
+            <p><span data-l="de">Minimum, Durchschnitt und Maximum über einen Zeitraum.</span><span data-l="en">Minimum, average and maximum over a time range.</span></p>
+          </figcaption>
+        </figure>
+        <figure class="widget-card">
+          <div class="widget-stage"><img src="assets/widget_multi_value.png" alt="Multi Value widget" width="360" height="160" loading="lazy"></div>
+          <figcaption>
+            <h3><span data-l="de">Mehrfachwert</span><span data-l="en">Multi value</span></h3>
+            <p><span data-l="de">Mehrere Felder kompakt in einer Tabelle, z. B. alle Werte eines Raumsensors.</span><span data-l="en">Several fields in one compact table, e.g. every reading of a room sensor.</span></p>
+          </figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="section section-alt">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow"><span data-l="de">So geht's</span><span data-l="en">How it works</span></p>
+        <h2>
+          <span data-l="de">In drei Schritten zum Widget</span>
+          <span data-l="en">Three steps to your widget</span>
+        </h2>
+      </header>
+
+      <ol class="steps">
+        <li class="step">
+          <div class="phone phone-sm">
+            <img src="assets/app_add_connection.png" alt="New connection screen" width="780" height="1688" loading="lazy">
+          </div>
+          <div class="step-text">
+            <span class="step-no">1</span>
+            <h3><span data-l="de">Datenbank verbinden</span><span data-l="en">Connect your database</span></h3>
+            <p><span data-l="de">Adresse, Datenbank bzw. Bucket und API-Token eintragen, Verbindung testen, fertig. Mehrere Instanzen sind möglich – InfluxDB Cloud oder selbst gehostet.</span><span data-l="en">Enter the URL, database or bucket and an API token, test the connection, done. Add as many instances as you like – InfluxDB Cloud or self-hosted.</span></p>
+          </div>
+        </li>
+        <li class="step">
+          <div class="phone phone-sm">
+            <img src="assets/app_new_widget.png" alt="Widget editor with live preview" width="780" height="1688" loading="lazy">
+          </div>
+          <div class="step-text">
+            <span class="step-no">2</span>
+            <h3><span data-l="de">Widget gestalten</span><span data-l="en">Design the widget</span></h3>
+            <p><span data-l="de">Typ wählen, Measurement und Feld aus den automatischen Vorschlägen übernehmen und die Live-Vorschau mit echten Daten prüfen.</span><span data-l="en">Pick a type, choose measurement and field from the automatic suggestions and check the live preview with real data.</span></p>
+          </div>
+        </li>
+        <li class="step">
+          <div class="phone phone-sm phone-home" aria-hidden="true">
+            <div class="home">
+              <img src="assets/widget_history_chart.png" alt="" width="360" height="218" loading="lazy">
+              <div class="home-row">
+                <img src="assets/widget_single_value.png" alt="" width="360" height="172" loading="lazy">
+                <img src="assets/widget_gauge_bar.png" alt="" width="360" height="156" loading="lazy">
+              </div>
+              <img src="assets/widget_multi_value.png" alt="" width="360" height="160" loading="lazy">
+              <div class="dock"><i></i><i></i><i></i><i></i></div>
+            </div>
+          </div>
+          <div class="step-text">
+            <span class="step-no">3</span>
+            <h3><span data-l="de">Auf den Startbildschirm</span><span data-l="en">Add it to the home screen</span></h3>
+            <p><span data-l="de">Lange auf den Startbildschirm tippen, „Sensor Widgets“ hinzufügen und dein Widget auswählen. Größe frei wählen – der Inhalt skaliert mit.</span><span data-l="en">Long-press the home screen, add “Sensor Widgets” and pick your widget. Resize freely – the content scales with it.</span></p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Formulas -->
+  <section id="formulas" class="section">
+    <div class="wrap split">
+      <div class="split-copy">
+        <p class="eyebrow"><span data-l="de">Formeln</span><span data-l="en">Formulas</span></p>
+        <h2>
+          <span data-l="de">Rechne, bevor es angezeigt wird</span>
+          <span data-l="en">Calculate before you display</span>
+        </h2>
+        <p>
+          <span data-l="de">Kombiniere mehrere Felder zu einem eigenen Wert – direkt auf dem Gerät. Mit benannten Zwischenschritten bleiben auch komplexe Berechnungen übersichtlich. Verläufe und Aggregate werden pro Zeitabschnitt berechnet.</span>
+          <span data-l="en">Combine several fields into a value of your own – right on the device. Named intermediate steps keep even complex calculations readable. History charts and aggregates are calculated per time bucket.</span>
+        </p>
+        <pre class="code" aria-label="Formula example"><code><span class="c">// IAQ (Sensirion SEN66)</span>
+s_co2  = clamp(100 * (2000 - co2) / 1400, 0, 100)
+s_voc  = clamp(100 * (250 - voc) / 150, 0, 100)
+s_pm25 = clamp(100 * (35 - pm25) / 30, 0, 100)
+s_rh   = clamp(100 - 100 * abs(rh - 50) / 30, 0, 100)
+<b>Result = min(s_co2, s_voc, s_pm25, s_rh)</b></code></pre>
+        <ul class="ticks">
+          <li><span data-l="de"><code>+ − * /</code>, Vergleiche, <code>if</code>, <code>min</code>, <code>max</code>, <code>clamp</code>, <code>round</code>, <code>pow</code>, <code>sqrt</code> …</span><span data-l="en"><code>+ − * /</code>, comparisons, <code>if</code>, <code>min</code>, <code>max</code>, <code>clamp</code>, <code>round</code>, <code>pow</code>, <code>sqrt</code> …</span></li>
+          <li><span data-l="de">Vorlagen zum Start, z. B. Luftqualitätsindex oder °C → °F</span><span data-l="en">Templates to get started, e.g. an air-quality index or °C → °F</span></li>
+          <li><span data-l="de">Eingebaute Hilfe mit Beispielen zu jeder Funktion</span><span data-l="en">Built-in help with an example for every function</span></li>
+        </ul>
+      </div>
+      <div class="split-visual duo" aria-hidden="true">
+        <div class="phone phone-sm"><img src="assets/app_formula_editor.png" alt="" width="780" height="1688" loading="lazy"></div>
+        <div class="phone phone-sm"><img src="assets/app_formula_preview.png" alt="" width="780" height="1688" loading="lazy"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- More features -->
+  <section class="section section-alt">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="eyebrow"><span data-l="de">Außerdem</span><span data-l="en">And also</span></p>
+        <h2><span data-l="de">Durchdacht bis ins Detail</span><span data-l="en">Thought through</span></h2>
+      </header>
+      <div class="features">
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+          <h3><span data-l="de">Benachrichtigungen</span><span data-l="en">Notifications</span></h3>
+          <p><span data-l="de">Optional meldet sich ein Widget, wenn ein Wert eine Schwelle überschreitet – etwa „Lüften, CO₂ über 1000 ppm“. Lokal erzeugt, ohne Push-Server.</span><span data-l="en">Optionally a widget alerts you when a value crosses a threshold – say “Open a window, CO₂ above 1000 ppm”. Created locally, no push server.</span></p>
+        </article>
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+          <h3><span data-l="de">Schema-Erkennung</span><span data-l="en">Schema discovery</span></h3>
+          <p><span data-l="de">Measurements, Felder und Tags werden automatisch vorgeschlagen. Oder einfach frei eintippen.</span><span data-l="en">Measurements, fields and tags are suggested automatically. Or just type them in.</span></p>
+        </article>
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h3l3-8 4 16 3-8h7"/></svg>
+          <h3><span data-l="de">Offline-fest</span><span data-l="en">Works offline</span></h3>
+          <p><span data-l="de">Widgets merken sich den letzten Messwert und zeigen ihn weiter an, wenn das Netz mal weg ist.</span><span data-l="en">Widgets keep the latest reading and keep showing it when the network drops.</span></p>
+        </article>
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3L20 9M20 4v5h-5M20 12a8 8 0 0 1-14 5.3L4 15M4 20v-5h5"/></svg>
+          <h3><span data-l="de">Läuft im Hintergrund</span><span data-l="en">Runs in the background</span></h3>
+          <p><span data-l="de">Die App muss nicht offen sein. Widgets aktualisieren sich im Rhythmus des Systems oder per Tippen auf ↻.</span><span data-l="en">The app does not need to be open. Widgets refresh on the system schedule or when you tap ↻.</span></p>
+        </article>
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M4 17h6M18 7h2M14 17h6"/><circle cx="16" cy="7" r="2"/><circle cx="12" cy="17" r="2"/></svg>
+          <h3><span data-l="de">Dein Look</span><span data-l="en">Your look</span></h3>
+          <p><span data-l="de">Hintergrund, Transparenz, Text- und Akzentfarbe, Schriftgröße, Eckenradius und Farbverläufe für Diagramme.</span><span data-l="en">Background, opacity, text and accent color, font size, corner radius and gradients for charts.</span></p>
+        </article>
+        <article class="feature">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h2M16 4h2a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-2M9 12h6"/></svg>
+          <h3><span data-l="de">Widgets teilen</span><span data-l="en">Share widgets</span></h3>
+          <p><span data-l="de">Eine Widget-Konfiguration als Code teilen und importieren – Zugangsdaten bleiben dabei auf deinem Gerät.</span><span data-l="en">Share a widget configuration as code and import it – credentials never leave your device.</span></p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- Privacy -->
+  <section id="privacy" class="section">
+    <div class="wrap privacy">
+      <div class="privacy-copy">
+        <p class="eyebrow"><span data-l="de">Datenschutz</span><span data-l="en">Privacy</span></p>
+        <h2>
+          <span data-l="de">Deine Daten bleiben bei dir</span>
+          <span data-l="en">Your data stays yours</span>
+        </h2>
+        <p>
+          <span data-l="de">Die App spricht ausschließlich direkt mit der Datenbank, die du einträgst. Es gibt keinen Server des Entwicklers, kein Konto und keine Analyse-Dienste.</span>
+          <span data-l="en">The app talks only to the database you enter. There is no developer server, no account and no analytics.</span>
+        </p>
+        <a class="btn btn-ghost" href="privacy.html">
+          <span data-l="de">Datenschutzerklärung lesen</span>
+          <span data-l="en">Read the privacy policy</span>
+        </a>
+      </div>
+      <ul class="privacy-list">
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <div>
+            <h3><span data-l="de">Tokens verschlüsselt</span><span data-l="en">Encrypted tokens</span></h3>
+            <p><span data-l="de">API-Tokens liegen im sicheren Speicher des Betriebssystems.</span><span data-l="en">API tokens live in the operating system's secure storage.</span></p>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          <div>
+            <h3><span data-l="de">Direkte Verbindung</span><span data-l="en">Direct connection</span></h3>
+            <p><span data-l="de">Gerät ↔ deine InfluxDB. Nichts dazwischen.</span><span data-l="en">Device ↔ your InfluxDB. Nothing in between.</span></p>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12"/><circle cx="12" cy="12" r="3"/></svg>
+          <div>
+            <h3><span data-l="de">Nur lesend</span><span data-l="en">Read-only</span></h3>
+            <p><span data-l="de">Die App schreibt niemals in deine Datenbank.</span><span data-l="en">The app never writes to your database.</span></p>
+          </div>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
+          <div>
+            <h3><span data-l="de">Offener Quellcode</span><span data-l="en">Open source</span></h3>
+            <p><span data-l="de">MIT-Lizenz – jede Zeile ist nachprüfbar.</span><span data-l="en">MIT licensed – every line can be checked.</span></p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Get it -->
+  <section id="download" class="section">
+    <div class="wrap">
+      <div class="final">
+        <img src="assets/icon.png" alt="" width="88" height="88">
+        <h2>
+          <span data-l="de">Bereit für deinen Startbildschirm?</span>
+          <span data-l="en">Ready for your home screen?</span>
+        </h2>
+        <p>
+          <span data-l="de">Lade die aktuelle Android-Version von GitHub. Google Play ist in Vorbereitung, die iOS-Version in Entwicklung.</span>
+          <span data-l="en">Get the latest Android build from GitHub. Google Play is on its way, the iOS version is in development.</span>
+        </p>
+        <div class="cta cta-center">
+          <a class="btn btn-primary" href="https://github.com/SphaeroX/sensor-widgets/releases/latest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14"/></svg>
+            <span data-l="de">APK herunterladen</span>
+            <span data-l="en">Download APK</span>
+          </a>
+          <a class="btn btn-ghost" href="https://github.com/SphaeroX/sensor-widgets#readme">
+            <span data-l="de">Anleitung lesen</span>
+            <span data-l="en">Read the guide</span>
+          </a>
+        </div>
+        <p class="req">
+          <span data-l="de">Voraussetzung: eine eigene InfluxDB (Cloud oder selbst gehostet) mit Lesezugriff per API-Token · Android 8.0 oder neuer</span>
+          <span data-l="en">Requires your own InfluxDB (cloud or self-hosted) with read access via an API token · Android 8.0 or later</span>
+        </p>
+      </div>
+    </div>
+  </section>
+
 </main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <img src="assets/icon.png" alt="" width="28" height="28">
+      <span>Sensor Widgets</span>
+    </div>
+    <nav class="footer-links">
+      <a href="privacy.html"><span data-l="de">Datenschutz</span><span data-l="en">Privacy</span></a>
+      <a href="https://github.com/SphaeroX/sensor-widgets">GitHub</a>
+      <a href="https://github.com/SphaeroX/sensor-widgets/issues"><span data-l="de">Fehler melden</span><span data-l="en">Report an issue</span></a>
+      <a href="https://github.com/SphaeroX/sensor-widgets/blob/main/LICENSE"><span data-l="de">MIT-Lizenz</span><span data-l="en">MIT license</span></a>
+    </nav>
+    <p class="trademark">
+      <span data-l="de">InfluxDB ist eine Marke von InfluxData Inc. Sensor Widgets ist ein unabhängiges Projekt und steht in keiner Verbindung zu InfluxData.</span>
+      <span data-l="en">InfluxDB is a trademark of InfluxData Inc. Sensor Widgets is an independent project and is not affiliated with InfluxData.</span>
+    </p>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    var buttons = document.querySelectorAll('[data-set-lang]');
+    var titles = {
+      de: 'Sensor Widgets – InfluxDB-Messwerte als Widgets auf dem Startbildschirm',
+      en: 'Sensor Widgets – InfluxDB readings as home-screen widgets'
+    };
+    function apply(lang) {
+      root.lang = lang;
+      document.title = titles[lang];
+      buttons.forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.getAttribute('data-set-lang') === lang));
+      });
+    }
+    buttons.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var lang = b.getAttribute('data-set-lang');
+        apply(lang);
+        try { localStorage.setItem('sw-lang', lang); } catch (e) {}
+      });
+    });
+    apply(root.lang === 'en' ? 'en' : 'de');
+  })();
+</script>
 </body>
 </html>
