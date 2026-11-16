@@ -156,6 +156,17 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stat strong { font-size: 1.9rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
 .stat span { color: var(--muted); font-size: 0.95rem; }
 
+/* ---------- Video ---------- */
+.showreel { padding: 72px 0 80px; }
+.showreel h2 { font-size: clamp(1.9rem, 3.6vw, 2.7rem); font-weight: 800; }
+.showreel .section-head { margin-bottom: 32px; }
+.showreel-video {
+  display: block; width: 100%; height: auto; aspect-ratio: 16 / 9;
+  background: #0b1210;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
+}
+
 /* ---------- Sections ---------- */
 .section { padding: 96px 0; }
 .section-alt { background: var(--bg-alt); border-block: 1px solid var(--line); }
